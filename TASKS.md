@@ -285,7 +285,7 @@ Acceptance criteria:
 
 ### TASK-005: Create login page
 
-Status: validated
+Status: done
 
 Objective: Build login page using Supabase Auth.
 
