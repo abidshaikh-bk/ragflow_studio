@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { startTransition, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { Input } from "@/components/ui/Input";
 
+type LoginSubmitResult = {
+  message: string;
+  redirectTo: "/chat";
+};
+
 type LoginFormProps = {
-  onSubmit?: (values: { email: string; password: string }) => Promise<void> | void;
+  onSubmit?: (
+    values: { email: string; password: string }
+  ) => Promise<LoginSubmitResult> | LoginSubmitResult;
 };
 
 export function LoginForm({ onSubmit }: LoginFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,13 +40,14 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     setLoading(true);
 
     try {
-      if (onSubmit) {
-        await onSubmit({ email, password });
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
+      const submit = onSubmit ?? loginWithSupabase;
+      const result = await submit({ email, password });
 
-      setSuccess("Credentials submitted. Supabase wiring lands in the next phase.");
+      setSuccess(result.message);
+
+      startTransition(() => {
+        router.push(result.redirectTo);
+      });
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -83,4 +94,24 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       </p>
     </form>
   );
+}
+
+async function loginWithSupabase(values: {
+  email: string;
+  password: string;
+}): Promise<LoginSubmitResult> {
+  const supabase = createBrowserSupabaseClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: values.email.trim(),
+    password: values.password
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    message: "Signed in successfully. Redirecting to chat.",
+    redirectTo: "/chat"
+  };
 }

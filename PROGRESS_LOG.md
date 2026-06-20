@@ -277,7 +277,52 @@ Pass
 
 ---
 
-## TASK-005 to TASK-033
+## TASK-005: Create login page
+
+Status: validated
+
+Owner Agent: Codex
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+Build login page using Supabase Auth.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/components/auth/LoginForm.tsx
+- src/tests/auth-forms.test.tsx
+
+### Implementation Notes
+- Replaced the login placeholder submit path with Supabase Auth `signInWithPassword` using the shared browser client helper.
+- Added success redirect behavior to `/chat` after successful authentication while keeping visible error handling for invalid credentials.
+- Preserved simple client-side required-field validation in the login form.
+
+### Tests Added
+- Expanded `src/tests/auth-forms.test.tsx` to cover required-field login validation, successful sign-in redirects, and invalid-credential errors.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
+
+---
+
+## TASK-006 to TASK-033
 
 Status: not_started
 
