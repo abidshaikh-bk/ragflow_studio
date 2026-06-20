@@ -94,7 +94,7 @@ Acceptance criteria:
 
 ### TASK-002: Add shared UI shell
 
-Status: validated
+Status: done
 
 Objective: Create reusable app layout, navigation, loading states, error components, and protected page shell.
 

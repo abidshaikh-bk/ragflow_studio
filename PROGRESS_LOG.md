@@ -119,11 +119,11 @@ Pass
 
 ## TASK-002: Add shared UI shell
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Started: 2026-06-20
-Completed:
+Completed: 2026-06-20
 
 ### Objective
 Create reusable app layout, navigation, loading states, error components, and protected page shell.
@@ -150,6 +150,7 @@ Create reusable app layout, navigation, loading states, error components, and pr
 - Added a reusable protected workspace shell with top navigation, active-route highlighting, and a placeholder user/logout control.
 - Added shared loading, empty, and error UI components plus route-level loading and error files for the protected app group.
 - Added lightweight `/chat`, `/documents`, and `/settings` placeholders that reuse the shell without pre-empting the fuller page-scaffolding task.
+- Task commit created: `e80cb51`
 
 ### Tests Added
 - `src/tests/app-shell.test.tsx`
@@ -169,7 +170,7 @@ Pass
 - None
 
 ### Follow-up
-- Create the task commit, record the commit hash, and mark the task `done` once the branch is clean.
+- Proceed to the next MVP-critical task on a new task branch.
 
 ---
 
