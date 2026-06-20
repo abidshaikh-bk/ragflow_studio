@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "nextjs-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp"]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase"]
+    },
+    "pinecone": {
+      "command": "npx",
+      "args": ["-y", "@pinecone-database/mcp"]
+    },
+    "langsmith": {
+      "command": "npx",
+      "args": ["-y", "@langchain/langsmith-mcp-server"]
+    },
+    "tavily": {
+      "command": "npx",
+      "args": ["-y", "tavily-mcp"]
+    }
+  }
+}

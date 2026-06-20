@@ -54,23 +54,47 @@ Pass | Fail
 
 ## TASK-001: Initialize Next.js project
 
-Status: not_started
+Status: validated
 
-Owner Agent:
-Started:
+Owner Agent: Codex
+Started: 2026-06-20
 Completed:
 
 ### Objective
 Create the Next.js App Router project with TypeScript and Tailwind.
 
 ### Files Changed
-- 
+- .gitignore
+- .mcp.json
+- README.md
+- package-lock.json
+- package.json
+- playwright.config.ts
+- postcss.config.mjs
+- public/ragflow-logo.png
+- src/app/globals.css
+- src/app/icon.png
+- src/app/layout.tsx
+- src/app/page.tsx
+- src/components/app-shell/AppLogo.tsx
+- src/tests/e2e/.gitkeep
+- src/tests/homepage.test.tsx
+- src/tests/setup.ts
+- tailwind.config.ts
+- tsconfig.json
+- vitest.config.ts
+- next.config.ts
+- next-env.d.ts
+- .eslintrc.json
 
 ### Implementation Notes
-- 
+- Added a minimal Next.js App Router scaffold with TypeScript, Tailwind CSS, Vitest, and Playwright scripts.
+- Wired `source/icon.png` into the app as the visible logo and app icon.
+- Added project-level `.mcp.json` based on `MCP_SERVERS.md` so Codex-compatible MCP setup is present in the repo.
+- Validation completed on branch `task/TASK-001-nextjs-foundation`.
 
 ### Tests Added
-- 
+- `src/tests/homepage.test.tsx`
 
 ### Validation Commands
 ```bash
@@ -78,15 +102,17 @@ npm run lint
 npm run typecheck
 npm run test
 npm run dev
+npm run build
 ```
 
 ### Result
+Pass
 
 ### Blockers
-- 
+- None
 
 ### Follow-up
-- 
+- Create the task commit, record the hash, and mark the task `done` once the working tree is clean.
 
 ---
 

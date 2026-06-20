@@ -1,10 +1,28 @@
-# RAGFlow Studio Agent Pack
+# RAGFlow Studio
 
-This folder contains the operating documents for Codex/coding agents building the RAGFlow Studio MVP.
+RAGFlow Studio is a Next.js MVP for authenticated document ingestion and chat-based retrieval.
+
+## Local development
+
+```bash
+npm install
+npm run dev -- --hostname 127.0.0.1
+```
+
+## Validation
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+## Project docs
+
+This repository also contains the operating documents for Codex/coding agents building the RAGFlow Studio MVP.
 
 ## Files
-
-
 - `UI_MOCKUPS.md` — low-fidelity wireframes and UI states for all MVP pages.
 - `UI_PAGES.md` — page-level implementation specs and component breakdown.
 - `VCS_WORKFLOW.md` — Git branch, commit, validation, and documentation workflow for agents.
