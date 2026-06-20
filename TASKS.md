@@ -310,7 +310,7 @@ Acceptance criteria:
 
 ### TASK-006: Create Supabase schema and RLS policies
 
-Status: blocked
+Status: validated
 
 Objective: Create database tables and row-level security policies.
 

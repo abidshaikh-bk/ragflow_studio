@@ -51,7 +51,7 @@ create table if not exists public.user_provider_credentials (
 do $$ begin
   alter table public.user_provider_credentials
     add constraint user_provider_credentials_id_user_id_unique unique (id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.user_model_configs (
   id uuid primary key default gen_random_uuid(),
@@ -75,14 +75,14 @@ create table if not exists public.user_model_configs (
 do $$ begin
   alter table public.user_model_configs
     add constraint user_model_configs_id_user_id_unique unique (id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.user_model_configs
     add constraint user_model_configs_credential_owner_fk
     foreign key (credential_id, user_id)
     references public.user_provider_credentials(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.user_model_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -98,14 +98,14 @@ do $$ begin
     add constraint user_model_preferences_default_chat_fk
     foreign key (default_chat_model_config_id, user_id)
     references public.user_model_configs(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.user_model_preferences
     add constraint user_model_preferences_default_embedding_fk
     foreign key (default_embedding_model_config_id, user_id)
     references public.user_model_configs(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.documents (
   id uuid primary key default gen_random_uuid(),
@@ -128,14 +128,14 @@ create table if not exists public.documents (
 do $$ begin
   alter table public.documents
     add constraint documents_id_user_id_unique unique (id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.documents
     add constraint documents_embedding_model_owner_fk
     foreign key (embedding_model_config_id, user_id)
     references public.user_model_configs(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.document_chunks (
   id uuid primary key default gen_random_uuid(),
@@ -155,7 +155,7 @@ do $$ begin
     foreign key (document_id, user_id)
     references public.documents(id, user_id)
     on delete cascade;
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.chat_sessions (
   id uuid primary key default gen_random_uuid(),
@@ -172,14 +172,14 @@ create table if not exists public.chat_sessions (
 do $$ begin
   alter table public.chat_sessions
     add constraint chat_sessions_id_user_id_unique unique (id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.chat_sessions
     add constraint chat_sessions_model_config_owner_fk
     foreign key (model_config_id, user_id)
     references public.user_model_configs(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.chat_messages (
   id uuid primary key default gen_random_uuid(),
@@ -198,7 +198,7 @@ create table if not exists public.chat_messages (
 do $$ begin
   alter table public.chat_messages
     add constraint chat_messages_id_user_id_unique unique (id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.chat_messages
@@ -206,14 +206,14 @@ do $$ begin
     foreign key (session_id, user_id)
     references public.chat_sessions(id, user_id)
     on delete cascade;
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.chat_messages
     add constraint chat_messages_model_config_owner_fk
     foreign key (model_config_id, user_id)
     references public.user_model_configs(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create table if not exists public.agent_tool_calls (
   id uuid primary key default gen_random_uuid(),
@@ -235,14 +235,14 @@ do $$ begin
     foreign key (session_id, user_id)
     references public.chat_sessions(id, user_id)
     on delete cascade;
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 do $$ begin
   alter table public.agent_tool_calls
     add constraint agent_tool_calls_message_owner_fk
     foreign key (message_id, user_id)
     references public.chat_messages(id, user_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 create index if not exists chat_sessions_user_updated_idx on public.chat_sessions(user_id, updated_at desc);
 create index if not exists chat_messages_session_created_idx on public.chat_messages(session_id, created_at asc);

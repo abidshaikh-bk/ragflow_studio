@@ -26,6 +26,7 @@ describeDatabase("Supabase schema and RLS", () => {
   let pool: Pool;
   let userA: TestUser;
   let userB: TestUser;
+  let supabaseAdmin: ReturnType<typeof createClient>;
 
   beforeAll(async () => {
     pool = new Pool({
@@ -44,10 +45,16 @@ describeDatabase("Supabase schema and RLS", () => {
     const migrationSql = await readFile(migrationPath, "utf8");
     await pool.query(migrationSql);
 
-    const supabaseAdmin = createClient(supabaseUrl!, serviceRoleKey!, {
+    supabaseAdmin = createClient(supabaseUrl!, serviceRoleKey!, {
       auth: {
         autoRefreshToken: false,
+        detectSessionInUrl: false,
         persistSession: false
+      },
+      global: {
+        headers: {
+          "x-test-runner": "database-schema-test"
+        }
       }
     });
 
@@ -63,13 +70,6 @@ describeDatabase("Supabase schema and RLS", () => {
     if (!pool) {
       return;
     }
-
-    const supabaseAdmin = createClient(supabaseUrl!, serviceRoleKey!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
 
     if (userA?.id && userB?.id) {
       await cleanupUserData(pool, [userA.id, userB.id]);
@@ -93,8 +93,8 @@ describeDatabase("Supabase schema and RLS", () => {
           pinecone_namespace
         )
         values
-          ($1, 'alpha.txt', 'text/plain', 12, 'user-a/alpha.txt', 'uploaded', 'user:' || $1),
-          ($2, 'bravo.txt', 'text/plain', 34, 'user-b/bravo.txt', 'uploaded', 'user:' || $2)
+          ($1::uuid, 'alpha.txt', 'text/plain', 12, 'user-a/alpha.txt', 'uploaded', 'user:' || $1::text),
+          ($2::uuid, 'bravo.txt', 'text/plain', 34, 'user-b/bravo.txt', 'uploaded', 'user:' || $2::text)
       `,
       [userA.id, userB.id]
     );
@@ -124,7 +124,7 @@ describeDatabase("Supabase schema and RLS", () => {
           status,
           pinecone_namespace
         )
-        values ($1, 'notes.md', 'text/markdown', 20, 'user-a/notes.md', 'uploaded', 'user:' || $1)
+        values ($1::uuid, 'notes.md', 'text/markdown', 20, 'user-a/notes.md', 'uploaded', 'user:' || $1::text)
         returning user_id, file_name
       `,
       [userA.id],
@@ -150,7 +150,7 @@ describeDatabase("Supabase schema and RLS", () => {
             status,
             pinecone_namespace
           )
-          values ($1, 'forbidden.txt', 'text/plain', 8, 'user-b/forbidden.txt', 'uploaded', 'user:' || $1)
+          values ($1::uuid, 'forbidden.txt', 'text/plain', 8, 'user-b/forbidden.txt', 'uploaded', 'user:' || $1::text)
         `,
         [userB.id],
         true

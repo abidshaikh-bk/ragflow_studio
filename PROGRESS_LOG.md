@@ -326,11 +326,11 @@ Pass
 
 ## TASK-006: Create Supabase schema and RLS policies
 
-Status: blocked
+Status: validated
 
 Owner Agent: Codex
 Started: 2026-06-20
-Completed:
+Completed: 2026-06-20
 
 ### Objective
 Create database tables and row-level security policies.
@@ -371,16 +371,14 @@ npm run test:db
 - `npm run typecheck`: Pass
 - `npm run test`: Pass
 - `npm run build`: Pass
-- `npm run db:migrate`: Fail
-- `npm run test:db`: Fail
+- `npm run db:migrate`: Pass
+- `npm run test:db`: Pass
 
 ### Blockers
-- `npm run db:migrate` fails with `getaddrinfo ENOTFOUND db.lhydfmripmipnysynpij.supabase.co`.
-- `npm run test:db` fails for the same reason before the migration can be applied.
-- Because the configured `DATABASE_URL` host is not reachable/resolvable from this machine, I could not create the Phase 2 tables in the actual Supabase database yet.
+- None
 
 ### Follow-up
-- Update `DATABASE_URL` to a valid reachable Supabase Postgres or pooler connection string, rerun `npm run db:migrate` and `npm run test:db`, then mark the task `validated` and `done`.
+- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
 
 ---
 
