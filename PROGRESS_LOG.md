@@ -232,9 +232,11 @@ Pass
 
 ## TASK-004: Create registration page
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
+Git Branch: task/TASK-004-registration-page
+Commit Hash: 9803370
 Started: 2026-06-20
 Completed: 2026-06-20
 
@@ -271,7 +273,7 @@ Pass
 - None
 
 ### Follow-up
-- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
+- Proceed to the next unfinished Phase 2 task on its own task branch.
 
 ---
 

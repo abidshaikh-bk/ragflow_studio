@@ -259,7 +259,7 @@ Acceptance criteria:
 
 ### TASK-004: Create registration page
 
-Status: validated
+Status: done
 
 Objective: Build registration page using Supabase Auth.
 
