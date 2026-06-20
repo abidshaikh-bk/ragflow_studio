@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
@@ -63,6 +63,30 @@ export function SettingsForm({
     chatApiKey: initialMaskedSecrets?.chatApiKey ?? null,
     embeddingApiKey: initialMaskedSecrets?.embeddingApiKey ?? null
   });
+
+  useEffect(() => {
+    if (!initialValues) {
+      return;
+    }
+
+    setValues((current) => ({
+      ...current,
+      ...initialValues,
+      chatApiKey: "",
+      embeddingApiKey: ""
+    }));
+  }, [initialValues]);
+
+  useEffect(() => {
+    if (!initialMaskedSecrets) {
+      return;
+    }
+
+    setMaskedSecrets({
+      chatApiKey: initialMaskedSecrets.chatApiKey ?? null,
+      embeddingApiKey: initialMaskedSecrets.embeddingApiKey ?? null
+    });
+  }, [initialMaskedSecrets]);
 
   function handleValueChange(
     field: keyof SettingsFormValues,

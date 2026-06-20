@@ -1,0 +1,308 @@
+import { createHash } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SettingsPayload } from "@/lib/validations/settings";
+
+const DEFAULT_SETTINGS = {
+  chatModel: "gpt-4.1-mini",
+  chatProvider: "openai",
+  embeddingModel: "text-embedding-3-small",
+  embeddingProvider: "openai"
+} as const;
+
+const SETTINGS_LABELS = {
+  chat: "default-chat",
+  embedding: "default-embedding"
+} as const;
+
+type SettingsKind = keyof typeof SETTINGS_LABELS;
+
+type ModelConfigRow = {
+  id: string;
+  kind: "chat" | "embedding";
+  model_name: string;
+  provider: string;
+};
+
+type CredentialRow = {
+  api_key_last4: string | null;
+  id: string;
+  is_active: boolean;
+  label: string;
+  provider: string;
+};
+
+export type UserSettings = {
+  chatApiKeyMasked: string | null;
+  chatModel: string;
+  chatProvider: string;
+  embeddingApiKeyMasked: string | null;
+  embeddingModel: string;
+  embeddingProvider: string;
+};
+
+export async function getUserSettings(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<UserSettings> {
+  const [configsResult, credentialsResult] = await Promise.all([
+    supabase
+      .from("user_model_configs")
+      .select("id, kind, model_name, provider")
+      .eq("user_id", userId)
+      .eq("is_default", true)
+      .eq("is_active", true),
+    supabase
+      .from("user_provider_credentials")
+      .select("id, provider, label, api_key_last4, is_active")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .in("label", [SETTINGS_LABELS.chat, SETTINGS_LABELS.embedding])
+  ]);
+
+  assertSupabaseSuccess(configsResult.error, "Unable to load saved model settings.");
+  assertSupabaseSuccess(
+    credentialsResult.error,
+    "Unable to load saved provider credentials."
+  );
+
+  const chatConfig = (configsResult.data as ModelConfigRow[] | null)?.find(
+    (config) => config.kind === "chat"
+  );
+  const embeddingConfig = (configsResult.data as ModelConfigRow[] | null)?.find(
+    (config) => config.kind === "embedding"
+  );
+  const chatCredential = (credentialsResult.data as CredentialRow[] | null)?.find(
+    (credential) => credential.label === SETTINGS_LABELS.chat
+  );
+  const embeddingCredential = (
+    credentialsResult.data as CredentialRow[] | null
+  )?.find((credential) => credential.label === SETTINGS_LABELS.embedding);
+
+  return {
+    chatApiKeyMasked: formatMaskedSecret(chatCredential?.api_key_last4 ?? null),
+    chatModel: chatConfig?.model_name ?? DEFAULT_SETTINGS.chatModel,
+    chatProvider: chatConfig?.provider ?? DEFAULT_SETTINGS.chatProvider,
+    embeddingApiKeyMasked: formatMaskedSecret(
+      embeddingCredential?.api_key_last4 ?? null
+    ),
+    embeddingModel: embeddingConfig?.model_name ?? DEFAULT_SETTINGS.embeddingModel,
+    embeddingProvider:
+      embeddingConfig?.provider ?? DEFAULT_SETTINGS.embeddingProvider
+  };
+}
+
+export async function saveUserSettings(
+  supabase: SupabaseClient,
+  userId: string,
+  payload: SettingsPayload
+): Promise<UserSettings> {
+  const chatConfigId = await saveModelConfig(supabase, userId, "chat", {
+    model: payload.chatModel,
+    provider: payload.chatProvider
+  });
+  const embeddingConfigId = await saveModelConfig(supabase, userId, "embedding", {
+    model: payload.embeddingModel,
+    provider: payload.embeddingProvider
+  });
+
+  await Promise.all([
+    syncCredentialMetadata(supabase, userId, "chat", payload.chatProvider, payload.chatApiKey),
+    syncCredentialMetadata(
+      supabase,
+      userId,
+      "embedding",
+      payload.embeddingProvider,
+      payload.embeddingApiKey
+    ),
+    saveModelPreferences(supabase, userId, {
+      chatConfigId,
+      embeddingConfigId
+    })
+  ]);
+
+  return getUserSettings(supabase, userId);
+}
+
+async function saveModelConfig(
+  supabase: SupabaseClient,
+  userId: string,
+  kind: ModelConfigRow["kind"],
+  values: {
+    model: string;
+    provider: string;
+  }
+) {
+  const existingResult = await supabase
+    .from("user_model_configs")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("kind", kind)
+    .eq("is_default", true)
+    .maybeSingle();
+
+  assertSupabaseSuccess(
+    existingResult.error,
+    `Unable to inspect the saved ${kind} model configuration.`
+  );
+
+  if (existingResult.data?.id) {
+    const updateResult = await supabase
+      .from("user_model_configs")
+      .update({
+        display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
+        is_active: true,
+        is_default: true,
+        model_name: values.model,
+        provider: values.provider
+      })
+      .eq("id", existingResult.data.id)
+      .eq("user_id", userId)
+      .select("id")
+      .single();
+
+    assertSupabaseSuccess(
+      updateResult.error,
+      `Unable to update the ${kind} model configuration.`
+    );
+
+    if (!updateResult.data?.id) {
+      throw new Error(`The updated ${kind} model configuration did not return an id.`);
+    }
+
+    return updateResult.data.id as string;
+  }
+
+  const insertResult = await supabase
+    .from("user_model_configs")
+    .insert({
+      display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
+      is_active: true,
+      is_default: true,
+      kind,
+      model_name: values.model,
+      provider: values.provider,
+      user_id: userId
+    })
+    .select("id")
+    .single();
+
+  assertSupabaseSuccess(
+    insertResult.error,
+    `Unable to create the ${kind} model configuration.`
+  );
+
+  if (!insertResult.data?.id) {
+    throw new Error(`The created ${kind} model configuration did not return an id.`);
+  }
+
+  return insertResult.data.id as string;
+}
+
+async function saveModelPreferences(
+  supabase: SupabaseClient,
+  userId: string,
+  ids: {
+    chatConfigId: string;
+    embeddingConfigId: string;
+  }
+) {
+  const result = await supabase.from("user_model_preferences").upsert(
+    {
+      default_chat_model_config_id: ids.chatConfigId,
+      default_embedding_model_config_id: ids.embeddingConfigId,
+      user_id: userId
+    },
+    {
+      onConflict: "user_id"
+    }
+  );
+
+  assertSupabaseSuccess(result.error, "Unable to save the default model preferences.");
+}
+
+async function syncCredentialMetadata(
+  supabase: SupabaseClient,
+  userId: string,
+  kind: SettingsKind,
+  provider: string,
+  secret: string
+) {
+  const label = SETTINGS_LABELS[kind];
+  const nextSecret = secret.trim();
+
+  const existingResult = await supabase
+    .from("user_provider_credentials")
+    .select("id, provider, label, api_key_last4, is_active")
+    .eq("user_id", userId)
+    .eq("label", label)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  assertSupabaseSuccess(
+    existingResult.error,
+    `Unable to inspect the saved ${kind} provider credentials.`
+  );
+
+  const existingCredential = existingResult.data as CredentialRow | null;
+
+  if (!nextSecret) {
+    if (existingCredential && existingCredential.provider !== provider) {
+      const clearResult = await supabase
+        .from("user_provider_credentials")
+        .update({ is_active: false })
+        .eq("user_id", userId)
+        .eq("label", label)
+        .eq("is_active", true);
+
+      assertSupabaseSuccess(
+        clearResult.error,
+        `Unable to clear stale ${kind} provider credentials.`
+      );
+    }
+
+    return;
+  }
+
+  const deactivateResult = await supabase
+    .from("user_provider_credentials")
+    .update({ is_active: false })
+    .eq("user_id", userId)
+    .eq("label", label)
+    .eq("is_active", true);
+
+  assertSupabaseSuccess(
+    deactivateResult.error,
+    `Unable to replace the existing ${kind} provider credentials.`
+  );
+
+  const upsertResult = await supabase.from("user_provider_credentials").upsert(
+    {
+      api_key_hash: createHash("sha256").update(nextSecret).digest("hex"),
+      api_key_last4: nextSecret.slice(-4),
+      is_active: true,
+      label,
+      provider,
+      user_id: userId
+    },
+    {
+      onConflict: "user_id,provider,label"
+    }
+  );
+
+  assertSupabaseSuccess(
+    upsertResult.error,
+    `Unable to save the ${kind} provider credentials.`
+  );
+}
+
+function formatMaskedSecret(last4: string | null) {
+  return last4 ? `********${last4}` : null;
+}
+
+function assertSupabaseSuccess(error: { message?: string } | null, fallback: string) {
+  if (!error) {
+    return;
+  }
+
+  throw new Error(error.message || fallback);
+}

@@ -339,7 +339,7 @@ Acceptance criteria:
 
 ### TASK-007: Build settings UI
 
-Status: validated
+Status: done
 
 Objective: Create settings page for model and embedding configuration.
 
@@ -368,7 +368,7 @@ Acceptance criteria:
 
 ### TASK-008: Build settings API
 
-Status: not_started
+Status: validated
 
 Objective: Persist and retrieve model settings.
 

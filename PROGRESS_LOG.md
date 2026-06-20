@@ -386,11 +386,11 @@ npm run test:db
 
 ## TASK-007: Build settings UI
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-007-build-settings-ui
-Commit Hash:
+Commit Hash: 4226fef
 Started: 2026-06-20
 Completed: 2026-06-20
 
@@ -417,7 +417,7 @@ Create the interactive settings page for model and embedding configuration.
 - Replaced the read-only settings placeholder with an interactive client form for provider, model, and secret inputs.
 - Added client-side validation for required provider/model fields and a save flow that clears raw secret inputs while keeping masked secret indicators visible after save.
 - Updated the shared provider, secret, and save-bar components so the UI can be reused by the real API wiring in TASK-008.
-- Hardened the typecheck script with `next typegen` so route-type generation is reliable before `tsc --noEmit`.
+- Hardened the typecheck script so Next route types are generated before `tsc --noEmit`.
 
 ### Tests Added
 
@@ -436,6 +436,90 @@ Create the interactive settings page for model and embedding configuration.
 ### Git / VCS
 
 - Branch: task/TASK-007-build-settings-ui
+- Commit: 4226fef
+- Working tree clean after commit: yes
+
+### Validation Commands
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+
+- `npm run lint`: Pass
+- `npm run typecheck`: Pass
+- `npm run test`: Pass
+- `npm run build`: Pass
+
+### Blockers
+
+- None
+
+### Follow-up
+
+- Continue to TASK-008 on its own branch.
+
+---
+
+## TASK-008: Build settings API
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-008-build-settings-api
+Commit Hash:
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+
+Persist and retrieve user model settings through secure authenticated API routes.
+
+### Files Changed
+
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- package-lock.json
+- package.json
+- src/app/(app)/settings/page.tsx
+- src/app/api/settings/route.ts
+- src/components/settings/SettingsForm.tsx
+- src/components/settings/SettingsPageClient.tsx
+- src/lib/validations/settings.ts
+- src/server/settings/service.ts
+- src/tests/page-scaffolds.test.tsx
+- src/tests/settings-route.test.ts
+- tsconfig.json
+
+### Implementation Notes
+
+- Added authenticated `GET /api/settings` and `POST /api/settings` route handlers with Zod validation on write requests.
+- Added a server-side settings service that persists provider/model choices and stores only safe credential metadata such as hashes and masked last-four indicators.
+- Wired the settings page to load and save through `/api/settings` while keeping raw API key inputs client-side only and clearing them after save.
+- Stabilized the project `typecheck` script around Next route type generation so the default validation command is reliable.
+
+### Tests Added
+
+- `src/tests/settings-route.test.ts`
+
+### Documentation Updated
+
+- [x] TASKS.md
+- [x] PROGRESS_LOG.md
+- [ ] design.md
+- [ ] UI_MOCKUPS.md / UI_PAGES.md
+- [ ] SECURITY.md
+- [x] TESTING.md
+- [ ] ENVIRONMENT.md
+
+### Git / VCS
+
+- Branch: task/TASK-008-build-settings-api
 - Commit:
 - Working tree clean after commit: no
 
@@ -461,15 +545,7 @@ npm run build
 
 ### Follow-up
 
-- Create the task-scoped commit, record its hash, then continue to TASK-008 on its own branch.
-
----
-
-## TASK-008: Build settings API
-
-Status: not_started
-
-Use the task log template above for this task after TASK-007 is complete.
+- Create the task-scoped commit, record its hash, then push the completed Phase 3 branch history to GitHub.
 
 
 ---

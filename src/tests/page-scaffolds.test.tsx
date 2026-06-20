@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import ChatPage from "@/app/(app)/chat/page";
 import DocumentsPage from "@/app/(app)/documents/page";
 import SettingsPage from "@/app/(app)/settings/page";
@@ -11,6 +11,29 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("phase 1a page scaffolds", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          data: {
+            chatApiKeyMasked: "********1234",
+            chatModel: "gpt-4.1-mini",
+            chatProvider: "openai",
+            embeddingApiKeyMasked: "********5678",
+            embeddingModel: "text-embedding-3-small",
+            embeddingProvider: "openai"
+          }
+        }),
+        ok: true
+      })
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders the chat workspace shell", () => {
     render(<ChatPage />);
 
@@ -35,7 +58,7 @@ describe("phase 1a page scaffolds", () => {
     expect(screen.getByText(/processing timeline/i)).toBeInTheDocument();
   });
 
-  it("renders the settings workspace shell", () => {
+  it("renders the settings workspace shell", async () => {
     render(<SettingsPage />);
 
     expect(
@@ -43,9 +66,11 @@ describe("phase 1a page scaffolds", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Chat provider")).toBeInTheDocument();
     expect(screen.getByLabelText("Embedding provider")).toBeInTheDocument();
-    expect(
-      screen.getByText(/saved secrets stay masked and server-side/i)
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText(/stored value on file: \*{8}1234/i)
+      ).toBeInTheDocument()
+    );
   });
 
   it("blocks empty chat submit and calls the handler when populated", async () => {

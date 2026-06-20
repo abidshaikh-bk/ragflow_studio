@@ -20,7 +20,7 @@ Add these scripts to `package.json`:
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "rm -f tsconfig.tsbuildinfo && next typegen && sleep 1 && tsc --noEmit",
     "test": "vitest run",
     "test:db": "RUN_DB_TESTS=true vitest run src/tests/database-schema.test.ts",
     "test:watch": "vitest",
