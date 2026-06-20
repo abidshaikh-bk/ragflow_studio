@@ -119,38 +119,57 @@ Pass
 
 ## TASK-002: Add shared UI shell
 
-Status: not_started
+Status: validated
 
-Owner Agent:
-Started:
+Owner Agent: Codex
+Started: 2026-06-20
 Completed:
 
 ### Objective
 Create reusable app layout, navigation, loading states, error components, and protected page shell.
 
 ### Files Changed
-- 
+- src/app/(app)/chat/page.tsx
+- src/app/(app)/documents/page.tsx
+- src/app/(app)/error.tsx
+- src/app/(app)/layout.tsx
+- src/app/(app)/loading.tsx
+- src/app/(app)/settings/page.tsx
+- src/components/app-shell/AppShell.tsx
+- src/components/app-shell/ProtectedPagePlaceholder.tsx
+- src/components/app-shell/TopNav.tsx
+- src/components/app-shell/UserMenu.tsx
+- src/components/ui/EmptyState.tsx
+- src/components/ui/ErrorAlert.tsx
+- src/components/ui/Spinner.tsx
+- src/tests/app-shell.test.tsx
+- tsconfig.json
+- vitest.config.ts
 
 ### Implementation Notes
-- 
+- Added a reusable protected workspace shell with top navigation, active-route highlighting, and a placeholder user/logout control.
+- Added shared loading, empty, and error UI components plus route-level loading and error files for the protected app group.
+- Added lightweight `/chat`, `/documents`, and `/settings` placeholders that reuse the shell without pre-empting the fuller page-scaffolding task.
 
 ### Tests Added
-- 
+- `src/tests/app-shell.test.tsx`
 
 ### Validation Commands
 ```bash
 npm run lint
 npm run typecheck
 npm run test
+npm run build
 ```
 
 ### Result
+Pass
 
 ### Blockers
-- 
+- None
 
 ### Follow-up
-- 
+- Create the task commit, record the commit hash, and mark the task `done` once the branch is clean.
 
 ---
 
