@@ -185,9 +185,10 @@ Phase 1A scaffold note:
 - Never display raw stored API keys.
 - Show save success/error state.
 
-Phase 1A scaffold note:
+MVP note:
 
-- Keep `/settings` read-only during MVP scaffolding and display masked placeholders instead of editable secrets.
+- Keep saved secrets masked after save.
+- Allow provider and model editing without rendering raw stored API keys.
 
 ## Test requirements
 

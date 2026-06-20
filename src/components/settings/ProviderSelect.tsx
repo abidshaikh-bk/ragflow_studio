@@ -1,6 +1,7 @@
+import type { SelectHTMLAttributes } from "react";
 import { Select } from "@/components/ui/Select";
 
-const providerOptions = [
+export const providerOptions = [
   { label: "OpenAI", value: "openai" },
   { label: "Anthropic", value: "anthropic" },
   { label: "Gemini", value: "gemini" },
@@ -8,11 +9,22 @@ const providerOptions = [
 ];
 
 export function ProviderSelect({
+  error,
   label,
-  value
+  value,
+  ...props
 }: {
+  error?: string;
   label: string;
   value: string;
-}) {
-  return <Select label={label} options={providerOptions} value={value} disabled />;
+} & SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <Select
+      error={error}
+      label={label}
+      options={providerOptions}
+      value={value}
+      {...props}
+    />
+  );
 }

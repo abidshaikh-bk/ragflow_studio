@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:db": "RUN_DB_TESTS=true vitest run src/tests/database-schema.test.ts",
     "test:watch": "vitest",

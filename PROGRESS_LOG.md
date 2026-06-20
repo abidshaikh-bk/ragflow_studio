@@ -384,11 +384,92 @@ npm run test:db
 
 ---
 
-## TASK-007 to TASK-033
+## TASK-007: Build settings UI
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-007-build-settings-ui
+Commit Hash:
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+
+Create the interactive settings page for model and embedding configuration.
+
+### Files Changed
+
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- UI_PAGES.md
+- package.json
+- src/components/settings/ProviderSelect.tsx
+- src/components/settings/SaveBar.tsx
+- src/components/settings/SecretInput.tsx
+- src/components/settings/SettingsForm.tsx
+- src/tests/page-scaffolds.test.tsx
+- src/tests/settings-form.test.tsx
+
+### Implementation Notes
+
+- Replaced the read-only settings placeholder with an interactive client form for provider, model, and secret inputs.
+- Added client-side validation for required provider/model fields and a save flow that clears raw secret inputs while keeping masked secret indicators visible after save.
+- Updated the shared provider, secret, and save-bar components so the UI can be reused by the real API wiring in TASK-008.
+- Hardened the typecheck script with `next typegen` so route-type generation is reliable before `tsc --noEmit`.
+
+### Tests Added
+
+- `src/tests/settings-form.test.tsx`
+
+### Documentation Updated
+
+- [x] TASKS.md
+- [x] PROGRESS_LOG.md
+- [ ] design.md
+- [x] UI_MOCKUPS.md / UI_PAGES.md
+- [ ] SECURITY.md
+- [x] TESTING.md
+- [ ] ENVIRONMENT.md
+
+### Git / VCS
+
+- Branch: task/TASK-007-build-settings-ui
+- Commit:
+- Working tree clean after commit: no
+
+### Validation Commands
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+
+- `npm run lint`: Pass
+- `npm run typecheck`: Pass
+- `npm run test`: Pass
+- `npm run build`: Pass
+
+### Blockers
+
+- None
+
+### Follow-up
+
+- Create the task-scoped commit, record its hash, then continue to TASK-008 on its own branch.
+
+---
+
+## TASK-008: Build settings API
 
 Status: not_started
 
-Use the task log template above for each remaining task. Do not mark a task done without tests and validation.
+Use the task log template above for this task after TASK-007 is complete.
 
 
 ---

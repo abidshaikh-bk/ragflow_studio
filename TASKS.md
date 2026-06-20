@@ -339,7 +339,7 @@ Acceptance criteria:
 
 ### TASK-007: Build settings UI
 
-Status: not_started
+Status: validated
 
 Objective: Create settings page for model and embedding configuration.
 

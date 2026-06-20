@@ -43,7 +43,9 @@ describe("phase 1a page scaffolds", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Chat provider")).toBeInTheDocument();
     expect(screen.getByLabelText("Embedding provider")).toBeInTheDocument();
-    expect(screen.getAllByDisplayValue("****************")).toHaveLength(2);
+    expect(
+      screen.getByText(/saved secrets stay masked and server-side/i)
+    ).toBeInTheDocument();
   });
 
   it("blocks empty chat submit and calls the handler when populated", async () => {
