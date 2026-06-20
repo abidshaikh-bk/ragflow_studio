@@ -176,9 +176,11 @@ Pass
 
 ## TASK-003: Configure Supabase client/server utilities
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
+Git Branch: task/TASK-003-supabase-auth-utilities
+Commit Hash: 808a8e1
 Started: 2026-06-20
 Completed: 2026-06-20
 
@@ -224,7 +226,7 @@ Pass
 - None
 
 ### Follow-up
-- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
+- Proceed to the next unfinished Phase 2 task on its own task branch.
 
 ---
 
