@@ -1,20 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { startTransition, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { Input } from "@/components/ui/Input";
+
+type RegisterSubmitResult = {
+  message: string;
+  redirectTo: "/chat" | "/login";
+};
 
 type RegisterFormProps = {
   onSubmit?: (values: {
     email: string;
     password: string;
     confirmPassword: string;
-  }) => Promise<void> | void;
+  }) => Promise<RegisterSubmitResult> | RegisterSubmitResult;
 };
 
 export function RegisterForm({ onSubmit }: RegisterFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,13 +48,19 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      if (onSubmit) {
-        await onSubmit({ email, password, confirmPassword });
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
+      const submit = onSubmit ?? registerWithSupabase;
 
-      setSuccess("Account request submitted. Auth wiring lands in the next phase.");
+      const result = await submit({
+        email,
+        password,
+        confirmPassword
+      });
+
+      setSuccess(result.message);
+
+      startTransition(() => {
+        router.push(result.redirectTo);
+      });
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -102,4 +116,32 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
       </p>
     </form>
   );
+}
+
+async function registerWithSupabase(values: {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}): Promise<RegisterSubmitResult> {
+  const supabase = createBrowserSupabaseClient();
+  const { data, error } = await supabase.auth.signUp({
+    email: values.email.trim(),
+    password: values.password
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (data.session) {
+    return {
+      message: "Workspace created. Redirecting you into chat.",
+      redirectTo: "/chat"
+    };
+  }
+
+  return {
+    message: "Account created. Check your inbox, then sign in to continue.",
+    redirectTo: "/login"
+  };
 }

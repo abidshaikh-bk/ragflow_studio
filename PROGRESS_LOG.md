@@ -230,7 +230,52 @@ Pass
 
 ---
 
-## TASK-004 to TASK-033
+## TASK-004: Create registration page
+
+Status: validated
+
+Owner Agent: Codex
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+Build registration page using Supabase Auth.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/components/auth/RegisterForm.tsx
+- src/tests/auth-forms.test.tsx
+
+### Implementation Notes
+- Replaced the registration placeholder submit path with Supabase Auth signup using the shared browser client helper.
+- Added redirect behavior to `/chat` when Supabase returns a session and to `/login` when email confirmation is required.
+- Preserved client-side required-field and password-match validation with clearer success and error states.
+
+### Tests Added
+- Expanded `src/tests/auth-forms.test.tsx` to cover required-field validation and successful Supabase signup redirects.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
+
+---
+
+## TASK-005 to TASK-033
 
 Status: not_started
 
