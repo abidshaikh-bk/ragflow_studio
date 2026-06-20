@@ -11,7 +11,11 @@ const navItems = [
   { href: "/settings", label: "Settings" }
 ];
 
-export function TopNav() {
+type TopNavProps = {
+  userEmail?: string;
+};
+
+export function TopNav({ userEmail }: TopNavProps) {
   const pathname = usePathname();
 
   return (
@@ -46,7 +50,7 @@ export function TopNav() {
             })}
           </nav>
 
-          <UserMenu />
+          <UserMenu userEmail={userEmail} />
         </div>
       </div>
     </header>

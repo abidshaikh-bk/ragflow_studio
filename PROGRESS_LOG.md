@@ -176,38 +176,55 @@ Pass
 
 ## TASK-003: Configure Supabase client/server utilities
 
-Status: not_started
+Status: validated
 
-Owner Agent:
-Started:
-Completed:
+Owner Agent: Codex
+Started: 2026-06-20
+Completed: 2026-06-20
 
 ### Objective
 Set up Supabase client and server helpers.
 
 ### Files Changed
-- 
+- middleware.ts
+- package-lock.json
+- package.json
+- src/app/(app)/layout.tsx
+- src/components/app-shell/AppShell.tsx
+- src/components/app-shell/TopNav.tsx
+- src/components/app-shell/UserMenu.tsx
+- src/lib/env.ts
+- src/lib/supabase/browser.ts
+- src/server/auth/session.ts
+- src/server/supabase/middleware.ts
+- src/server/supabase/server.ts
+- src/tests/supabase-auth.test.tsx
 
 ### Implementation Notes
-- 
+- Added shared Supabase environment helpers plus browser and server clients for Next.js App Router usage.
+- Added middleware-based protection for `/chat`, `/documents`, and `/settings`, and redirect handling for authenticated users hitting `/login` or `/register`.
+- Updated the protected app layout to require a server-derived authenticated user before rendering page content.
 
 ### Tests Added
-- 
+- `src/tests/supabase-auth.test.tsx`
 
 ### Validation Commands
 ```bash
 npm run lint
 npm run typecheck
 npm run test
+npm run test:e2e
+npm run build
 ```
 
 ### Result
+Pass
 
 ### Blockers
-- 
+- None
 
 ### Follow-up
-- 
+- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
 
 ---
 

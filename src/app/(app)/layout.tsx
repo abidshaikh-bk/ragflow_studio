@@ -1,9 +1,12 @@
 import { AppShell } from "@/components/app-shell/AppShell";
+import { requireAuthenticatedUser } from "@/server/auth/session";
 
-export default function ProtectedLayout({
+export default async function ProtectedLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AppShell>{children}</AppShell>;
+  const user = await requireAuthenticatedUser();
+
+  return <AppShell userEmail={user.email}>{children}</AppShell>;
 }

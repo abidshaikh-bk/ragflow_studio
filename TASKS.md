@@ -234,7 +234,7 @@ Acceptance criteria:
 
 ### TASK-003: Configure Supabase client/server utilities
 
-Status: not_started
+Status: validated
 
 Objective: Set up Supabase client and server helpers.
 
