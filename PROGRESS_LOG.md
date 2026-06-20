@@ -326,9 +326,11 @@ Pass
 
 ## TASK-006: Create Supabase schema and RLS policies
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
+Git Branch: task/TASK-006-supabase-schema-rls
+Commit Hash: 65b0166
 Started: 2026-06-20
 Completed: 2026-06-20
 
@@ -378,7 +380,7 @@ npm run test:db
 - None
 
 ### Follow-up
-- Stage the validated task files, create the task-scoped commit, record the commit hash here, and mark the task complete.
+- Proceed to the next unfinished task on its own task branch.
 
 ---
 
