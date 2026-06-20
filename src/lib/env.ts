@@ -1,23 +1,19 @@
-const requiredEnvKeys = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY"
-] as const;
+export function getSupabaseEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-type RequiredEnvKey = (typeof requiredEnvKeys)[number];
-
-function readRequiredEnv(key: RequiredEnvKey) {
-  const value = process.env[key];
-
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+  if (!supabaseUrl) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
   }
 
-  return value;
-}
+  if (!supabaseAnonKey) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    );
+  }
 
-export function getSupabaseEnv() {
   return {
-    url: readRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    anonKey: readRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey
   };
 }
