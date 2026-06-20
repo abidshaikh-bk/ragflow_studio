@@ -54,11 +54,11 @@ Pass | Fail
 
 ## TASK-001: Initialize Next.js project
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Started: 2026-06-20
-Completed:
+Completed: 2026-06-20
 
 ### Objective
 Create the Next.js App Router project with TypeScript and Tailwind.
@@ -92,6 +92,7 @@ Create the Next.js App Router project with TypeScript and Tailwind.
 - Wired `source/icon.png` into the app as the visible logo and app icon.
 - Added project-level `.mcp.json` based on `MCP_SERVERS.md` so Codex-compatible MCP setup is present in the repo.
 - Validation completed on branch `task/TASK-001-nextjs-foundation`.
+- Task commit created: `ecd28dd`
 
 ### Tests Added
 - `src/tests/homepage.test.tsx`
@@ -112,7 +113,7 @@ Pass
 - None
 
 ### Follow-up
-- Create the task commit, record the hash, and mark the task `done` once the working tree is clean.
+- Proceed to the next MVP-critical task on a new task branch.
 
 ---
 

@@ -55,7 +55,7 @@ See `VCS_WORKFLOW.md` for exact Git commands.
 
 ### TASK-001: Initialize Next.js project
 
-Status: validated
+Status: done
 
 Objective: Create the Next.js App Router project with TypeScript and Tailwind.
 
