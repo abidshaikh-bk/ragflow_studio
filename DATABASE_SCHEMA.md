@@ -85,6 +85,7 @@ Rules:
 - A user can have multiple chat configs.
 - A user can have multiple embedding configs.
 - Only one default chat config and one default embedding config should be active per user. Enforce in application logic or partial unique indexes.
+- Add ownership-preserving composite foreign keys anywhere a user-owned record references another user-owned record.
 
 ## 5. User model preferences
 
@@ -222,6 +223,33 @@ for delete using (auth.uid() = user_id);
 ```
 
 For `profiles`, use `auth.uid() = id`.
+
+## 10A. Ownership integrity
+
+RLS alone is not enough for child tables that reference other user-owned rows. Add composite unique keys plus composite foreign keys so a user-owned child record cannot reference another user's parent row.
+
+Examples:
+
+```sql
+alter table public.documents
+  add constraint documents_id_user_id_unique unique (id, user_id);
+
+alter table public.document_chunks
+  add constraint document_chunks_document_owner_fk
+  foreign key (document_id, user_id)
+  references public.documents(id, user_id)
+  on delete cascade;
+
+alter table public.chat_messages
+  add constraint chat_messages_session_owner_fk
+  foreign key (session_id, user_id)
+  references public.chat_sessions(id, user_id)
+  on delete cascade;
+```
+
+## 10B. Timestamp and profile triggers
+
+Keep `updated_at` fresh with a shared trigger function and create a profile row automatically when a new `auth.users` record is inserted.
 
 ## 11. Required migration validation
 

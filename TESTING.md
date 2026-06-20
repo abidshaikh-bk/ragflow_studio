@@ -22,6 +22,7 @@ Add these scripts to `package.json`:
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:db": "RUN_DB_TESTS=true vitest run src/tests/database-schema.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
   }
@@ -103,6 +104,17 @@ Add these scripts to `package.json`:
 - Client-submitted `user_id` is ignored.
 - Raw API keys are never returned.
 - Logs and LangSmith traces redact secrets.
+
+## Database migration validation
+
+Use a dedicated live-database validation step for schema and RLS work:
+
+```bash
+npm run db:migrate
+npm run test:db
+```
+
+These commands require a working `DATABASE_URL`. They should apply the SQL migration, create disposable test users, and verify cross-user isolation against the real Supabase database.
 
 ## Smoke checklist before launch
 

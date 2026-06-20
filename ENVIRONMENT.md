@@ -45,6 +45,8 @@ npm run dev
 npm run lint
 npm run typecheck
 npm run test
+npm run db:migrate
+npm run test:db
 npm run build
 ```
 
@@ -53,6 +55,7 @@ npm run build
 - Only variables prefixed with `NEXT_PUBLIC_` are safe for the browser.
 - Never put provider keys in frontend code.
 - Never commit `.env.local`.
+- `DATABASE_URL` must be a valid, reachable Postgres connection string for the Supabase project if migrations or live RLS validation will run.
 
 
 ## Git/GitHub prerequisites

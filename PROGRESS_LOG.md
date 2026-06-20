@@ -324,7 +324,67 @@ Pass
 
 ---
 
-## TASK-006 to TASK-033
+## TASK-006: Create Supabase schema and RLS policies
+
+Status: blocked
+
+Owner Agent: Codex
+Started: 2026-06-20
+Completed:
+
+### Objective
+Create database tables and row-level security policies.
+
+### Files Changed
+- DATABASE_SCHEMA.md
+- ENVIRONMENT.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- package-lock.json
+- package.json
+- scripts/apply-supabase-migration.mjs
+- src/tests/database-schema.test.ts
+- supabase/migrations/0001_core_schema.sql
+
+### Implementation Notes
+- Completed the repository-side Supabase schema work: explicit CRUD RLS policies, ownership-preserving composite foreign keys, automatic `updated_at` triggers, a profile-on-signup trigger, and migration/apply tooling.
+- Added a dedicated live database validation path with `npm run db:migrate` and `npm run test:db` so schema/RLS verification runs against the configured Supabase project instead of only static SQL assertions.
+- Ran the local app through `npm run dev` and verified `/login`, `/register`, and protected `/chat` behavior over localhost. No code-level runtime regressions were found; the only runtime wrinkle was sandbox port binding, solved by running the dev server with terminal escalation.
+
+### Tests Added
+- `src/tests/database-schema.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npm run db:migrate
+npm run test:db
+```
+
+### Result
+- `npm run lint`: Pass
+- `npm run typecheck`: Pass
+- `npm run test`: Pass
+- `npm run build`: Pass
+- `npm run db:migrate`: Fail
+- `npm run test:db`: Fail
+
+### Blockers
+- `npm run db:migrate` fails with `getaddrinfo ENOTFOUND db.lhydfmripmipnysynpij.supabase.co`.
+- `npm run test:db` fails for the same reason before the migration can be applied.
+- Because the configured `DATABASE_URL` host is not reachable/resolvable from this machine, I could not create the Phase 2 tables in the actual Supabase database yet.
+
+### Follow-up
+- Update `DATABASE_URL` to a valid reachable Supabase Postgres or pooler connection string, rerun `npm run db:migrate` and `npm run test:db`, then mark the task `validated` and `done`.
+
+---
+
+## TASK-007 to TASK-033
 
 Status: not_started
 

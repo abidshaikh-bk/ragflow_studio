@@ -37,6 +37,14 @@ using (auth.uid() = id)
 with check (auth.uid() = id)
 ```
 
+Also enforce ownership at the relational layer with composite foreign keys for user-owned child tables such as:
+
+- `document_chunks (document_id, user_id) -> documents (id, user_id)`
+- `chat_messages (session_id, user_id) -> chat_sessions (id, user_id)`
+- `agent_tool_calls (session_id, user_id) -> chat_sessions (id, user_id)`
+
+This prevents a user-owned row from pointing at another user's parent record even if an attacker learns a UUID.
+
 ## API route auth pattern
 
 Every protected route must:
