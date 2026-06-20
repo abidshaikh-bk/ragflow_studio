@@ -31,6 +31,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Show loading state while submitting.
 - Link to `/register`.
 
+Phase 1A scaffold note:
+
+- Until Supabase wiring lands in Phase 2, use local-only submit handling that preserves the target UI states without making network calls.
+
 ## Test requirements
 
 - Renders email and password fields.
@@ -54,6 +58,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Validate email, password, and confirm password.
 - Show password mismatch error before calling Supabase.
 - Link to `/login`.
+
+Phase 1A scaffold note:
+
+- Use local-only form validation and success/error placeholders until server auth is connected.
 
 ## Test requirements
 
@@ -111,6 +119,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Show source metadata returned in metadata.
 - Persist messages after refresh.
 
+Phase 1A scaffold note:
+
+- The page scaffold may use placeholder sessions, messages, sources, and tool activity while preserving the intended layout and composer interactions.
+
 ## Test requirements
 
 - Empty state renders.
@@ -141,6 +153,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Stop polling on `completed` or `failed`.
 - Show total and processed chunk counts.
 
+Phase 1A scaffold note:
+
+- Before ingestion APIs are implemented, use client-side file-type validation and placeholder progress/history data only.
+
 ## Test requirements
 
 - Dropzone validates supported file types.
@@ -168,6 +184,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Validate provider and model names.
 - Never display raw stored API keys.
 - Show save success/error state.
+
+Phase 1A scaffold note:
+
+- Keep `/settings` read-only during MVP scaffolding and display masked placeholders instead of editable secrets.
 
 ## Test requirements
 

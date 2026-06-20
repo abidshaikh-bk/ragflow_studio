@@ -128,7 +128,7 @@ Acceptance criteria:
 
 ### TASK-002A: Add UI mockup reference docs
 
-Status: not_started
+Status: done
 
 Objective: Add and maintain implementation-ready UI mockups and page specs.
 
@@ -160,7 +160,7 @@ Acceptance criteria:
 
 ### TASK-002B: Implement shared design system primitives
 
-Status: not_started
+Status: done
 
 Objective: Create reusable UI primitives matching the dark glowing RAGFlow Studio design language.
 
@@ -194,7 +194,7 @@ Acceptance criteria:
 
 ### TASK-002C: Scaffold all MVP pages from mockups
 
-Status: not_started
+Status: done
 
 Objective: Create initial page scaffolds for Login, Register, Chat, Documents, and Settings.
 

@@ -222,12 +222,12 @@ Use the task log template above for each remaining task. Do not mark a task done
 
 ## TASK-002A: Add UI mockup reference docs
 
-Status: not_started
-Owner Agent:
-Git Branch:
-Commit Hash:
-Started:
-Completed:
+Status: done
+Owner Agent: Codex
+Git Branch: task/TASK-002A-ui-mockup-reference-docs
+Commit Hash: pending_commit
+Started: 2026-06-20
+Completed: 2026-06-20
 
 ### Objective
 
@@ -243,18 +243,18 @@ Add UI mockups and page-level implementation specs for all MVP screens.
 
 ### Implementation Notes
 
-- Pending agent implementation/update.
+- Validated the existing UI mockup and page-spec documentation files, confirmed core doc references, and added Phase 1A scaffold notes clarifying local-only placeholder behavior.
 
 ### Tests Added
 
-- Pending.
+- None. This task validates required documentation files and cross-references.
 
 ### Documentation Updated
 
-- [ ] TASKS.md
-- [ ] PROGRESS_LOG.md
+- [x] TASKS.md
+- [x] PROGRESS_LOG.md
 - [ ] design.md
-- [ ] UI_MOCKUPS.md / UI_PAGES.md
+- [x] UI_MOCKUPS.md / UI_PAGES.md
 
 ### Git / VCS
 
@@ -271,7 +271,7 @@ test -f UI_PAGES.md
 
 ### Result
 
-Pending
+Pass
 
 ### Blockers
 
@@ -279,4 +279,107 @@ Pending
 
 ### Follow-up
 
-- Implement page scaffolds from mockups.
+- Proceed to Phase 2 auth wiring using the scaffolded route structure.
+
+---
+
+## TASK-002B: Implement shared design system primitives
+
+Status: done
+
+Owner Agent: Codex
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+Create reusable UI primitives matching the dark glowing RAGFlow Studio design language.
+
+### Files Changed
+- src/components/ui/Button.tsx
+- src/components/ui/Input.tsx
+- src/components/ui/Select.tsx
+- src/components/ui/Card.tsx
+- src/components/ui/Badge.tsx
+- src/components/ui/Progress.tsx
+- src/components/ui/Toast.tsx
+- src/app/globals.css
+- tailwind.config.ts
+- src/tests/ui-primitives.test.tsx
+
+### Implementation Notes
+- Added the core button, form, card, badge, progress, and toast primitives and aligned focus/disabled behavior with the project design tokens.
+- Preserved the existing shared feedback components and wired typography tokens for heading, body, and mono use.
+
+### Tests Added
+- `src/tests/ui-primitives.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Use these primitives as the base layer for the Phase 2 auth and data-entry tasks.
+
+---
+
+## TASK-002C: Scaffold all MVP pages from mockups
+
+Status: done
+
+Owner Agent: Codex
+Started: 2026-06-20
+Completed: 2026-06-20
+
+### Objective
+Create initial page scaffolds for Login, Register, Chat, Documents, and Settings.
+
+### Files Changed
+- src/app/(auth)/login/page.tsx
+- src/app/(auth)/register/page.tsx
+- src/app/(app)/chat/page.tsx
+- src/app/(app)/documents/page.tsx
+- src/app/(app)/settings/page.tsx
+- src/components/auth/*
+- src/components/chat/*
+- src/components/documents/*
+- src/components/settings/*
+- src/tests/auth-forms.test.tsx
+- src/tests/page-scaffolds.test.tsx
+- UI_PAGES.md
+
+### Implementation Notes
+- Replaced the protected-page placeholders with full mockup-aligned scaffolds for auth, chat, documents, and settings.
+- Kept interactions local-only where backend work is intentionally deferred, while preserving the intended page structure, states, and accessibility hooks.
+- Kept `/settings` read-only per the MVP-first policy in `UI_PAGES.md`.
+
+### Tests Added
+- `src/tests/auth-forms.test.tsx`
+- `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Phase 2 should replace local placeholder submits with real Supabase-backed auth and protected-session behavior.
