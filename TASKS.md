@@ -368,7 +368,7 @@ Acceptance criteria:
 
 ### TASK-008: Build settings API
 
-Status: validated
+Status: done
 
 Objective: Persist and retrieve model settings.
 

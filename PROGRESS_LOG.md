@@ -467,11 +467,11 @@ npm run build
 
 ## TASK-008: Build settings API
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-008-build-settings-api
-Commit Hash:
+Commit Hash: 437e8d3
 Started: 2026-06-20
 Completed: 2026-06-20
 
@@ -520,8 +520,8 @@ Persist and retrieve user model settings through secure authenticated API routes
 ### Git / VCS
 
 - Branch: task/TASK-008-build-settings-api
-- Commit:
-- Working tree clean after commit: no
+- Commit: 437e8d3
+- Working tree clean after commit: yes
 
 ### Validation Commands
 
@@ -545,7 +545,7 @@ npm run build
 
 ### Follow-up
 
-- Create the task-scoped commit, record its hash, then push the completed Phase 3 branch history to GitHub.
+- Push the completed Phase 3 branch history to GitHub.
 
 
 ---
