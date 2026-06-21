@@ -880,12 +880,13 @@ Pass
 
 ## TASK-012: Implement chunking pipeline
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-012-implement-chunking-pipeline
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
+Commit Hash: c6b334e
 
 ### Objective
 Chunk parsed document text, preserve source metadata, and insert user-scoped `document_chunks` rows.
@@ -919,4 +920,4 @@ Pass
 - None
 
 ### Follow-up
-- Commit the validated task, record the hash here, then continue to `TASK-013`.
+- Continue to `TASK-013` on the next task branch.
