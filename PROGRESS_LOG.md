@@ -1203,12 +1203,13 @@ Pass
 
 ## TASK-018: Implement vector search tool
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-018-vector-search-tool
+Commit Hash: 8311e15
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
 
 ### Objective
 Create a user-scoped vector search tool that embeds the query, searches the authenticated user's Pinecone namespace, and returns retrieved chunk metadata for chat grounding.
