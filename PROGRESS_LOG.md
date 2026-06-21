@@ -823,3 +823,48 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-011` on the next task branch.
+
+---
+
+## TASK-011: Implement document parser
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-011-implement-document-parser
+Started: 2026-06-21
+Completed:
+
+### Objective
+Extract text from uploaded documents, update parsing status, and record failures on the document row.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/server/documents/parser.ts
+- src/tests/document-parser.test.ts
+
+### Implementation Notes
+- Added a server-side parser utility that supports TXT and Markdown for the MVP, updates the document row to `parsing`, and marks the document `failed` with an error message on parse failures.
+- Kept the parser focused on text extraction so later chunking and processing tasks can compose it directly without reworking status handling.
+
+### Tests Added
+- `src/tests/document-parser.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Commit the validated task, record the hash here, then continue to `TASK-012`.

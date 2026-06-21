@@ -454,7 +454,7 @@ Acceptance criteria:
 
 ### TASK-011: Implement document parser
 
-Status: not_started
+Status: validated
 
 Objective: Extract text from uploaded files.
 
