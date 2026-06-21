@@ -425,7 +425,7 @@ Acceptance criteria:
 
 ### TASK-010: Implement S3 upload API
 
-Status: validated
+Status: done
 
 Objective: Upload raw files to S3 and create Supabase document record.
 

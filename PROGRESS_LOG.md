@@ -773,12 +773,13 @@ Pass
 
 ## TASK-010: Implement S3 upload API
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-010-implement-s3-upload-api
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
+Commit Hash: 5a3f37b
 
 ### Objective
 Upload raw files to S3, create a user-scoped Supabase document record, and return the new document id.
@@ -821,4 +822,4 @@ Pass
 - None
 
 ### Follow-up
-- Commit the validated task, record the hash here, then continue to `TASK-011`.
+- Continue to `TASK-011` on the next task branch.
