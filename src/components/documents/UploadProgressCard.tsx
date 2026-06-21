@@ -16,7 +16,7 @@ export function UploadProgressCard({ activeDocument }: UploadProgressCardProps) 
         description="Uploaded files will move through parsing, chunking, embedding, and indexing here."
       >
         <Toast
-          message="Choose a supported document to preview the live ingestion states before the backend pipeline is wired."
+          message="Choose a supported document to watch the backend ingestion pipeline report live status updates."
           title="Waiting for an upload"
         />
       </Card>
@@ -57,7 +57,7 @@ export function UploadProgressCard({ activeDocument }: UploadProgressCardProps) 
               ? activeDocument.errorMessage ?? "Document processing failed."
               : isCompleted
                 ? "Document processing completed and the file is ready for retrieval tasks."
-                : `Processed ${activeDocument.processedChunks} of ${activeDocument.totalChunks} chunks in the mock pipeline.`
+                : `Processed ${activeDocument.processedChunks} of ${activeDocument.totalChunks} chunks in the live pipeline.`
           }
           title={
             isFailed

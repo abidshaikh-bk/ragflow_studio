@@ -8,6 +8,7 @@ import { DocumentTable } from "./DocumentTable";
 import { ProcessingTimeline } from "./ProcessingTimeline";
 import { UploadProgressCard } from "./UploadProgressCard";
 import {
+  isTerminalDocumentStatus,
   type DocumentRecord,
   type DocumentStatus
 } from "./types";
@@ -18,15 +19,25 @@ type UploadSnapshot = {
   errorMessage?: string;
   processedChunks: number;
   status: DocumentStatus;
+  totalChunks: number;
   uploadProgress: number;
 };
 
-type ActiveUpload = {
+type LiveActiveUpload = {
   documentId: string;
   failedStage?: TimelineStage;
+  mode: "live";
+};
+
+type PreviewActiveUpload = {
+  documentId: string;
+  failedStage?: TimelineStage;
+  mode: "preview";
   snapshotIndex: number;
   snapshots: UploadSnapshot[];
 };
+
+type ActiveUpload = LiveActiveUpload | PreviewActiveUpload;
 
 type UploadApiResponse = {
   data?: {
@@ -35,6 +46,21 @@ type UploadApiResponse = {
   };
   error?: string;
 };
+
+type DocumentStatusApiResponse = {
+  data?: {
+    documentId: string;
+    errorMessage?: string;
+    fileName: string;
+    processedChunks: number;
+    status: DocumentStatus;
+    totalChunks: number;
+  };
+  error?: string;
+};
+
+const STATUS_POLL_INTERVAL_MS = 1200;
+const PREVIEW_TOTAL_CHUNKS = 24;
 
 const initialDocuments: DocumentRecord[] = [
   {
@@ -59,12 +85,42 @@ const initialDocuments: DocumentRecord[] = [
 
 function createSnapshots(shouldFail: boolean): UploadSnapshot[] {
   const snapshots: UploadSnapshot[] = [
-    { processedChunks: 0, status: "uploaded", uploadProgress: 100 },
-    { processedChunks: 0, status: "parsing", uploadProgress: 100 },
-    { processedChunks: 4, status: "chunking", uploadProgress: 100 },
-    { processedChunks: 10, status: "embedding", uploadProgress: 100 },
-    { processedChunks: 18, status: "indexing", uploadProgress: 100 },
-    { processedChunks: 24, status: "completed", uploadProgress: 100 }
+    {
+      processedChunks: 0,
+      status: "uploaded",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    },
+    {
+      processedChunks: 0,
+      status: "parsing",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    },
+    {
+      processedChunks: 4,
+      status: "chunking",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    },
+    {
+      processedChunks: 10,
+      status: "embedding",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    },
+    {
+      processedChunks: 18,
+      status: "indexing",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    },
+    {
+      processedChunks: PREVIEW_TOTAL_CHUNKS,
+      status: "completed",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
+      uploadProgress: 100
+    }
   ];
 
   if (!shouldFail) {
@@ -77,6 +133,7 @@ function createSnapshots(shouldFail: boolean): UploadSnapshot[] {
       errorMessage: "Embedding provider timed out while generating vectors for this document.",
       processedChunks: 10,
       status: "failed",
+      totalChunks: PREVIEW_TOTAL_CHUNKS,
       uploadProgress: 100
     }
   ];
@@ -108,28 +165,30 @@ export function DocumentsWorkspace() {
   const [activeUpload, setActiveUpload] = useState<ActiveUpload | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [uploadMessage, setUploadMessage] = useState(
-    "Upload a document to send it to private S3 storage before the processing pipeline continues."
+    "Upload a document to send it to private S3 storage before the backend pipeline reports each processing stage."
   );
 
   const activeDocument = activeUpload
     ? documents.find((document) => document.id === activeUpload.documentId) ?? null
     : null;
+  const activeUploadDocumentId = activeUpload?.documentId;
+  const activeUploadMode = activeUpload?.mode;
 
   useEffect(() => {
-    if (!activeUpload) {
+    if (!activeUpload || activeUpload.mode !== "preview") {
       return;
     }
 
     const currentSnapshot = activeUpload.snapshots[activeUpload.snapshotIndex];
 
-    if (!currentSnapshot || currentSnapshot.status === "completed" || currentSnapshot.status === "failed") {
+    if (!currentSnapshot || isTerminalDocumentStatus(currentSnapshot.status)) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
       setActiveUpload((currentActiveUpload) => {
-        if (!currentActiveUpload) {
-          return null;
+        if (!currentActiveUpload || currentActiveUpload.mode !== "preview") {
+          return currentActiveUpload;
         }
 
         const nextIndex = Math.min(
@@ -146,6 +205,7 @@ export function DocumentsWorkspace() {
                   errorMessage: nextSnapshot.errorMessage,
                   processedChunks: nextSnapshot.processedChunks,
                   status: nextSnapshot.status,
+                  totalChunks: nextSnapshot.totalChunks,
                   updatedAt: formatUpdatedAt(nextSnapshot.status),
                   uploadProgress: nextSnapshot.uploadProgress
                 }
@@ -163,14 +223,126 @@ export function DocumentsWorkspace() {
     return () => window.clearTimeout(timeoutId);
   }, [activeUpload]);
 
-  function startUpload(name: string, shouldFail: boolean, documentId?: string) {
+  useEffect(() => {
+    if (!activeUploadDocumentId || activeUploadMode !== "live") {
+      return;
+    }
+
+    let cancelled = false;
+    let pollIntervalId = 0;
+
+    async function pollDocumentStatus() {
+      try {
+        const response = await fetch(`/api/documents/${activeUploadDocumentId}/status`, {
+          method: "GET"
+        });
+        const payload = (await response.json()) as DocumentStatusApiResponse;
+
+        if (!response.ok || !payload.data) {
+          throw new Error(payload.error || "Unable to refresh the document status.");
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setUploadError("");
+        setUploadMessage(
+          isTerminalDocumentStatus(payload.data.status)
+            ? `${payload.data.fileName} finished processing.`
+            : `Polling live processing status for ${payload.data.fileName}.`
+        );
+        setDocuments((currentDocuments) =>
+          currentDocuments.map((document) =>
+            document.id === payload.data?.documentId
+              ? {
+                  ...document,
+                  ...(payload.data.errorMessage
+                    ? { errorMessage: payload.data.errorMessage }
+                    : { errorMessage: undefined }),
+                  name: payload.data.fileName,
+                  processedChunks: payload.data.processedChunks,
+                  status: payload.data.status,
+                  totalChunks: payload.data.totalChunks,
+                  updatedAt: formatUpdatedAt(payload.data.status),
+                  uploadProgress: 100
+                }
+              : document
+          )
+        );
+
+        setActiveUpload((currentActiveUpload) => {
+          if (
+            !currentActiveUpload ||
+            currentActiveUpload.documentId !== payload.data?.documentId ||
+            currentActiveUpload.mode !== "live"
+          ) {
+            return currentActiveUpload;
+          }
+
+          if (
+            payload.data.status !== "completed" &&
+            payload.data.status !== "failed"
+          ) {
+            return {
+              ...currentActiveUpload,
+              failedStage: payload.data.status
+            };
+          }
+
+          if (payload.data.status === "failed") {
+            return {
+              ...currentActiveUpload,
+              failedStage: currentActiveUpload.failedStage ?? "uploaded"
+            };
+          }
+
+          return currentActiveUpload;
+        });
+
+        if (isTerminalDocumentStatus(payload.data.status)) {
+          window.clearInterval(pollIntervalId);
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to refresh the document status.";
+
+        window.clearInterval(pollIntervalId);
+        setUploadError(message);
+        setUploadMessage("Status polling paused because the backend status check failed.");
+      }
+    }
+
+    void pollDocumentStatus();
+    pollIntervalId = window.setInterval(() => {
+      void pollDocumentStatus();
+    }, STATUS_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollIntervalId);
+    };
+  }, [activeUploadDocumentId, activeUploadMode]);
+
+  function startPreviewUpload(name: string, shouldFail: boolean) {
     const snapshots = createSnapshots(shouldFail);
-    const document = createDocumentRecord(name, snapshots[0], documentId);
+    const document = createDocumentRecord({
+      documentId: `${name}-${Date.now()}`,
+      name,
+      snapshot: snapshots[0]
+    });
 
     setDocuments((currentDocuments) => [document, ...currentDocuments]);
     setActiveUpload({
       documentId: document.id,
       failedStage: shouldFail ? "embedding" : undefined,
+      mode: "preview",
       snapshotIndex: 0,
       snapshots
     });
@@ -183,24 +355,37 @@ export function DocumentsWorkspace() {
     const formData = new FormData();
     formData.append("file", file);
 
-    let payload: UploadApiResponse | undefined;
-
     try {
       const response = await fetch("/api/documents/upload", {
         body: formData,
         method: "POST"
       });
-
-      payload = (await response.json()) as UploadApiResponse;
+      const payload = (await response.json()) as UploadApiResponse;
 
       if (!response.ok || !payload.data) {
         throw new Error(payload.error || "Unable to upload your document right now.");
       }
 
+      const document = createDocumentRecord({
+        documentId: payload.data.documentId,
+        name: file.name,
+        snapshot: {
+          processedChunks: 0,
+          status: payload.data.status,
+          totalChunks: 0,
+          uploadProgress: 100
+        }
+      });
+
+      setDocuments((currentDocuments) => [document, ...currentDocuments]);
       setUploadMessage(
-        `${file.name} reached private S3 storage. Continuing through the mock parsing pipeline.`
+        `${file.name} reached private S3 storage. Polling live processing status now.`
       );
-      startUpload(file.name, false, payload.data.documentId);
+      setActiveUpload({
+        documentId: payload.data.documentId,
+        failedStage: "uploaded",
+        mode: "live"
+      });
     } catch (error) {
       const message =
         error instanceof Error
@@ -213,7 +398,7 @@ export function DocumentsWorkspace() {
   }
 
   function handlePreviewFailure() {
-    startUpload("contracts-import-failure.md", true);
+    startPreviewUpload("contracts-import-failure.md", true);
   }
 
   return (
@@ -227,11 +412,7 @@ export function DocumentsWorkspace() {
         ) : null}
         <DocumentDropzone
           activeFileName={activeDocument?.name}
-          isUploading={Boolean(
-            activeDocument &&
-              activeDocument.status !== "completed" &&
-              activeDocument.status !== "failed"
-          )}
+          isUploading={Boolean(activeDocument && !isTerminalDocumentStatus(activeDocument.status))}
           onFileAccepted={handleFileAccepted}
           onPreviewFailure={handlePreviewFailure}
           statusMessage={uploadMessage}
@@ -239,7 +420,7 @@ export function DocumentsWorkspace() {
         <Card
           eyebrow="History"
           title="Indexed document list"
-          description="Successful uploads now hit the live S3-backed API before the local processing simulation takes over."
+          description="Successful uploads now write to S3 and then poll the live backend ingestion status until processing completes."
         >
           <DocumentTable documents={documents} />
         </Card>
@@ -249,7 +430,7 @@ export function DocumentsWorkspace() {
         <Card
           eyebrow="Stages"
           title="Processing timeline"
-          description="This list follows the planned ingestion status model and highlights the active stage."
+          description="This list follows the live ingestion status model and highlights the active backend-reported stage."
         >
           <ProcessingTimeline
             currentStatus={activeDocument?.status ?? "uploaded"}
@@ -261,15 +442,19 @@ export function DocumentsWorkspace() {
   );
 }
 
-function createDocumentRecord(name: string, snapshot: UploadSnapshot, documentId?: string): DocumentRecord {
+function createDocumentRecord(input: {
+  documentId: string;
+  name: string;
+  snapshot: UploadSnapshot;
+}): DocumentRecord {
   return {
-    id: documentId ?? `${name}-${Date.now()}`,
-    name,
-    processedChunks: snapshot.processedChunks,
-    status: snapshot.status,
-    totalChunks: 24,
+    id: input.documentId,
+    ...(input.snapshot.errorMessage ? { errorMessage: input.snapshot.errorMessage } : {}),
+    name: input.name,
+    processedChunks: input.snapshot.processedChunks,
+    status: input.snapshot.status,
+    totalChunks: input.snapshot.totalChunks,
     updatedAt: "Queued just now",
-    uploadProgress: snapshot.uploadProgress,
-    ...(snapshot.errorMessage ? { errorMessage: snapshot.errorMessage } : {})
+    uploadProgress: input.snapshot.uploadProgress
   };
 }

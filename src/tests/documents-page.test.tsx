@@ -5,18 +5,7 @@ import DocumentsPage from "@/app/(app)/documents/page";
 
 describe("documents page upload flow", () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({
-          data: {
-            documentId: "doc-123",
-            status: "uploaded"
-          }
-        }),
-        ok: true
-      })
-    );
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   afterEach(() => {
@@ -36,7 +25,47 @@ describe("documents page upload flow", () => {
     expect(screen.getByText(/unsupported file type/i)).toBeInTheDocument();
   });
 
-  it("uploads through the API before advancing through the mock progress stages", async () => {
+  it("polls live status updates until processing completes", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.mocked(globalThis.fetch);
+    const statusSnapshots = [
+      {
+        documentId: "doc-123",
+        fileName: "employee-handbook.md",
+        processedChunks: 0,
+        status: "parsing",
+        totalChunks: 24
+      },
+      {
+        documentId: "doc-123",
+        fileName: "employee-handbook.md",
+        processedChunks: 24,
+        status: "completed",
+        totalChunks: 24
+      }
+    ];
+
+    fetchMock.mockImplementation(async (input) => {
+      if (input === "/api/documents/upload") {
+        return createJsonResponse(true, {
+          data: {
+            documentId: "doc-123",
+            status: "uploaded"
+          }
+        });
+      }
+
+      if (input === "/api/documents/doc-123/status") {
+        const nextSnapshot = statusSnapshots.shift() ?? statusSnapshots.at(-1);
+
+        return createJsonResponse(true, {
+          data: nextSnapshot
+        });
+      }
+
+      throw new Error(`Unexpected fetch input: ${String(input)}`);
+    });
+
     render(<DocumentsPage />);
 
     fireEvent.change(screen.getByLabelText(/upload document/i), {
@@ -45,28 +74,124 @@ describe("documents page upload flow", () => {
       }
     });
 
-    await waitFor(() =>
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        "/api/documents/upload",
-        expect.objectContaining({
-          method: "POST"
-        })
-      )
-    );
-    expect(await screen.findByText(/selected document: employee-handbook.md/i)).toBeInTheDocument();
-    expect(screen.getByText(/current stage/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/^uploaded$/i, { selector: "p" }).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/reached private s3 storage\. continuing through the mock parsing pipeline/i)
-    ).toBeInTheDocument();
+    await act(async () => {
+      await flushAsyncWork();
+    });
 
-    await waitFor(
-      () =>
-        expect(screen.getByRole("status", { name: /processing completed/i })).toBeInTheDocument(),
-      { timeout: 6000 }
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/upload",
+      expect.objectContaining({
+        method: "POST"
+      })
     );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-123/status",
+      expect.objectContaining({
+        method: "GET"
+      })
+    );
+    expect(screen.getByText(/selected document: employee-handbook.md/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/polling live processing status for employee-handbook\.md/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/^parsing$/i, { selector: "p" }).length).toBeGreaterThan(0);
+
+    const statusCallCountBeforeCompletion = fetchMock.mock.calls.length;
+
+    await act(async () => {
+      vi.advanceTimersByTime(1200);
+      await flushAsyncWork();
+    });
+
+    expect(screen.getByRole("status", { name: /processing completed/i })).toBeInTheDocument();
     expect(screen.getAllByText(/24 chunks indexed/i).length).toBeGreaterThan(0);
-  }, 10000);
+
+    await act(async () => {
+      vi.advanceTimersByTime(2400);
+    });
+
+    expect(fetchMock.mock.calls.length).toBe(statusCallCountBeforeCompletion + 1);
+  });
+
+  it("stops polling when the backend reports a failed document", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.mocked(globalThis.fetch);
+    const statusSnapshots = [
+      {
+        documentId: "doc-123",
+        fileName: "employee-handbook.md",
+        processedChunks: 10,
+        status: "embedding",
+        totalChunks: 24
+      },
+      {
+        documentId: "doc-123",
+        errorMessage: "Embedding provider timed out while generating vectors for this document.",
+        fileName: "employee-handbook.md",
+        processedChunks: 10,
+        status: "failed",
+        totalChunks: 24
+      }
+    ];
+
+    fetchMock.mockImplementation(async (input) => {
+      if (input === "/api/documents/upload") {
+        return createJsonResponse(true, {
+          data: {
+            documentId: "doc-123",
+            status: "uploaded"
+          }
+        });
+      }
+
+      if (input === "/api/documents/doc-123/status") {
+        const nextSnapshot = statusSnapshots.shift() ?? statusSnapshots.at(-1);
+
+        return createJsonResponse(true, {
+          data: nextSnapshot
+        });
+      }
+
+      throw new Error(`Unexpected fetch input: ${String(input)}`);
+    });
+
+    render(<DocumentsPage />);
+
+    fireEvent.change(screen.getByLabelText(/upload document/i), {
+      target: {
+        files: [new File(["# Handbook"], "employee-handbook.md", { type: "text/markdown" })]
+      }
+    });
+
+    await act(async () => {
+      await flushAsyncWork();
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-123/status",
+      expect.objectContaining({
+        method: "GET"
+      })
+    );
+    expect(screen.getAllByText(/^embedding$/i, { selector: "p" }).length).toBeGreaterThan(0);
+
+    const statusCallCountBeforeFailure = fetchMock.mock.calls.length;
+
+    await act(async () => {
+      vi.advanceTimersByTime(1200);
+      await flushAsyncWork();
+    });
+
+    expect(screen.getByRole("status", { name: /processing failed/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/embedding provider timed out while generating vectors/i).length)
+      .toBeGreaterThan(0);
+
+    await act(async () => {
+      vi.advanceTimersByTime(2400);
+    });
+
+    expect(fetchMock.mock.calls.length).toBe(statusCallCountBeforeFailure + 1);
+  });
 
   it("renders a failed terminal state from the preview action", () => {
     vi.useFakeTimers();
@@ -92,13 +217,9 @@ describe("documents page upload flow", () => {
   });
 
   it("shows an upload error when the API rejects the file", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({
-          error: "Unauthorized"
-        }),
-        ok: false
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      createJsonResponse(false, {
+        error: "Unauthorized"
       })
     );
 
@@ -115,3 +236,17 @@ describe("documents page upload flow", () => {
     );
   });
 });
+
+function createJsonResponse(ok: boolean, payload: unknown) {
+  return new Response(JSON.stringify(payload), {
+    headers: {
+      "content-type": "application/json"
+    },
+    status: ok ? 200 : 400
+  });
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve();
+  await Promise.resolve();
+}

@@ -1027,3 +1027,57 @@ Pass
 
 ### Follow-up
 - Populate `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` locally to run a live namespace smoke upsert against the configured index.
+
+---
+
+## TASK-015: Add live document status polling
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-015-live-document-status-polling
+Started: 2026-06-21
+Completed:
+
+### Objective
+Show live ingestion progress by polling the authenticated user's document status from the backend until processing completes or fails.
+
+### Files Changed
+- TASKS.md
+- PROGRESS_LOG.md
+- src/app/api/documents/[documentId]/status/route.ts
+- src/components/documents/DocumentsWorkspace.tsx
+- src/components/documents/UploadProgressCard.tsx
+- src/components/documents/types.ts
+- src/lib/validations/documents.ts
+- src/server/documents/status.ts
+- src/tests/document-status-route.test.ts
+- src/tests/documents-page.test.tsx
+
+### Implementation Notes
+- Added an authenticated `GET /api/documents/:id/status` route backed by a typed server helper that only returns the current user's document status snapshot.
+- Replaced the live-upload UI's local progress simulation with backend polling for real uploads while preserving the preview failure simulator for UI QA.
+- Polling now starts immediately after a successful upload, refreshes every 1.2 seconds, stops on `completed` or `failed`, and updates chunk progress plus the active timeline stage from the backend response.
+- Updated the progress card messaging to reflect live ingestion instead of the previous mock-only pipeline copy.
+
+### Tests Added
+- `src/tests/document-status-route.test.ts`
+- Expanded `src/tests/documents-page.test.tsx` to verify polling reaches terminal `completed` and `failed` states and stops requesting more status updates afterward.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- With Phase 4 complete, the next MVP-critical step is wiring document retrieval into chat.

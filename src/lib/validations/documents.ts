@@ -47,6 +47,10 @@ const uploadDocumentMetadataSchema = z
     }
   });
 
+const documentStatusParamsSchema = z.object({
+  documentId: z.string().uuid("Invalid document id.")
+});
+
 export type UploadDocumentMetadata = {
   extension: keyof typeof allowedDocumentTypes;
   fileName: string;
@@ -78,4 +82,16 @@ export function parseUploadDocumentMetadata(input: {
     fileSize: parsed.data.fileSize,
     mimeType
   };
+}
+
+export function parseDocumentStatusParams(input: {
+  documentId?: string;
+}) {
+  const parsed = documentStatusParamsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Invalid document id.");
+  }
+
+  return parsed.data;
 }

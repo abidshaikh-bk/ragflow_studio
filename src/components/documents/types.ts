@@ -19,3 +19,7 @@ export type DocumentRecord = {
   errorMessage?: string;
   updatedAt: string;
 };
+
+export function isTerminalDocumentStatus(status: DocumentStatus) {
+  return status === "completed" || status === "failed";
+}
