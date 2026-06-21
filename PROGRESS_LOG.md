@@ -1032,12 +1032,13 @@ Pass
 
 ## TASK-015: Add live document status polling
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-015-live-document-status-polling
+Commit Hash: c7a3f5f
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
 
 ### Objective
 Show live ingestion progress by polling the authenticated user's document status from the backend until processing completes or fails.

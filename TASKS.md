@@ -560,7 +560,7 @@ Acceptance criteria:
 
 ### TASK-015: Add live document status polling
 
-Status: validated
+Status: done
 
 Objective: Show processing progress live.
 
