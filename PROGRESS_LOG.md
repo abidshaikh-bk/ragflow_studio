@@ -718,12 +718,13 @@ Pass
 
 ## TASK-009: Build document upload page
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-009-build-document-upload-page
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
+Commit Hash: b423419
 
 ### Objective
 Create the document upload UI with live progress states for the document ingestion workspace.
@@ -766,4 +767,4 @@ Pass
 - None
 
 ### Follow-up
-- Commit the validated task, record the hash here, then move to `TASK-010`.
+- Proceed to `TASK-010` on the next task branch.
