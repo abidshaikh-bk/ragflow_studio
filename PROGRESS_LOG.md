@@ -779,7 +779,7 @@ Owner Agent: Codex
 Git Branch: task/TASK-010-live-s3-upload
 Started: 2026-06-21
 Completed: 2026-06-21
-Commit Hash: 5a3f37b, pending_followup_commit
+Commit Hash: 5a3f37b, ec52ed6
 
 ### Objective
 Upload raw files to S3, create a user-scoped Supabase document record, and return the new document id.
