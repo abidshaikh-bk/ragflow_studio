@@ -828,12 +828,13 @@ Pass
 
 ## TASK-011: Implement document parser
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-011-implement-document-parser
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
+Commit Hash: 0931dcd
 
 ### Objective
 Extract text from uploaded documents, update parsing status, and record failures on the document row.
@@ -867,4 +868,4 @@ Pass
 - None
 
 ### Follow-up
-- Commit the validated task, record the hash here, then continue to `TASK-012`.
+- Continue to `TASK-012` on the next task branch.
