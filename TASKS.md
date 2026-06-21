@@ -481,7 +481,7 @@ Acceptance criteria:
 
 ### TASK-012: Implement chunking pipeline
 
-Status: not_started
+Status: validated
 
 Objective: Chunk parsed text for embedding.
 

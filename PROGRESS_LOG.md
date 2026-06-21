@@ -875,3 +875,48 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-012` on the next task branch.
+
+---
+
+## TASK-012: Implement chunking pipeline
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-012-implement-chunking-pipeline
+Started: 2026-06-21
+Completed:
+
+### Objective
+Chunk parsed document text, preserve source metadata, and insert user-scoped `document_chunks` rows.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/server/documents/chunking.ts
+- src/tests/document-chunking.test.ts
+
+### Implementation Notes
+- Added a server-side chunking utility that updates the document to `chunking`, creates overlapping chunks with stable vector ids, inserts `document_chunks` rows, and updates chunk progress on the parent document.
+- Added failure handling so empty parsed text or persistence errors mark the document `failed` with a clear error message.
+
+### Tests Added
+- `src/tests/document-chunking.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Commit the validated task, record the hash here, then continue to `TASK-013`.
