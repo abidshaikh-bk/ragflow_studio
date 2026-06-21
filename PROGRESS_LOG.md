@@ -1140,12 +1140,13 @@ Pass
 
 ## TASK-017: Implement chat persistence
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-017-chat-persistence
+Commit Hash: 7541856
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
 
 ### Objective
 Persist chat sessions and chat messages in Supabase so the chat page survives refresh and stays scoped to the authenticated user.

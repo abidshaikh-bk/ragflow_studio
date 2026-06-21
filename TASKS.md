@@ -615,7 +615,7 @@ Acceptance criteria:
 
 ### TASK-017: Implement chat persistence
 
-Status: validated
+Status: done
 
 Objective: Persist chat sessions and messages in Supabase.
 
