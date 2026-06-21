@@ -397,7 +397,7 @@ Acceptance criteria:
 
 ### TASK-009: Build document upload page
 
-Status: not_started
+Status: validated
 
 Objective: Create document upload UI with live progress.
 

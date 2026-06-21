@@ -157,6 +157,10 @@ Phase 1A scaffold note:
 
 - Before ingestion APIs are implemented, use client-side file-type validation and placeholder progress/history data only.
 
+TASK-009 implementation note:
+
+- The page now includes a local upload-progress simulation for supported files, terminal success/failure states, and a realistic document history table while `TASK-010` prepares the real upload API and storage flow.
+
 ## Test requirements
 
 - Dropzone validates supported file types.

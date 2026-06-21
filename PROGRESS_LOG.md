@@ -713,3 +713,57 @@ Pass
 
 ### Follow-up
 - Phase 2 should replace local placeholder submits with real Supabase-backed auth and protected-session behavior.
+
+---
+
+## TASK-009: Build document upload page
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-009-build-document-upload-page
+Started: 2026-06-21
+Completed:
+
+### Objective
+Create the document upload UI with live progress states for the document ingestion workspace.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- UI_PAGES.md
+- src/app/(app)/documents/page.tsx
+- src/components/documents/DocumentDropzone.tsx
+- src/components/documents/DocumentStatusBadge.tsx
+- src/components/documents/DocumentTable.tsx
+- src/components/documents/DocumentsWorkspace.tsx
+- src/components/documents/ProcessingTimeline.tsx
+- src/components/documents/UploadProgressCard.tsx
+- src/components/documents/types.ts
+- src/tests/documents-page.test.tsx
+
+### Implementation Notes
+- Replaced the static documents scaffold with a client-side workspace that simulates supported uploads, live ingestion stages, and terminal success and failure states.
+- Kept the implementation local-only so the page stays within `TASK-009` scope while clearly handing off real storage and API work to `TASK-010`.
+- Expanded the document history and progress panels to reflect active stage, chunk progress, and surfaced processing errors.
+
+### Tests Added
+- `src/tests/documents-page.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Commit the validated task, record the hash here, then move to `TASK-010`.

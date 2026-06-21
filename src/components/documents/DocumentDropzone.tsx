@@ -1,16 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 
 const supportedExtensions = [".pdf", ".txt", ".docx", ".md"];
 
-export function DocumentDropzone() {
-  const [fileName, setFileName] = useState("");
-  const [error, setError] = useState("");
+type DocumentDropzoneProps = {
+  activeFileName?: string;
+  isUploading?: boolean;
+  onFileAccepted: (file: File) => void;
+  onPreviewFailure: () => void;
+};
 
-  const supportedText = useMemo(() => supportedExtensions.join(", "), []);
+export function DocumentDropzone({
+  activeFileName,
+  isUploading = false,
+  onFileAccepted,
+  onPreviewFailure
+}: DocumentDropzoneProps) {
+  const [error, setError] = useState("");
+  const supportedText = supportedExtensions.join(", ");
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -25,12 +36,13 @@ export function DocumentDropzone() {
 
     if (!isSupported) {
       setError(`Unsupported file type. Use ${supportedText}.`);
-      setFileName("");
+      event.target.value = "";
       return;
     }
 
     setError("");
-    setFileName(file.name);
+    onFileAccepted(file);
+    event.target.value = "";
   }
 
   return (
@@ -45,16 +57,31 @@ export function DocumentDropzone() {
           Drag a file here or choose one from disk. Supported types: {supportedText}.
         </span>
         <input
+          accept={supportedExtensions.join(",")}
           aria-label="Upload document"
           className="sr-only"
           onChange={handleChange}
           type="file"
         />
       </label>
-      {fileName ? (
-        <p className="mt-4 text-sm text-emerald">Ready to process: {fileName}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button onClick={onPreviewFailure} type="button" variant="ghost">
+          Preview failed state
+        </Button>
+        <p className="text-sm text-slate-300">
+          {isUploading && activeFileName
+            ? `Uploading ${activeFileName} through the mock ingestion pipeline.`
+            : "The next task will replace this local simulation with the real upload API."}
+        </p>
+      </div>
+      {activeFileName ? (
+        <p className="mt-4 text-sm text-emerald">Selected document: {activeFileName}</p>
       ) : null}
-      {error ? <div className="mt-4"><ErrorAlert message={error} title="Upload blocked" /></div> : null}
+      {error ? (
+        <div className="mt-4">
+          <ErrorAlert message={error} title="Upload blocked" />
+        </div>
+      ) : null}
     </Card>
   );
 }

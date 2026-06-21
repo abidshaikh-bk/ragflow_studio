@@ -1,13 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-
-type DocumentStatus =
-  | "uploaded"
-  | "parsing"
-  | "chunking"
-  | "embedding"
-  | "indexing"
-  | "completed"
-  | "failed";
+import type { DocumentStatus } from "./types";
 
 const toneByStatus: Record<DocumentStatus, "default" | "success" | "warning" | "info"> = {
   uploaded: "default",

@@ -1,18 +1,28 @@
+import { Badge } from "@/components/ui/Badge";
 import { DocumentStatusBadge } from "./DocumentStatusBadge";
+import { processingStages, type DocumentStatus } from "./types";
 
-const stages = [
-  "uploaded",
-  "parsing",
-  "chunking",
-  "embedding",
-  "indexing",
-  "completed"
-] as const;
+type ProcessingTimelineProps = {
+  currentStatus: DocumentStatus;
+  failedStage?: Exclude<DocumentStatus, "completed" | "failed">;
+};
 
-export function ProcessingTimeline() {
+export function ProcessingTimeline({
+  currentStatus,
+  failedStage
+}: ProcessingTimelineProps) {
+  const currentIndex = processingStages.indexOf(
+    currentStatus === "failed" ? (failedStage ?? "uploaded") : currentStatus
+  );
+
   return (
     <ol className="space-y-3">
-      {stages.map((stage, index) => (
+      {processingStages.map((stage, index) => {
+        const isFailedStage = currentStatus === "failed" && failedStage === stage;
+        const isCurrentStage = !isFailedStage && index === currentIndex;
+        const isCompletedStage = !isFailedStage && index < currentIndex;
+
+        return (
         <li
           className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
           key={stage}
@@ -23,9 +33,18 @@ export function ProcessingTimeline() {
               Stage {index + 1}
             </p>
           </div>
-          <DocumentStatusBadge status={stage} />
+          {isFailedStage ? (
+            <DocumentStatusBadge status="failed" />
+          ) : isCurrentStage ? (
+            <DocumentStatusBadge status={stage} />
+          ) : isCompletedStage ? (
+            <Badge tone="success">done</Badge>
+          ) : (
+            <Badge>queued</Badge>
+          )}
         </li>
-      ))}
+        );
+      })}
     </ol>
   );
 }
