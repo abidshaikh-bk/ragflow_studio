@@ -972,12 +972,13 @@ Pass
 
 ## TASK-014: Implement Pinecone indexing
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-014-implement-pinecone-indexing
+Commit Hash: eebae79
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
 
 ### Objective
 Store document vectors in Pinecone under the authenticated user's namespace and mark the document completed.

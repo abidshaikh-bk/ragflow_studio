@@ -534,7 +534,7 @@ Acceptance criteria:
 
 ### TASK-014: Implement Pinecone indexing
 
-Status: validated
+Status: done
 
 Objective: Store vectors in Pinecone.
 
