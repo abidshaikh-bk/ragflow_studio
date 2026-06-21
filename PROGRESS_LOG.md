@@ -768,3 +768,57 @@ Pass
 
 ### Follow-up
 - Proceed to `TASK-010` on the next task branch.
+
+---
+
+## TASK-010: Implement S3 upload API
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-010-implement-s3-upload-api
+Started: 2026-06-21
+Completed:
+
+### Objective
+Upload raw files to S3, create a user-scoped Supabase document record, and return the new document id.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- package-lock.json
+- package.json
+- src/app/api/documents/upload/route.ts
+- src/lib/env.ts
+- src/lib/validations/documents.ts
+- src/server/documents/upload.ts
+- src/server/s3/client.ts
+- src/tests/document-upload-route.test.ts
+- src/tests/document-upload-service.test.ts
+
+### Implementation Notes
+- Added a multipart upload route that authenticates the request server-side, rejects missing or invalid files, and returns only the new document id plus status.
+- Added typed document-upload validation, a server-only S3 client, and a document upload service that stores the raw file in a private S3 key and inserts a user-scoped `documents` row.
+- Added `@aws-sdk/client-s3` as the storage dependency for the MVP upload flow.
+
+### Tests Added
+- `src/tests/document-upload-route.test.ts`
+- `src/tests/document-upload-service.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Commit the validated task, record the hash here, then continue to `TASK-011`.
