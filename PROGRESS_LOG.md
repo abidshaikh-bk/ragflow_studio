@@ -1250,3 +1250,49 @@ Pass
 
 ### Follow-up
 - The retrieval primitive is ready to plug into the upcoming date/time tool and LangGraph chat flow.
+
+---
+
+## TASK-019: Implement date/time tool
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-019-date-time-tool
+Started: 2026-06-21
+Completed:
+
+### Objective
+Create a deterministic date/time tool that returns the current ISO timestamp, a user-friendly date string, the timezone, and a logged tool-call record.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/lib/validations/date-time.ts
+- src/server/tools/date-time.ts
+- src/tests/date-time-tool.test.ts
+
+### Implementation Notes
+- Added a deterministic date/time tool with optional locale/timezone input, injectable clock support for tests, and a normalized payload containing ISO datetime, friendly datetime, and timezone.
+- Reused the `agent_tool_calls` logging pattern so successful and failed time lookups are observable when invoked inside a chat session.
+
+### Tests Added
+- `src/tests/date-time-tool.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- The next tool step is Tavily-backed web search for current-information questions.
