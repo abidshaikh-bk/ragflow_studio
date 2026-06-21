@@ -1082,3 +1082,55 @@ Pass
 
 ### Follow-up
 - With Phase 4 complete, the next MVP-critical step is wiring document retrieval into chat.
+
+---
+
+## TASK-016: Build chat UI
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-016-build-chat-ui
+Started: 2026-06-21
+Completed:
+
+### Objective
+Create the MVP chat page with session navigation, message history, composer interactions, loading states, tool activity, source context, and empty-state guidance.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/components/chat/ChatComposer.tsx
+- src/components/chat/ChatLayout.tsx
+- src/components/chat/MessageList.tsx
+- src/components/chat/SessionList.tsx
+- src/components/chat/SourcePanel.tsx
+- src/components/chat/ToolActivityPanel.tsx
+- src/tests/chat-layout.test.tsx
+
+### Implementation Notes
+- Replaced the static chat scaffold with an interactive client-side workspace that supports session switching, creating a new chat, sending a question, and showing a mock assistant reply with source and tool metadata.
+- Added a visible “searching your documents” assistant loading state, preserved empty-chat guidance, and surfaced a simple chat error state for failed mock responses.
+- Kept the model and thinking controls read-only per the MVP page spec while making the side panels follow the latest assistant message metadata.
+
+### Tests Added
+- `src/tests/chat-layout.test.tsx`
+- Existing chat scaffold coverage in `src/tests/page-scaffolds.test.tsx` still passes with the updated UI.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Continue to `TASK-017` to persist chat sessions and messages in Supabase.

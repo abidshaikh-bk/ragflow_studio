@@ -5,6 +5,16 @@ type SourcePanelProps = {
 };
 
 export function SourcePanel({ sources }: SourcePanelProps) {
+  if (sources.length === 0) {
+    return (
+      <Card eyebrow="Context" title="Sources">
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-slate-300">
+          Retrieved document chunks will appear here after the assistant answers.
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card eyebrow="Context" title="Sources">
       <div className="space-y-3">
