@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { uploadDocument } from "@/server/documents/upload";
 
@@ -95,8 +95,41 @@ describe("uploadDocument", () => {
     );
     expect(result).toEqual({
       documentId: "doc-123",
+      s3Key: expect.stringContaining("user:user-123/documents/"),
       status: "uploaded"
     });
+  });
+
+  it("removes the S3 object if the Supabase insert fails", async () => {
+    sendMock.mockResolvedValue({});
+    singleMock.mockResolvedValue({
+      data: null,
+      error: {
+        message: "insert failed"
+      }
+    });
+
+    const file = createFile("hello world", "notes.txt", "text/plain");
+
+    await expect(
+      uploadDocument(
+        {
+          file,
+          supabase: supabaseMock as never,
+          userId: "user-123"
+        },
+        {
+          bucketName: "ragflow-documents",
+          s3Client: {
+            send: sendMock
+          } as never
+        }
+      )
+    ).rejects.toThrow(/unable to create the uploaded document record/i);
+
+    const deleteCommand = sendMock.mock.calls[1][0] as DeleteObjectCommand;
+    expect(deleteCommand).toBeInstanceOf(DeleteObjectCommand);
+    expect(deleteCommand.input.Bucket).toBe("ragflow-documents");
   });
 });
 

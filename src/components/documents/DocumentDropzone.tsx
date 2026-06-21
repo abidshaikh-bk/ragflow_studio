@@ -10,15 +10,17 @@ const supportedExtensions = [".pdf", ".txt", ".docx", ".md"];
 type DocumentDropzoneProps = {
   activeFileName?: string;
   isUploading?: boolean;
-  onFileAccepted: (file: File) => void;
+  onFileAccepted: (file: File) => Promise<void> | void;
   onPreviewFailure: () => void;
+  statusMessage?: string;
 };
 
 export function DocumentDropzone({
   activeFileName,
   isUploading = false,
   onFileAccepted,
-  onPreviewFailure
+  onPreviewFailure,
+  statusMessage
 }: DocumentDropzoneProps) {
   const [error, setError] = useState("");
   const supportedText = supportedExtensions.join(", ");
@@ -69,9 +71,11 @@ export function DocumentDropzone({
           Preview failed state
         </Button>
         <p className="text-sm text-slate-300">
-          {isUploading && activeFileName
-            ? `Uploading ${activeFileName} through the mock ingestion pipeline.`
-            : "The next task will replace this local simulation with the real upload API."}
+          {statusMessage
+            ? statusMessage
+            : isUploading && activeFileName
+              ? `Uploading ${activeFileName} through the mock ingestion pipeline.`
+              : "Upload a document to send it to private S3 storage before the processing pipeline continues."}
         </p>
       </div>
       {activeFileName ? (

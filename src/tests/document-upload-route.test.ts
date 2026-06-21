@@ -65,6 +65,7 @@ describe("/api/documents/upload route", () => {
     });
     uploadDocumentMock.mockResolvedValue({
       documentId: "doc-456",
+      s3Key: "user:user-123/documents/doc-456.md",
       status: "uploaded"
     });
 

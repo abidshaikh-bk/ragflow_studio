@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { DocumentDropzone } from "./DocumentDropzone";
 import { DocumentTable } from "./DocumentTable";
 import { ProcessingTimeline } from "./ProcessingTimeline";
@@ -25,6 +26,14 @@ type ActiveUpload = {
   failedStage?: TimelineStage;
   snapshotIndex: number;
   snapshots: UploadSnapshot[];
+};
+
+type UploadApiResponse = {
+  data?: {
+    documentId: string;
+    status: "uploaded";
+  };
+  error?: string;
 };
 
 const initialDocuments: DocumentRecord[] = [
@@ -73,19 +82,6 @@ function createSnapshots(shouldFail: boolean): UploadSnapshot[] {
   ];
 }
 
-function createDocumentRecord(name: string, snapshot: UploadSnapshot): DocumentRecord {
-  return {
-    id: `${name}-${Date.now()}`,
-    name,
-    processedChunks: snapshot.processedChunks,
-    status: snapshot.status,
-    totalChunks: 24,
-    updatedAt: "Queued just now",
-    uploadProgress: snapshot.uploadProgress,
-    ...(snapshot.errorMessage ? { errorMessage: snapshot.errorMessage } : {})
-  };
-}
-
 function formatUpdatedAt(status: DocumentStatus): string {
   switch (status) {
     case "uploaded":
@@ -110,6 +106,10 @@ function formatUpdatedAt(status: DocumentStatus): string {
 export function DocumentsWorkspace() {
   const [documents, setDocuments] = useState<DocumentRecord[]>(initialDocuments);
   const [activeUpload, setActiveUpload] = useState<ActiveUpload | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadMessage, setUploadMessage] = useState(
+    "Upload a document to send it to private S3 storage before the processing pipeline continues."
+  );
 
   const activeDocument = activeUpload
     ? documents.find((document) => document.id === activeUpload.documentId) ?? null
@@ -163,9 +163,9 @@ export function DocumentsWorkspace() {
     return () => window.clearTimeout(timeoutId);
   }, [activeUpload]);
 
-  function startUpload(name: string, shouldFail: boolean) {
+  function startUpload(name: string, shouldFail: boolean, documentId?: string) {
     const snapshots = createSnapshots(shouldFail);
-    const document = createDocumentRecord(name, snapshots[0]);
+    const document = createDocumentRecord(name, snapshots[0], documentId);
 
     setDocuments((currentDocuments) => [document, ...currentDocuments]);
     setActiveUpload({
@@ -176,8 +176,40 @@ export function DocumentsWorkspace() {
     });
   }
 
-  function handleFileAccepted(file: File) {
-    startUpload(file.name, false);
+  async function handleFileAccepted(file: File) {
+    setUploadError("");
+    setUploadMessage(`Uploading ${file.name} to private S3 storage.`);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let payload: UploadApiResponse | undefined;
+
+    try {
+      const response = await fetch("/api/documents/upload", {
+        body: formData,
+        method: "POST"
+      });
+
+      payload = (await response.json()) as UploadApiResponse;
+
+      if (!response.ok || !payload.data) {
+        throw new Error(payload.error || "Unable to upload your document right now.");
+      }
+
+      setUploadMessage(
+        `${file.name} reached private S3 storage. Continuing through the mock parsing pipeline.`
+      );
+      startUpload(file.name, false, payload.data.documentId);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to upload your document right now.";
+
+      setUploadError(message);
+      setUploadMessage("Fix the upload issue, then try again.");
+    }
   }
 
   function handlePreviewFailure() {
@@ -187,6 +219,12 @@ export function DocumentsWorkspace() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
       <div className="space-y-6">
+        {uploadError ? (
+          <ErrorAlert
+            message={uploadError}
+            title="Document upload failed"
+          />
+        ) : null}
         <DocumentDropzone
           activeFileName={activeDocument?.name}
           isUploading={Boolean(
@@ -196,11 +234,12 @@ export function DocumentsWorkspace() {
           )}
           onFileAccepted={handleFileAccepted}
           onPreviewFailure={handlePreviewFailure}
+          statusMessage={uploadMessage}
         />
         <Card
           eyebrow="History"
           title="Indexed document list"
-          description="Local upload simulation keeps the document list and progress surfaces realistic until the real ingestion APIs land."
+          description="Successful uploads now hit the live S3-backed API before the local processing simulation takes over."
         >
           <DocumentTable documents={documents} />
         </Card>
@@ -220,4 +259,17 @@ export function DocumentsWorkspace() {
       </div>
     </div>
   );
+}
+
+function createDocumentRecord(name: string, snapshot: UploadSnapshot, documentId?: string): DocumentRecord {
+  return {
+    id: documentId ?? `${name}-${Date.now()}`,
+    name,
+    processedChunks: snapshot.processedChunks,
+    status: snapshot.status,
+    totalChunks: 24,
+    updatedAt: "Queued just now",
+    uploadProgress: snapshot.uploadProgress,
+    ...(snapshot.errorMessage ? { errorMessage: snapshot.errorMessage } : {})
+  };
 }

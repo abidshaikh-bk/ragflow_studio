@@ -26,7 +26,15 @@ export async function POST(request: NextRequest) {
       userId: auth.userId
     });
 
-    return NextResponse.json({ data: result }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: {
+          documentId: result.documentId,
+          status: result.status
+        }
+      },
+      { status: 201 }
+    );
   } catch (error) {
     const message =
       error instanceof Error

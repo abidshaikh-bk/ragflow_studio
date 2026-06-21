@@ -776,10 +776,10 @@ Pass
 Status: done
 
 Owner Agent: Codex
-Git Branch: task/TASK-010-implement-s3-upload-api
+Git Branch: task/TASK-010-live-s3-upload
 Started: 2026-06-21
 Completed: 2026-06-21
-Commit Hash: 5a3f37b
+Commit Hash: 5a3f37b, pending_followup_commit
 
 ### Objective
 Upload raw files to S3, create a user-scoped Supabase document record, and return the new document id.
@@ -790,21 +790,27 @@ Upload raw files to S3, create a user-scoped Supabase document record, and retur
 - package-lock.json
 - package.json
 - src/app/api/documents/upload/route.ts
+- src/components/documents/DocumentDropzone.tsx
+- src/components/documents/DocumentsWorkspace.tsx
 - src/lib/env.ts
 - src/lib/validations/documents.ts
 - src/server/documents/upload.ts
 - src/server/s3/client.ts
 - src/tests/document-upload-route.test.ts
 - src/tests/document-upload-service.test.ts
+- src/tests/documents-page.test.tsx
 
 ### Implementation Notes
 - Added a multipart upload route that authenticates the request server-side, rejects missing or invalid files, and returns only the new document id plus status.
 - Added typed document-upload validation, a server-only S3 client, and a document upload service that stores the raw file in a private S3 key and inserts a user-scoped `documents` row.
 - Added `@aws-sdk/client-s3` as the storage dependency for the MVP upload flow.
+- Wired the Documents page to the live upload API so successful uploads now hit private S3 before the local processing simulation continues.
+- Added S3 rollback on Supabase insert failure and verified a real smoke upload with `HeadObject` against bucket `ragflow-studio`.
 
 ### Tests Added
 - `src/tests/document-upload-route.test.ts`
 - `src/tests/document-upload-service.test.ts`
+- `src/tests/documents-page.test.tsx`
 
 ### Validation Commands
 ```bash
