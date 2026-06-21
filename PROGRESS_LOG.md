@@ -1198,3 +1198,54 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-018` to replace the stored mock assistant reply with real Pinecone-backed retrieval.
+
+---
+
+## TASK-018: Implement vector search tool
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-018-vector-search-tool
+Started: 2026-06-21
+Completed:
+
+### Objective
+Create a user-scoped vector search tool that embeds the query, searches the authenticated user's Pinecone namespace, and returns retrieved chunk metadata for chat grounding.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/lib/validations/vector-search.ts
+- src/server/embeddings/service.ts
+- src/server/pinecone/client.ts
+- src/server/pinecone/indexing.ts
+- src/server/tools/vector-search.ts
+- src/tests/vector-search-tool.test.ts
+
+### Implementation Notes
+- Added a validated Pinecone vector-search helper that embeds the user query, enforces the authenticated user's namespace, supports optional document-id filtering, and returns chunk-level metadata for grounding.
+- Extended the Pinecone client helpers with a typed query client so upsert and query operations share the same index targeting logic.
+- Added `agent_tool_calls` logging support for successful and failed vector-search executions when a chat session id is available.
+- Exported the resolved embedding configuration helper so query embedding and document embedding stay aligned on provider/model selection.
+
+### Tests Added
+- `src/tests/vector-search-tool.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- The retrieval primitive is ready to plug into the upcoming date/time tool and LangGraph chat flow.

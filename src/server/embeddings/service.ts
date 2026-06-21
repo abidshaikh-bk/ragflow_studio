@@ -149,7 +149,7 @@ export async function embedTexts(input: {
   return payload.data.map((item) => item.embedding);
 }
 
-async function resolveEmbeddingConfig(
+export async function resolveEmbeddingConfig(
   supabase: SupabaseClient,
   userId: string
 ): Promise<EmbeddingConfig> {

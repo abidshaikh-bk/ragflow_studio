@@ -25,11 +25,29 @@ export type PineconeVector = {
   metadata: PineconeMetadata;
 };
 
+export type PineconeQueryMatch = {
+  id: string;
+  metadata?: PineconeMetadata;
+  score?: number;
+};
+
 export type PineconeUpsertClient = {
   upsert: (input: {
     namespace: string;
     vectors: PineconeVector[];
   }) => Promise<void>;
+};
+
+export type PineconeQueryClient = {
+  query: (input: {
+    filter?: object;
+    includeMetadata: boolean;
+    namespace: string;
+    topK: number;
+    vector: number[];
+  }) => Promise<{
+    matches: PineconeQueryMatch[];
+  }>;
 };
 
 type IndexDocumentEmbeddingsParams = {

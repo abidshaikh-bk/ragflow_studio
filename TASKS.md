@@ -641,7 +641,7 @@ Acceptance criteria:
 
 ### TASK-018: Implement vector search tool
 
-Status: not_started
+Status: validated
 
 Objective: Create an agent tool for querying Pinecone.
 
