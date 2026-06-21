@@ -507,7 +507,7 @@ Acceptance criteria:
 
 ### TASK-013: Implement embedding generation
 
-Status: validated
+Status: done
 
 Objective: Generate embeddings for document chunks.
 

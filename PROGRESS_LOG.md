@@ -926,12 +926,13 @@ Pass
 
 ## TASK-013: Implement embedding generation
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-013-implement-embedding-generation
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
+Commit Hash: b696f67
 
 ### Objective
 Generate embeddings for document chunks in batches, resolve the embedding model configuration safely, and track progress on the parent document.
@@ -965,4 +966,4 @@ Pass
 - None
 
 ### Follow-up
-- Commit the validated task, record the hash here, then continue to `TASK-014`.
+- Continue to `TASK-014` on the next task branch.
