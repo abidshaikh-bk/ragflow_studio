@@ -587,7 +587,7 @@ Acceptance criteria:
 
 ### TASK-016: Build chat UI
 
-Status: validated
+Status: done
 
 Objective: Create chat page with message history and response area.
 

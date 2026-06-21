@@ -1087,12 +1087,13 @@ Pass
 
 ## TASK-016: Build chat UI
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-016-build-chat-ui
+Commit Hash: 737cd5b
 Started: 2026-06-21
-Completed:
+Completed: 2026-06-21
 
 ### Objective
 Create the MVP chat page with session navigation, message history, composer interactions, loading states, tool activity, source context, and empty-state guidance.
