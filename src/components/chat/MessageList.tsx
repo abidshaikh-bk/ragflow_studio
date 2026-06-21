@@ -1,16 +1,10 @@
 import { MessageBubble } from "./MessageBubble";
+import type { ChatMessage } from "./types";
 import { EmptyState } from "@/components/ui/EmptyState";
-
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  sources?: string[];
-};
 
 type MessageListProps = {
   loading?: boolean;
-  messages: Message[];
+  messages: ChatMessage[];
 };
 
 export function MessageList({ loading = false, messages }: MessageListProps) {
@@ -30,7 +24,7 @@ export function MessageList({ loading = false, messages }: MessageListProps) {
           content={message.content}
           key={message.id}
           role={message.role}
-          sources={message.sources}
+          sources={message.metadata?.sources}
         />
       ))}
       {loading ? (

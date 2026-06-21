@@ -10,6 +10,43 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/chat"
 }));
 
+vi.mock("@/server/auth/session", () => ({
+  requireAuthenticatedUser: async () => ({
+    id: "user-123"
+  })
+}));
+
+vi.mock("@/server/supabase/server", () => ({
+  createServerSupabaseClient: async () => ({})
+}));
+
+vi.mock("@/server/chat/persistence", () => ({
+  listChatSessions: async () => [
+    {
+      id: "session-1",
+      messages: [
+        {
+          content: "What does the policy say about approval flow?",
+          id: "message-1",
+          role: "user"
+        },
+        {
+          content:
+            "The onboarding policy requires manager approval before workspace access is granted.",
+          id: "message-2",
+          metadata: {
+            sources: ["employee-handbook.md chunk 4"],
+            toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
+          },
+          role: "assistant"
+        }
+      ],
+      title: "Upload policy Q&A",
+      updatedAt: "Jun 21, 9:30 PM"
+    }
+  ]
+}));
+
 describe("phase 1a page scaffolds", () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -34,8 +71,8 @@ describe("phase 1a page scaffolds", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders the chat workspace shell", () => {
-    render(<ChatPage />);
+  it("renders the chat workspace shell", async () => {
+    render(await ChatPage());
 
     expect(
       screen.getByRole("heading", { name: /agentic rag workspace/i })

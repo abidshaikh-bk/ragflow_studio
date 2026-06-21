@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 
 type MessageBubbleProps = {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system" | "tool";
   content: string;
   sources?: string[];
 };

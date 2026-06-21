@@ -1135,3 +1135,65 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-017` to persist chat sessions and messages in Supabase.
+
+---
+
+## TASK-017: Implement chat persistence
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-017-chat-persistence
+Started: 2026-06-21
+Completed:
+
+### Objective
+Persist chat sessions and chat messages in Supabase so the chat page survives refresh and stays scoped to the authenticated user.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/app/(app)/chat/page.tsx
+- src/app/api/chat/route.ts
+- src/app/api/chat/sessions/route.ts
+- src/app/api/chat/sessions/[sessionId]/route.ts
+- src/components/chat/ChatLayout.tsx
+- src/components/chat/MessageBubble.tsx
+- src/components/chat/MessageList.tsx
+- src/components/chat/types.ts
+- src/lib/validations/chat.ts
+- src/server/chat/persistence.ts
+- src/tests/chat-layout.test.tsx
+- src/tests/chat-route.test.ts
+- src/tests/chat-sessions-route.test.ts
+- src/tests/page-scaffolds.test.tsx
+
+### Implementation Notes
+- Added typed Supabase-backed chat persistence helpers for listing sessions, loading a single session, creating a session on demand, and saving user plus assistant messages together.
+- Added authenticated `/api/chat`, `/api/chat/sessions`, and `/api/chat/sessions/:sessionId` routes with Zod validation and user-scoped access.
+- Updated the `/chat` page to load saved sessions server-side and submit new messages through the persistence API so chat history survives refresh.
+- Preserved the MVP placeholder assistant behavior on the server by storing deterministic assistant replies with source and tool metadata in `chat_messages.metadata`.
+
+### Tests Added
+- `src/tests/chat-route.test.ts`
+- `src/tests/chat-sessions-route.test.ts`
+- Updated `src/tests/chat-layout.test.tsx`
+- Updated `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Continue to `TASK-018` to replace the stored mock assistant reply with real Pinecone-backed retrieval.
