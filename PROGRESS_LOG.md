@@ -921,3 +921,48 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-013` on the next task branch.
+
+---
+
+## TASK-013: Implement embedding generation
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-013-implement-embedding-generation
+Started: 2026-06-21
+Completed:
+
+### Objective
+Generate embeddings for document chunks in batches, resolve the embedding model configuration safely, and track progress on the parent document.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- src/server/embeddings/service.ts
+- src/tests/document-embeddings.test.ts
+
+### Implementation Notes
+- Added a server-side embedding service that resolves the effective embedding provider/model, batches chunk text, updates document status to `embedding`, and tracks processed chunk counts as batches complete.
+- Kept the runtime MVP-safe by supporting server-managed OpenAI embeddings directly and marking the document `failed` on provider or progress-update errors.
+
+### Tests Added
+- `src/tests/document-embeddings.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Commit the validated task, record the hash here, then continue to `TASK-014`.
