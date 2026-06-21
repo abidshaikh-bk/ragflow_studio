@@ -967,3 +967,62 @@ Pass
 
 ### Follow-up
 - Continue to `TASK-014` on the next task branch.
+
+---
+
+## TASK-014: Implement Pinecone indexing
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-014-implement-pinecone-indexing
+Started: 2026-06-21
+Completed:
+
+### Objective
+Store document vectors in Pinecone under the authenticated user's namespace and mark the document completed.
+
+### Files Changed
+- TASKS.md
+- package-lock.json
+- package.json
+- PROGRESS_LOG.md
+- src/app/api/documents/upload/route.ts
+- src/lib/env.ts
+- src/server/documents/process.ts
+- src/server/embeddings/service.ts
+- src/server/pinecone/client.ts
+- src/server/pinecone/indexing.ts
+- src/tests/document-processing.test.ts
+- src/tests/document-upload-route.test.ts
+- src/tests/pinecone-indexing.test.ts
+
+### Implementation Notes
+- Added a typed Pinecone indexing service that builds user-scoped vector payloads, writes them into the authenticated user's namespace, and marks documents `completed` only after the upsert succeeds.
+- Added a server-side Pinecone client helper using the official `@pinecone-database/pinecone` SDK and environment-backed index targeting.
+- Added `processUploadedDocument` to chain parsing, chunking, embedding generation, and Pinecone indexing after a successful upload.
+- Updated the upload route to kick off the ingestion pipeline after the S3 object and Supabase document record are created, while preserving the existing API response contract.
+- Full validation passed locally. A live Pinecone smoke upsert could not run in this workspace because `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` are currently blank in `.env` and `.env.local`.
+
+### Tests Added
+- `src/tests/document-processing.test.ts`
+- `src/tests/pinecone-indexing.test.ts`
+- Expanded `src/tests/document-upload-route.test.ts` to verify background document processing starts after upload.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Populate `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` locally to run a live namespace smoke upsert against the configured index.

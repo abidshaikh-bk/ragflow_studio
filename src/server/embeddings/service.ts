@@ -4,7 +4,7 @@ import { getUserSettings } from "@/server/settings/service";
 export const DEFAULT_EMBEDDING_BATCH_SIZE = 20;
 const DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small";
 
-type EmbeddingChunk = {
+export type EmbeddingChunk = {
   chunkIndex: number;
   content: string;
   contentPreview: string;
@@ -12,12 +12,12 @@ type EmbeddingChunk = {
   tokenCount: number;
 };
 
-type EmbeddingVector = {
+export type EmbeddingVector = {
   chunkIndex: number;
   values: number[];
 };
 
-type EmbeddingConfig = {
+export type EmbeddingConfig = {
   model: string;
   provider: string;
 };
@@ -30,7 +30,7 @@ type GenerateEmbeddingsParams = {
   batchSize?: number;
 };
 
-type Embedder = (input: {
+export type Embedder = (input: {
   model: string;
   provider: string;
   texts: string[];

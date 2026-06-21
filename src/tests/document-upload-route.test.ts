@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/documents/upload/route";
 
 const getUserMock = vi.fn();
+const processUploadedDocumentMock = vi.fn();
 const uploadDocumentMock = vi.fn();
 const supabaseMock = {
   auth: {
@@ -18,9 +19,14 @@ vi.mock("@/server/documents/upload", () => ({
   uploadDocument: (...args: unknown[]) => uploadDocumentMock(...args)
 }));
 
+vi.mock("@/server/documents/process", () => ({
+  processUploadedDocument: (...args: unknown[]) => processUploadedDocumentMock(...args)
+}));
+
 describe("/api/documents/upload route", () => {
   beforeEach(() => {
     getUserMock.mockReset();
+    processUploadedDocumentMock.mockReset();
     uploadDocumentMock.mockReset();
   });
 
@@ -68,9 +74,13 @@ describe("/api/documents/upload route", () => {
       s3Key: "user:user-123/documents/doc-456.md",
       status: "uploaded"
     });
+    processUploadedDocumentMock.mockResolvedValue({
+      namespace: "user:user-123",
+      vectorCount: 1
+    });
 
     const formData = new FormData();
-    const file = new File(["# handbook"], "handbook.md", { type: "text/markdown" });
+    const file = createFile("# handbook", "handbook.md", "text/markdown");
     formData.append("file", file);
 
     const response = await POST(createMultipartRequest(formData));
@@ -79,6 +89,14 @@ describe("/api/documents/upload route", () => {
     expect(response.status).toBe(201);
     expect(uploadDocumentMock).toHaveBeenCalledWith({
       file,
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
+    expect(processUploadedDocumentMock).toHaveBeenCalledWith({
+      documentId: "doc-456",
+      fileContents: Buffer.from("# handbook"),
+      fileName: "handbook.md",
+      fileType: "text/markdown",
       supabase: supabaseMock,
       userId: "user-123"
     });
@@ -95,4 +113,14 @@ function createMultipartRequest(formData: FormData) {
   return {
     formData: async () => formData
   } as NextRequest;
+}
+
+function createFile(contents: string, name: string, type: string) {
+  const file = new File([contents], name, { type });
+
+  Object.defineProperty(file, "arrayBuffer", {
+    value: async () => new TextEncoder().encode(contents).buffer
+  });
+
+  return file;
 }

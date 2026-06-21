@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { processUploadedDocument } from "@/server/documents/process";
 import { uploadDocument } from "@/server/documents/upload";
 import { createServerSupabaseClient } from "@/server/supabase/server";
 
@@ -24,6 +25,18 @@ export async function POST(request: NextRequest) {
       file: maybeFile,
       supabase: auth.supabase,
       userId: auth.userId
+    });
+    const fileContents = Buffer.from(await maybeFile.arrayBuffer());
+
+    void processUploadedDocument({
+      documentId: result.documentId,
+      fileContents,
+      fileName: maybeFile.name,
+      fileType: maybeFile.type,
+      supabase: auth.supabase,
+      userId: auth.userId
+    }).catch((error) => {
+      console.error("Document processing failed after upload.", error);
     });
 
     return NextResponse.json(
