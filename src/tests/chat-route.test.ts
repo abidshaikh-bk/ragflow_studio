@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/route";
 
 const getUserMock = vi.fn();
-const persistChatExchangeMock = vi.fn();
-const buildMockAssistantReplyMock = vi.fn();
+const getChatSessionMock = vi.fn();
+const prepareChatTurnMock = vi.fn();
+const persistAssistantReplyMock = vi.fn();
+const invokeChatAgentMock = vi.fn();
 const supabaseMock = {
   auth: {
     getUser: getUserMock
@@ -15,16 +17,23 @@ vi.mock("@/server/supabase/server", () => ({
   createServerSupabaseClient: () => supabaseMock
 }));
 
+vi.mock("@/server/agent/workflow", () => ({
+  invokeChatAgent: (...args: unknown[]) => invokeChatAgentMock(...args)
+}));
+
 vi.mock("@/server/chat/persistence", () => ({
-  buildMockAssistantReply: (...args: unknown[]) => buildMockAssistantReplyMock(...args),
-  persistChatExchange: (...args: unknown[]) => persistChatExchangeMock(...args)
+  getChatSession: (...args: unknown[]) => getChatSessionMock(...args),
+  persistAssistantReply: (...args: unknown[]) => persistAssistantReplyMock(...args),
+  prepareChatTurn: (...args: unknown[]) => prepareChatTurnMock(...args)
 }));
 
 describe("/api/chat route", () => {
   beforeEach(() => {
     getUserMock.mockReset();
-    persistChatExchangeMock.mockReset();
-    buildMockAssistantReplyMock.mockReset();
+    getChatSessionMock.mockReset();
+    prepareChatTurnMock.mockReset();
+    persistAssistantReplyMock.mockReset();
+    invokeChatAgentMock.mockReset();
   });
 
   it("returns 401 when the request is unauthenticated", async () => {
@@ -53,20 +62,56 @@ describe("/api/chat route", () => {
     expect(payload.error).toMatch(/invalid chat payload/i);
   });
 
-  it("persists the user and assistant messages and returns the saved session", async () => {
+  it("returns 404 when the session does not belong to the authenticated user", async () => {
     getUserMock.mockResolvedValue({
       data: {
         user: { id: "user-123" }
       }
     });
-    buildMockAssistantReplyMock.mockReturnValue({
+    getChatSessionMock.mockResolvedValue(null);
+
+    const response = await POST(
+      createJsonRequest({
+        message: "Summarize my documents",
+        sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef"
+      })
+    );
+
+    expect(response.status).toBe(404);
+    expect(prepareChatTurnMock).not.toHaveBeenCalled();
+  });
+
+  it("persists the user message, invokes the agent, and returns the saved session", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-123" }
+      }
+    });
+    getChatSessionMock.mockResolvedValue({
+      id: "session-1",
+      messages: [
+        {
+          content: "What is our document policy?",
+          id: "message-0",
+          role: "user"
+        }
+      ],
+      title: "What is our document policy?",
+      updatedAt: "Jun 21, 10:05 PM"
+    });
+    prepareChatTurnMock.mockResolvedValue({
+      messageId: "message-1",
+      sessionId: "session-1"
+    });
+    invokeChatAgentMock.mockResolvedValue({
       content: "Saved assistant reply",
+      langsmithRunId: "trace-123",
       metadata: {
         sources: ["handbook.md chunk 1"],
         toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
       }
     });
-    persistChatExchangeMock.mockResolvedValue({
+    persistAssistantReplyMock.mockResolvedValue({
       id: "session-1",
       messages: [
         {
@@ -78,6 +123,7 @@ describe("/api/chat route", () => {
           content: "Saved assistant reply",
           id: "message-2",
           metadata: {
+            langsmithRunId: "trace-123",
             sources: ["handbook.md chunk 1"],
             toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
           },
@@ -97,21 +143,39 @@ describe("/api/chat route", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(buildMockAssistantReplyMock).toHaveBeenCalledWith("Summarize my documents");
-    expect(persistChatExchangeMock).toHaveBeenCalledWith({
-      assistant: {
-        content: "Saved assistant reply",
-        metadata: {
-          sources: ["handbook.md chunk 1"],
-          toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
-        }
-      },
+    expect(prepareChatTurnMock).toHaveBeenCalledWith({
       message: "Summarize my documents",
       sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef",
       supabase: supabaseMock,
       userId: "user-123"
     });
+    expect(invokeChatAgentMock).toHaveBeenCalledWith({
+      history: [
+        {
+          content: "What is our document policy?",
+          role: "user"
+        }
+      ],
+      message: "Summarize my documents",
+      sessionId: "session-1",
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
+    expect(persistAssistantReplyMock).toHaveBeenCalledWith({
+      assistant: {
+        content: "Saved assistant reply",
+        langsmithRunId: "trace-123",
+        metadata: {
+          sources: ["handbook.md chunk 1"],
+          toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
+        }
+      },
+      sessionId: "session-1",
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
     expect(payload.data.id).toBe("session-1");
+    expect(payload.langsmithRunId).toBe("trace-123");
   });
 });
 

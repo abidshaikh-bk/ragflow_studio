@@ -1,4 +1,5 @@
 export type ChatMessageMetadata = {
+  langsmithRunId?: string | null;
   sources?: string[];
   toolActivity?: string[];
 };

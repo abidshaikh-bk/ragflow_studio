@@ -122,6 +122,7 @@ Safe trace metadata:
 
 - `agent_tool_calls.tool_input` and `agent_tool_calls.tool_output` must contain normalized, minimal payloads only.
 - Tavily result logging should store title, URL, snippet, score, and timestamps, but not raw response headers or secrets.
+- `/api/chat` must persist the authenticated user's message and assistant reply under the same user-scoped session, and any stored `langsmith_run_id` must come from the server-side agent only.
 
 ## Security task completion criteria
 

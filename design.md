@@ -332,6 +332,7 @@ Persistence:
 - Save assistant response after agent call.
 - Save tool calls in `agent_tool_calls`.
 - Save LangSmith run IDs where available.
+- Return the updated session payload and LangSmith run ID from `/api/chat`.
 
 Initial MVP execution shape:
 

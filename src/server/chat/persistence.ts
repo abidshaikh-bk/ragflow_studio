@@ -16,18 +16,26 @@ type ChatMessageRow = {
   content: string;
   created_at: string;
   id: string;
+  langsmith_run_id: string | null;
   metadata: ChatMessageMetadata | null;
   role: ChatMessage["role"];
   session_id: string;
 };
 
-type PersistChatExchangeParams = {
-  assistant: {
-    content: string;
-    metadata?: ChatMessageMetadata;
-  };
+type PrepareChatTurnParams = {
   message: string;
   sessionId?: string;
+  supabase: SupabaseClient;
+  userId: string;
+};
+
+type PersistAssistantReplyParams = {
+  assistant: {
+    content: string;
+    langsmithRunId?: string | null;
+    metadata?: ChatMessageMetadata;
+  };
+  sessionId: string;
   supabase: SupabaseClient;
   userId: string;
 };
@@ -45,7 +53,7 @@ export async function listChatSessions(
       .order("updated_at", { ascending: false }),
     supabase
       .from("chat_messages")
-      .select("id, session_id, role, content, metadata, created_at")
+      .select("id, session_id, role, content, metadata, langsmith_run_id, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: true })
   ]);
@@ -80,7 +88,7 @@ export async function getChatSession(
       .maybeSingle(),
     supabase
       .from("chat_messages")
-      .select("id, session_id, role, content, metadata, created_at")
+      .select("id, session_id, role, content, metadata, langsmith_run_id, created_at")
       .eq("session_id", sessionId)
       .eq("user_id", input.userId)
       .order("created_at", { ascending: true })
@@ -101,13 +109,12 @@ export async function getChatSession(
   )[0]!;
 }
 
-export async function persistChatExchange({
-  assistant,
+export async function prepareChatTurn({
   message,
   sessionId,
   supabase,
   userId
-}: PersistChatExchangeParams): Promise<ChatSession> {
+}: PrepareChatTurnParams) {
   const resolvedSessionId = sessionId
     ? await ensureChatSessionExists(supabase, { sessionId, userId })
     : await createChatSession(supabase, {
@@ -117,39 +124,59 @@ export async function persistChatExchange({
 
   const insertResult = await supabase
     .from("chat_messages")
-    .insert([
-      {
-        content: message,
-        metadata: {},
-        role: "user",
-        session_id: resolvedSessionId,
-        user_id: userId
-      },
-      {
-        content: assistant.content,
-        metadata: assistant.metadata ?? {},
-        role: "assistant",
-        session_id: resolvedSessionId,
-        user_id: userId
-      }
-    ])
-    .select("id, session_id, role, content, metadata, created_at");
-
-  assertSupabaseSuccess(insertResult.error, "Unable to save chat messages.");
-
-  const updateResult = await supabase
-    .from("chat_sessions")
-    .update({
-      title: message.slice(0, 36),
-      updated_at: new Date().toISOString()
+    .insert({
+      content: message,
+      metadata: {},
+      role: "user",
+      session_id: resolvedSessionId,
+      user_id: userId
     })
-    .eq("id", resolvedSessionId)
-    .eq("user_id", userId);
+    .select("id")
+    .single();
 
-  assertSupabaseSuccess(updateResult.error, "Unable to update the chat session.");
+  assertSupabaseSuccess(insertResult.error, "Unable to save the user chat message.");
+
+  await updateChatSessionTimestamp(supabase, {
+    sessionId: resolvedSessionId,
+    title: message.slice(0, 36),
+    userId
+  });
+
+  return {
+    messageId: insertResult.data?.id as string | undefined,
+    sessionId: resolvedSessionId
+  };
+}
+
+export async function persistAssistantReply({
+  assistant,
+  sessionId,
+  supabase,
+  userId
+}: PersistAssistantReplyParams): Promise<ChatSession> {
+  const insertResult = await supabase
+    .from("chat_messages")
+    .insert({
+      content: assistant.content,
+      langsmith_run_id: assistant.langsmithRunId ?? null,
+      metadata: assistant.metadata ?? {},
+      role: "assistant",
+      session_id: sessionId,
+      user_id: userId
+    })
+    .select("id")
+    .single();
+
+  assertSupabaseSuccess(insertResult.error, "Unable to save the assistant reply.");
+
+  await updateChatSessionTimestamp(supabase, {
+    sessionId,
+    title: assistant.content.slice(0, 36),
+    userId
+  });
 
   const session = await getChatSession(supabase, {
-    sessionId: resolvedSessionId,
+    sessionId,
     userId
   });
 
@@ -158,47 +185,6 @@ export async function persistChatExchange({
   }
 
   return session;
-}
-
-export function buildMockAssistantReply(message: string): {
-  content: string;
-  metadata: ChatMessageMetadata;
-} {
-  const normalized = message.trim().toLowerCase();
-
-  if (normalized.includes("approval")) {
-    return {
-      content:
-        "Based on your indexed documents, approval requests should route to the document owner first, then move to a manager review before any external sharing happens.",
-      metadata: {
-        sources: ["employee-handbook.md chunk 4", "policy.txt chunk 2"],
-        toolActivity: [
-          "pinecone.query -> searched the authenticated user's namespace",
-          "date.now -> added deterministic timestamp context"
-        ]
-      }
-    };
-  }
-
-  if (normalized.includes("summarize")) {
-    return {
-      content:
-        "Here is the short version from your indexed notes: the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow.",
-      metadata: {
-        sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
-        toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
-      }
-    };
-  }
-
-  return {
-    content:
-      "I searched your private document context and found the most relevant chunks. Once retrieval is wired in, this stored response will be replaced by the backend agent output.",
-    metadata: {
-      sources: ["employee-handbook.md chunk 3"],
-      toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
-    }
-  };
 }
 
 async function createChatSession(
@@ -242,6 +228,26 @@ async function ensureChatSessionExists(
   return session.id;
 }
 
+async function updateChatSessionTimestamp(
+  supabase: SupabaseClient,
+  input: {
+    sessionId: string;
+    title: string;
+    userId: string;
+  }
+) {
+  const updateResult = await supabase
+    .from("chat_sessions")
+    .update({
+      title: input.title || "New chat",
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", input.sessionId)
+    .eq("user_id", input.userId);
+
+  assertSupabaseSuccess(updateResult.error, "Unable to update the chat session.");
+}
+
 function mapSessionsWithMessages(
   sessions: ChatSessionRow[],
   messages: ChatMessageRow[]
@@ -250,13 +256,23 @@ function mapSessionsWithMessages(
 
   for (const message of messages) {
     const list = messagesBySessionId.get(message.session_id) ?? [];
+    const metadata = message.metadata ?? {};
+
     list.push({
       content: message.content,
       id: message.id,
-      ...(message.metadata &&
-      (message.metadata.sources?.length || message.metadata.toolActivity?.length)
-        ? { metadata: message.metadata }
-        : {}),
+      ...((metadata.sources?.length ||
+        metadata.toolActivity?.length ||
+        message.langsmith_run_id) && {
+        metadata: {
+          ...metadata,
+          ...(message.langsmith_run_id
+            ? {
+                langsmithRunId: message.langsmith_run_id
+              }
+            : {})
+        }
+      }),
       role: message.role
     });
     messagesBySessionId.set(message.session_id, list);

@@ -1358,7 +1358,7 @@ Pass
 Status: done
 
 Owner Agent: Codex
-Git Branch: task/TASK-021-langgraph-agent
+Git Branch: task/TASK-022-chat-api-endpoint
 Commit Hash: 861397e
 Started: 2026-06-22
 Completed: 2026-06-22
@@ -1403,3 +1403,53 @@ Pass
 
 ### Follow-up
 - Wire the new agent into `/api/chat` in `TASK-022` after validation passes.
+
+---
+
+## TASK-022: Implement `/api/chat`
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-021-langgraph-agent
+Started: 2026-06-22
+Completed:
+
+### Objective
+Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow, persisting the user message before invocation and the assistant reply afterward.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/app/api/chat/route.ts
+- src/components/chat/types.ts
+- src/server/chat/persistence.ts
+- src/tests/chat-route.test.ts
+
+### Implementation Notes
+- Replaced the mock `/api/chat` path with a real authenticated flow that loads prior session history, stores the user message, invokes the LangGraph agent, stores the assistant reply, and returns the updated session plus LangSmith run id.
+- Extended chat persistence so assistant rows can store `langsmith_run_id` and surface it back through message metadata without exposing any raw secrets.
+
+### Tests Added
+- Updated `src/tests/chat-route.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Phase 5 is complete once full validation passes and the task is committed.

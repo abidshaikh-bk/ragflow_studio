@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { chatMessagePayloadSchema } from "@/lib/validations/chat";
 import {
-  buildMockAssistantReply,
-  persistChatExchange
+  getChatSession,
+  persistAssistantReply,
+  prepareChatTurn
 } from "@/server/chat/persistence";
+import { invokeChatAgent } from "@/server/agent/workflow";
 import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -25,16 +27,49 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const assistant = buildMockAssistantReply(payload.data.message);
-  const session = await persistChatExchange({
-    assistant,
+  const existingSession = payload.data.sessionId
+    ? await getChatSession(auth.supabase, {
+        sessionId: payload.data.sessionId,
+        userId: auth.userId
+      })
+    : null;
+
+  if (payload.data.sessionId && !existingSession) {
+    return NextResponse.json({ error: "Chat session not found." }, { status: 404 });
+  }
+
+  const preparedTurn = await prepareChatTurn({
     message: payload.data.message,
     sessionId: payload.data.sessionId,
     supabase: auth.supabase,
     userId: auth.userId
   });
+  const agentResult = await invokeChatAgent({
+    history:
+      existingSession?.messages.map((message) => ({
+        content: message.content,
+        role: message.role
+      })) ?? [],
+    message: payload.data.message,
+    sessionId: preparedTurn.sessionId,
+    supabase: auth.supabase,
+    userId: auth.userId
+  });
+  const session = await persistAssistantReply({
+    assistant: {
+      content: agentResult.content,
+      langsmithRunId: agentResult.langsmithRunId,
+      metadata: agentResult.metadata
+    },
+    sessionId: preparedTurn.sessionId,
+    supabase: auth.supabase,
+    userId: auth.userId
+  });
 
-  return NextResponse.json({ data: session });
+  return NextResponse.json({
+    data: session,
+    langsmithRunId: agentResult.langsmithRunId
+  });
 }
 
 async function authenticateRequest() {
