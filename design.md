@@ -105,6 +105,7 @@ UI:
 - Chat model input
 - Chat API key input, masked after save and stored encrypted server-side
 - Embedding provider select
+- Embedding dimensions input
 - Embedding model input
 - Embedding API key input, masked after save and stored encrypted server-side
 - Save button

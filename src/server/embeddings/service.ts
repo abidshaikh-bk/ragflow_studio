@@ -23,6 +23,7 @@ export type EmbeddingVector = {
 
 export type EmbeddingConfig = {
   apiKey: string;
+  dimensions: number;
   model: string;
   provider: string;
 };
@@ -38,6 +39,7 @@ type GenerateEmbeddingsParams = {
 };
 
 export type Embedder = (input: {
+  dimensions?: number;
   model: string;
   provider: string;
   texts: string[];
@@ -72,13 +74,15 @@ export async function generateDocumentEmbeddings(
         ? (input: { model: string; provider: string; texts: string[] }) =>
             embedTexts({
               ...input,
-              apiKey: config.apiKey
+              apiKey: config.apiKey,
+              dimensions: config.dimensions
             })
         : embedder;
 
     for (let index = 0; index < chunks.length; index += batchSize) {
       const batch = chunks.slice(index, index + batchSize);
       const values = await runtimeEmbedder({
+        dimensions: config.dimensions,
         model: config.model,
         provider: config.provider,
         texts: batch.map((chunk) => chunk.content)
@@ -87,6 +91,14 @@ export async function generateDocumentEmbeddings(
       if (values.length !== batch.length) {
         throw new Error("Embedding provider returned an unexpected number of vectors.");
       }
+
+      values.forEach((vector) => {
+        if (vector.length !== config.dimensions) {
+          throw new Error(
+            `Embedding provider returned ${vector.length} dimensions, expected ${config.dimensions}.`
+          );
+        }
+      });
 
       batch.forEach((chunk, batchIndex) => {
         vectors.push({
@@ -125,6 +137,7 @@ export async function generateDocumentEmbeddings(
 
 export async function embedTexts(input: {
   apiKey?: string;
+  dimensions?: number;
   model: string;
   provider: string;
   texts: string[];
@@ -143,12 +156,14 @@ export async function embedTexts(input: {
     case "openai":
       return embedWithOpenAi({
         apiKey,
+        dimensions: input.dimensions,
         model: input.model,
         texts: input.texts
       });
     case "gemini":
       return embedWithGemini({
         apiKey,
+        dimensions: input.dimensions,
         model: input.model,
         texts: input.texts
       });
@@ -188,6 +203,7 @@ export async function resolveEmbeddingConfig(
 
   return {
     apiKey: resolvedApiKey,
+    dimensions: userSettings.embeddingDimensions,
     model,
     provider
   };
@@ -228,11 +244,13 @@ function getProviderApiKeyFromEnv(provider: string) {
 
 async function embedWithOpenAi(input: {
   apiKey: string;
+  dimensions?: number;
   model: string;
   texts: string[];
 }) {
   const response = await fetch("https://api.openai.com/v1/embeddings", {
     body: JSON.stringify({
+      ...(input.dimensions ? { dimensions: input.dimensions } : {}),
       input: input.texts,
       model: input.model
     }),
@@ -259,6 +277,7 @@ async function embedWithOpenAi(input: {
 
 async function embedWithGemini(input: {
   apiKey: string;
+  dimensions?: number;
   model: string;
   texts: string[];
 }) {
@@ -276,7 +295,12 @@ async function embedWithGemini(input: {
                 }
               ]
             },
-            model: `models/${modelName}`
+            model: `models/${modelName}`,
+            ...(input.dimensions
+              ? {
+                  outputDimensionality: input.dimensions
+                }
+              : {})
           }),
           headers: {
             "content-type": "application/json",

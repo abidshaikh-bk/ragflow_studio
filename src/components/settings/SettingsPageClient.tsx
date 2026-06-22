@@ -13,6 +13,7 @@ type SettingsResponse = {
   chatModel: string;
   chatProvider: string;
   embeddingApiKeyMasked: string | null;
+  embeddingDimensions: number;
   embeddingModel: string;
   embeddingProvider: string;
 };
@@ -22,6 +23,7 @@ const defaultSettings: SettingsResponse = {
   chatModel: "gpt-4.1-mini",
   chatProvider: "openai",
   embeddingApiKeyMasked: null,
+  embeddingDimensions: 1024,
   embeddingModel: "text-embedding-3-small",
   embeddingProvider: "openai"
 };
@@ -117,6 +119,7 @@ export function SettingsPageClient() {
         initialValues={{
           chatModel: settings.chatModel,
           chatProvider: settings.chatProvider,
+          embeddingDimensions: settings.embeddingDimensions,
           embeddingModel: settings.embeddingModel,
           embeddingProvider: settings.embeddingProvider
         }}

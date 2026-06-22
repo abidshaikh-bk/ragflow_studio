@@ -51,6 +51,7 @@ export function getS3Env() {
 export function getPineconeEnv() {
   const apiKey = process.env.PINECONE_API_KEY;
   const indexName = process.env.PINECONE_INDEX_NAME;
+  const dimension = getPineconeDimensionEnv();
 
   if (!apiKey) {
     throw new Error("Missing required environment variable: PINECONE_API_KEY");
@@ -62,8 +63,25 @@ export function getPineconeEnv() {
 
   return {
     apiKey,
+    dimension,
     indexName
   };
+}
+
+export function getPineconeDimensionEnv() {
+  const dimensionValue = process.env.PINECONE_VECTOR_DIMENSION;
+
+  if (!dimensionValue) {
+    throw new Error("Missing required environment variable: PINECONE_VECTOR_DIMENSION");
+  }
+
+  const dimension = Number.parseInt(dimensionValue, 10);
+
+  if (!Number.isInteger(dimension) || dimension <= 0) {
+    throw new Error("PINECONE_VECTOR_DIMENSION must be a positive integer.");
+  }
+
+  return dimension;
 }
 
 export function getTavilyEnv() {

@@ -14,6 +14,7 @@ export type SettingsFormValues = {
   chatModel: string;
   chatProvider: string;
   embeddingApiKey: string;
+  embeddingDimensions: number;
   embeddingModel: string;
   embeddingProvider: string;
 };
@@ -40,6 +41,7 @@ const defaultValues: SettingsFormValues = {
   chatModel: "gpt-4.1-mini",
   chatProvider: "openai",
   embeddingApiKey: "",
+  embeddingDimensions: 1024,
   embeddingModel: "text-embedding-3-small",
   embeddingProvider: "openai"
 };
@@ -90,7 +92,7 @@ export function SettingsForm({
 
   function handleValueChange(
     field: keyof SettingsFormValues,
-    nextValue: string
+    nextValue: string | number
   ) {
     setValues((current) => ({
       ...current,
@@ -117,6 +119,10 @@ export function SettingsForm({
 
     if (!nextValues.embeddingProvider) {
       nextErrors.embeddingProvider = "Select an embedding provider.";
+    }
+
+    if (!nextValues.embeddingDimensions || nextValues.embeddingDimensions <= 0) {
+      nextErrors.embeddingDimensions = "Enter an embedding dimension.";
     }
 
     if (!nextValues.embeddingModel.trim()) {
@@ -207,6 +213,20 @@ export function SettingsForm({
               handleValueChange("embeddingProvider", event.target.value)
             }
             value={values.embeddingProvider}
+          />
+          <Input
+            error={fieldErrors.embeddingDimensions}
+            hint="This must match the Pinecone index dimension configured on the server."
+            label="Embedding dimensions"
+            onChange={(event) =>
+              handleValueChange(
+                "embeddingDimensions",
+                Number.parseInt(event.target.value, 10) || 0
+              )
+            }
+            placeholder="1024"
+            type="number"
+            value={String(values.embeddingDimensions)}
           />
           <Input
             error={fieldErrors.embeddingModel}

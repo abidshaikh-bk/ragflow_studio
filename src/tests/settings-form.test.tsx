@@ -20,6 +20,9 @@ describe("settings form", () => {
       screen.getByPlaceholderText("Enter a new chat provider key")
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Embedding provider")).toBeInTheDocument();
+    expect(
+      screen.getByRole("spinbutton", { name: /embedding dimensions/i })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Embedding model")).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText("Enter a new embedding provider key")
@@ -58,6 +61,7 @@ describe("settings form", () => {
         initialValues={{
           chatModel: "",
           chatProvider: "",
+          embeddingDimensions: 0,
           embeddingModel: "",
           embeddingProvider: ""
         }}
@@ -77,6 +81,7 @@ describe("settings form", () => {
     expect(screen.getByText("Select a chat provider.")).toBeInTheDocument();
     expect(screen.getByText("Enter a chat model.")).toBeInTheDocument();
     expect(screen.getByText("Select an embedding provider.")).toBeInTheDocument();
+    expect(screen.getByText("Enter an embedding dimension.")).toBeInTheDocument();
     expect(screen.getByText("Enter an embedding model.")).toBeInTheDocument();
   });
 

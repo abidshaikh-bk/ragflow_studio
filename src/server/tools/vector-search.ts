@@ -64,6 +64,7 @@ export async function queryDocumentVectors(
         }));
     const pineconeClient = deps?.pineconeClient ?? createPineconeQueryClient();
     const [vector] = await embedder({
+      dimensions: config.dimensions,
       model: config.model,
       provider: config.provider,
       texts: [input.query]

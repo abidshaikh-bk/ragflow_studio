@@ -38,6 +38,7 @@ describe("vector search tool", () => {
       chatModel: "gpt-4.1-mini",
       chatProvider: "openai",
       embeddingApiKeyMasked: null,
+      embeddingDimensions: 3,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -98,6 +99,7 @@ describe("vector search tool", () => {
     );
 
     expect(embedder).toHaveBeenCalledWith({
+      dimensions: 3,
       model: expect.any(String),
       provider: expect.any(String),
       texts: ["approval flow"]
@@ -174,6 +176,7 @@ describe("vector search tool", () => {
       chatModel: "gpt-4.1-mini",
       chatProvider: "openai",
       embeddingApiKeyMasked: null,
+      embeddingDimensions: 3,
       embeddingModel: "gemini-embedding-001",
       embeddingProvider: "gemini"
     });
@@ -201,6 +204,7 @@ describe("vector search tool", () => {
       );
 
       expect(embedder).toHaveBeenCalledWith({
+        dimensions: 3,
         model: "gemini-embedding-001",
         provider: "gemini",
         texts: ["approval flow"]

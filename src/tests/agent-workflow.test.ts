@@ -41,6 +41,7 @@ describe("chat agent workflow", () => {
           chatModel: "gpt-4.1-mini",
           chatProvider: "openai",
           embeddingApiKeyMasked: null,
+          embeddingDimensions: 1024,
           embeddingModel: "text-embedding-3-small",
           embeddingProvider: "openai"
         }),
@@ -96,6 +97,7 @@ describe("chat agent workflow", () => {
           chatModel: "gpt-4.1-mini",
           chatProvider: "openai",
           embeddingApiKeyMasked: null,
+          embeddingDimensions: 1024,
           embeddingModel: "text-embedding-3-small",
           embeddingProvider: "openai"
         }),
@@ -155,6 +157,7 @@ describe("chat agent workflow", () => {
           chatModel: "gpt-4.1-mini",
           chatProvider: "openai",
           embeddingApiKeyMasked: null,
+          embeddingDimensions: 1024,
           embeddingModel: "text-embedding-3-small",
           embeddingProvider: "openai"
         }),

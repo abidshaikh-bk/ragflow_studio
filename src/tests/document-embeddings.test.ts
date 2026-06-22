@@ -62,6 +62,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 2,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -82,6 +83,7 @@ describe("document embeddings", () => {
     );
 
     expect(embedder).toHaveBeenCalledWith({
+      dimensions: 2,
       model: "text-embedding-3-small",
       provider: "openai",
       texts: ["first chunk text", "second chunk text", "third chunk text"]
@@ -97,6 +99,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 2,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -132,6 +135,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue("saved-gemini-key");
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 3,
       embeddingModel: "gemini-embedding-001",
       embeddingProvider: "gemini"
     });
@@ -168,6 +172,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue(null);
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 2,
       embeddingModel: "sentence-transformers/all-MiniLM-L6-v2",
       embeddingProvider: "huggingface"
     });
@@ -196,6 +201,7 @@ describe("document embeddings", () => {
       );
 
       expect(embedder).toHaveBeenCalledWith({
+        dimensions: 2,
         model: "gemini-embedding-2",
         provider: "gemini",
         texts: ["first chunk text", "second chunk text", "third chunk text"]
@@ -211,6 +217,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 2,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -243,6 +250,7 @@ describe("document embeddings", () => {
     eqUserMock.mockResolvedValue({ error: null });
     getProviderCredentialSecretMock.mockResolvedValue("saved-user-openai-key");
     getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 3,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -276,5 +284,27 @@ describe("document embeddings", () => {
       process.env.OPENAI_API_KEY = originalOpenAiApiKey;
       vi.unstubAllGlobals();
     }
+  });
+
+  it("fails when the provider returns the wrong vector dimension", async () => {
+    eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
+    getUserSettingsMock.mockResolvedValue({
+      embeddingDimensions: 1024,
+      embeddingModel: "text-embedding-3-small",
+      embeddingProvider: "openai"
+    });
+
+    await expect(
+      generateDocumentEmbeddings(
+        {
+          chunks: [baseChunks[0]],
+          documentId: "doc-123",
+          supabase: supabaseMock as never,
+          userId: "user-123"
+        },
+        vi.fn().mockResolvedValue([[0.1, 0.2]])
+      )
+    ).rejects.toThrow(/returned 2 dimensions, expected 1024/i);
   });
 });

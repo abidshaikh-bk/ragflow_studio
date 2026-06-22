@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getPineconeDimensionEnv } from "@/lib/env";
 import type { SettingsPayload } from "@/lib/validations/settings";
 import { decryptSecret, encryptSecret } from "@/server/settings/crypto";
 
 const DEFAULT_SETTINGS = {
   chatModel: "gpt-4.1-mini",
   chatProvider: "openai",
+  embeddingDimensions: 1024,
   embeddingModel: "text-embedding-3-small",
   embeddingProvider: "openai"
 } as const;
@@ -18,6 +20,9 @@ const SETTINGS_LABELS = {
 type SettingsKind = keyof typeof SETTINGS_LABELS;
 
 type ModelConfigRow = {
+  extra_config?: {
+    dimensions?: number;
+  } | null;
   id: string;
   kind: "chat" | "embedding";
   model_name: string;
@@ -41,6 +46,7 @@ export type UserSettings = {
   chatModel: string;
   chatProvider: string;
   embeddingApiKeyMasked: string | null;
+  embeddingDimensions: number;
   embeddingModel: string;
   embeddingProvider: string;
 };
@@ -52,7 +58,7 @@ export async function getUserSettings(
   const [configsResult, credentialsResult] = await Promise.all([
     supabase
       .from("user_model_configs")
-      .select("id, kind, model_name, provider")
+      .select("id, kind, model_name, provider, extra_config")
       .eq("user_id", userId)
       .eq("is_default", true)
       .eq("is_active", true),
@@ -94,6 +100,8 @@ export async function getUserSettings(
     embeddingApiKeyMasked: hasDecryptableSecret(embeddingCredential)
       ? formatMaskedSecret(embeddingCredential?.api_key_last4 ?? null)
       : null,
+    embeddingDimensions:
+      embeddingConfig?.extra_config?.dimensions ?? getDefaultEmbeddingDimensions(),
     embeddingModel: embeddingConfig?.model_name ?? DEFAULT_SETTINGS.embeddingModel,
     embeddingProvider:
       embeddingConfig?.provider ?? DEFAULT_SETTINGS.embeddingProvider
@@ -110,6 +118,7 @@ export async function saveUserSettings(
     provider: payload.chatProvider
   });
   const embeddingConfigId = await saveModelConfig(supabase, userId, "embedding", {
+    dimensions: payload.embeddingDimensions,
     model: payload.embeddingModel,
     provider: payload.embeddingProvider
   });
@@ -137,10 +146,15 @@ async function saveModelConfig(
   userId: string,
   kind: ModelConfigRow["kind"],
   values: {
+    dimensions?: number;
     model: string;
     provider: string;
   }
 ) {
+  if (kind === "embedding") {
+    assertMatchingPineconeDimension(values.dimensions);
+  }
+
   const existingResult = await supabase
     .from("user_model_configs")
     .select("id")
@@ -159,6 +173,12 @@ async function saveModelConfig(
       .from("user_model_configs")
       .update({
         display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
+        extra_config:
+          kind === "embedding"
+            ? {
+                dimensions: values.dimensions ?? getDefaultEmbeddingDimensions()
+              }
+            : {},
         is_active: true,
         is_default: true,
         model_name: values.model,
@@ -185,6 +205,12 @@ async function saveModelConfig(
     .from("user_model_configs")
     .insert({
       display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
+      extra_config:
+        kind === "embedding"
+          ? {
+              dimensions: values.dimensions ?? getDefaultEmbeddingDimensions()
+            }
+          : {},
       is_active: true,
       is_default: true,
       kind,
@@ -326,6 +352,24 @@ function hasDecryptableSecret(credential: CredentialRow | undefined) {
   return Boolean(
     credential?.api_key_ciphertext && credential.api_key_iv && credential.api_key_tag
   );
+}
+
+function getDefaultEmbeddingDimensions() {
+  return getPineconeDimensionEnv() || DEFAULT_SETTINGS.embeddingDimensions;
+}
+
+function assertMatchingPineconeDimension(dimensions?: number) {
+  const pineconeDimension = getDefaultEmbeddingDimensions();
+
+  if (!dimensions) {
+    throw new Error("Embedding dimension is required.");
+  }
+
+  if (dimensions !== pineconeDimension) {
+    throw new Error(
+      `Embedding dimension must match the Pinecone index dimension of ${pineconeDimension}.`
+    );
+  }
 }
 
 export async function getProviderCredentialSecret(

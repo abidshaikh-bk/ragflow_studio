@@ -69,12 +69,16 @@ describe("settings service", () => {
     configsEqIsActiveMock.mockResolvedValue({
       data: [
         {
+          extra_config: null,
           id: "cfg-1",
           kind: "chat",
           model_name: "gpt-4.1-mini",
           provider: "openai"
         },
         {
+          extra_config: {
+            dimensions: 1024
+          },
           id: "cfg-2",
           kind: "embedding",
           model_name: "text-embedding-3-small",
@@ -120,6 +124,7 @@ describe("settings service", () => {
 
     expect(result.chatApiKeyMasked).toBeNull();
     expect(result.embeddingApiKeyMasked).toBeNull();
+    expect(result.embeddingDimensions).toBe(1024);
   });
 
   it("throws a re-entry error when a legacy credential row has no encrypted secret", async () => {

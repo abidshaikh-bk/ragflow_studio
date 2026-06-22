@@ -517,6 +517,7 @@ Implementation:
 - Use the saved encrypted embedding credential when the selected provider is supported.
 - Fall back to server default embedding provider.
 - Fall back to the provider environment key when no user-scoped credential is available.
+- Persist the embedding dimension alongside the user embedding config and ensure it matches the Pinecone index dimension configured on the server.
 - Batch embeddings.
 - Update document status to `embedding`.
 - Track processed chunk count.

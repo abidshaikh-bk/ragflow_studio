@@ -43,7 +43,11 @@ export async function POST(request: NextRequest) {
       error instanceof Error
         ? error.message
         : "Unable to save your settings right now.";
-    const status = message.includes("must be re-entered in Settings") ? 400 : 500;
+    const status =
+      message.includes("must be re-entered in Settings") ||
+      message.includes("Embedding dimension must match")
+        ? 400
+        : 500;
 
     return NextResponse.json({ error: message }, { status });
   }

@@ -22,6 +22,7 @@ cp .env.example .env.local
 | `S3_BUCKET_NAME` | Yes | No | Private document bucket |
 | `PINECONE_API_KEY` | Yes | No | Pinecone access |
 | `PINECONE_INDEX_NAME` | Yes | No | Pinecone index |
+| `PINECONE_VECTOR_DIMENSION` | Yes | No | Pinecone index vector dimension expected by embedding configs |
 | `LANGSMITH_API_KEY` | Yes | No | LangSmith tracing |
 | `LANGSMITH_PROJECT` | Yes | No | LangSmith project name |
 | `LANGCHAIN_TRACING_V2` | Yes | No | Enable LangSmith tracing |
@@ -62,6 +63,7 @@ npm run build
 - `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, and `LANGCHAIN_TRACING_V2` are consumed only by the server-side LangGraph agent tracing path.
 - `APP_ENCRYPTION_KEY` is used to encrypt saved provider credentials before they are written to Supabase. If it is unset in local development, the server falls back to deriving an encryption key from `SUPABASE_SERVICE_ROLE_KEY`.
 - `DEFAULT_EMBEDDING_PROVIDER=gemini` is supported by the runtime embedding service. When `DEFAULT_EMBEDDING_MODEL` is blank, the server defaults to `gemini-embedding-2`.
+- `PINECONE_VECTOR_DIMENSION` is enforced by the settings API and passed through to embedding requests so generated vectors match the Pinecone index shape before upsert.
 
 
 ## Git/GitHub prerequisites

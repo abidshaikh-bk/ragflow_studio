@@ -187,6 +187,7 @@ TASK-009 implementation note:
 - Fetch masked settings from `/api/settings`.
 - Save settings to `/api/settings`.
 - Validate provider and model names.
+- Validate that embedding dimensions are present and match the server Pinecone index dimension.
 - Never display raw stored API keys.
 - Show save success/error state.
 
@@ -198,6 +199,7 @@ MVP note:
 ## Test requirements
 
 - Renders chat and embedding sections.
+- Renders embedding dimension control.
 - Shows masked key placeholder.
 - Save button disabled while submitting.
 - Validation errors render.

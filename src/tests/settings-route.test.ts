@@ -42,6 +42,7 @@ describe("/api/settings route", () => {
           chatModel: "gpt-4.1-mini",
           chatProvider: "openai",
           embeddingApiKey: "",
+          embeddingDimensions: 1024,
           embeddingModel: "text-embedding-3-small",
           embeddingProvider: "openai"
         }),
@@ -69,6 +70,7 @@ describe("/api/settings route", () => {
       chatModel: "gpt-4.1-mini",
       chatProvider: "openai",
       embeddingApiKeyMasked: "********5678",
+      embeddingDimensions: 1024,
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
     });
@@ -99,6 +101,7 @@ describe("/api/settings route", () => {
       chatModel: "claude-3-5-sonnet",
       chatProvider: "anthropic",
       embeddingApiKeyMasked: "********5678",
+      embeddingDimensions: 1024,
       embeddingModel: "text-embedding-3-large",
       embeddingProvider: "openai"
     });
@@ -110,6 +113,7 @@ describe("/api/settings route", () => {
           chatModel: "claude-3-5-sonnet",
           chatProvider: "anthropic",
           embeddingApiKey: "raw-embedding-secret",
+          embeddingDimensions: 1024,
           embeddingModel: "text-embedding-3-large",
           embeddingProvider: "openai"
         }),
@@ -127,6 +131,7 @@ describe("/api/settings route", () => {
       chatModel: "claude-3-5-sonnet",
       chatProvider: "anthropic",
       embeddingApiKey: "raw-embedding-secret",
+      embeddingDimensions: 1024,
       embeddingModel: "text-embedding-3-large",
       embeddingProvider: "openai"
     });
@@ -159,6 +164,7 @@ describe("/api/settings route", () => {
           chatModel: "gemini-3.1-flash-lite",
           chatProvider: "gemini",
           embeddingApiKey: "",
+          embeddingDimensions: 1024,
           embeddingModel: "gemini-embedding-2-preview",
           embeddingProvider: "gemini"
         }),

@@ -63,6 +63,7 @@ describe("phase 1a page scaffolds", () => {
                   chatModel: "gpt-4.1-mini",
                   chatProvider: "openai",
                   embeddingApiKeyMasked: "********5678",
+                  embeddingDimensions: 1024,
                   embeddingModel: "text-embedding-3-small",
                   embeddingProvider: "openai"
                 }
