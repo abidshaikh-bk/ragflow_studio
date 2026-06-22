@@ -812,7 +812,7 @@ Acceptance criteria:
 
 ### TASK-025: Add server-side auth guards
 
-Status: not_started
+Status: validated
 
 Objective: Ensure all protected APIs enforce auth.
 

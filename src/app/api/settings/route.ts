@@ -1,66 +1,46 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { settingsPayloadSchema } from "@/lib/validations/settings";
+import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { getUserSettings, saveUserSettings } from "@/server/settings/service";
-import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export async function GET() {
-  const auth = await authenticateRequest();
+  return withAuthenticatedApiRoute(async (auth) => {
+    const settings = await getUserSettings(auth.supabase, auth.userId);
 
-  if (!auth.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const settings = await getUserSettings(auth.supabase, auth.userId);
-
-  return NextResponse.json({ data: settings });
+    return NextResponse.json({ data: settings });
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await authenticateRequest();
+  return withAuthenticatedApiRoute(async (auth) => {
+    const payload = settingsPayloadSchema.safeParse(await request.json());
 
-  if (!auth.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (!payload.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid settings payload.",
+          fieldErrors: payload.error.flatten().fieldErrors
+        },
+        { status: 400 }
+      );
+    }
 
-  const payload = settingsPayloadSchema.safeParse(await request.json());
+    try {
+      const settings = await saveUserSettings(auth.supabase, auth.userId, payload.data);
 
-  if (!payload.success) {
-    return NextResponse.json(
-      {
-        error: "Invalid settings payload.",
-        fieldErrors: payload.error.flatten().fieldErrors
-      },
-      { status: 400 }
-    );
-  }
+      return NextResponse.json({ data: settings });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to save your settings right now.";
+      const status =
+        message.includes("must be re-entered in Settings") ||
+        message.includes("Embedding dimension must match")
+          ? 400
+          : 500;
 
-  try {
-    const settings = await saveUserSettings(auth.supabase, auth.userId, payload.data);
-
-    return NextResponse.json({ data: settings });
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unable to save your settings right now.";
-    const status =
-      message.includes("must be re-entered in Settings") ||
-      message.includes("Embedding dimension must match")
-        ? 400
-        : 500;
-
-    return NextResponse.json({ error: message }, { status });
-  }
-}
-
-async function authenticateRequest() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  return {
-    supabase,
-    userId: user?.id ?? null
-  };
+      return NextResponse.json({ error: message }, { status });
+    }
+  });
 }

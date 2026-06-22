@@ -55,6 +55,10 @@ Every protected route must:
 4. Use server-derived `user.id` for all queries/mutations.
 5. Validate request body with Zod.
 
+Implementation note:
+
+- Prefer a shared server-side auth guard helper for protected Next.js route handlers so every API route enforces the same session-derived `user.id` behavior.
+
 ## Secret handling
 
 - `NEXT_PUBLIC_*` variables are browser-visible. Only Supabase URL and anon key may use this prefix.

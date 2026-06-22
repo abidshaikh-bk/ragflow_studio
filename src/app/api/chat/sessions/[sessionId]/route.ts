@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { getChatSession } from "@/server/chat/persistence";
-import { createServerSupabaseClient } from "@/server/supabase/server";
 
 type RouteContext = {
   params: Promise<{
@@ -9,47 +9,34 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await authenticateRequest();
+  return withAuthenticatedApiRoute(async (auth) => {
+    const { sessionId } = await context.params;
 
-  if (!auth.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    try {
+      const session = await getChatSession(auth.supabase, {
+        sessionId,
+        userId: auth.userId
+      });
 
-  const { sessionId } = await context.params;
+      if (!session) {
+        return NextResponse.json(
+          { error: "Chat session not found." },
+          { status: 404 }
+        );
+      }
 
-  try {
-    const session = await getChatSession(auth.supabase, {
-      sessionId,
-      userId: auth.userId
-    });
+      return NextResponse.json({ data: session });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to load the chat session.";
+      const status =
+        message.includes("Invalid chat session id") || message.includes("not found")
+          ? 400
+          : 500;
 
-    if (!session) {
-      return NextResponse.json({ error: "Chat session not found." }, { status: 404 });
+      return NextResponse.json({ error: message }, { status });
     }
-
-    return NextResponse.json({ data: session });
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unable to load the chat session.";
-    const status =
-      message.includes("Invalid chat session id") || message.includes("not found")
-        ? 400
-        : 500;
-
-    return NextResponse.json({ error: message }, { status });
-  }
-}
-
-async function authenticateRequest() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  return {
-    supabase,
-    userId: user?.id ?? null
-  };
+  });
 }

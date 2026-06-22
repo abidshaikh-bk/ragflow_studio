@@ -6,134 +6,123 @@ import {
   prepareChatTurn
 } from "@/server/chat/persistence";
 import { invokeChatAgent } from "@/server/agent/workflow";
+import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { appEventLogger } from "@/server/logging/events";
-import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export async function POST(request: NextRequest) {
-  const auth = await authenticateRequest();
+  return withAuthenticatedApiRoute(async (auth) => {
+    let requestBody: unknown;
 
-  if (!auth.userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let requestBody: unknown;
-
-  try {
-    requestBody = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON request body." },
-      { status: 400 }
-    );
-  }
-
-  const payload = chatMessagePayloadSchema.safeParse(requestBody);
-
-  if (!payload.success) {
-    return NextResponse.json(
-      {
-        error: "Invalid chat payload.",
-        fieldErrors: payload.error.flatten().fieldErrors
-      },
-      { status: 400 }
-    );
-  }
-
-  const startedAt = Date.now();
-
-  appEventLogger.info({
-    event: "chat.request.started",
-    metadata: {
-      messageLength: payload.data.message.length,
-      requestedSessionId: payload.data.sessionId ?? null
-    },
-    sessionId: payload.data.sessionId,
-    userId: auth.userId
-  });
-
-  try {
-    const existingSession = payload.data.sessionId
-      ? await getChatSession(auth.supabase, {
-          sessionId: payload.data.sessionId,
-          userId: auth.userId
-        })
-      : null;
-
-    if (payload.data.sessionId && !existingSession) {
-      return NextResponse.json({ error: "Chat session not found." }, { status: 404 });
+    try {
+      requestBody = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request body." },
+        { status: 400 }
+      );
     }
 
-    const preparedTurn = await prepareChatTurn({
-      message: payload.data.message,
-      sessionId: payload.data.sessionId,
-      supabase: auth.supabase,
-      userId: auth.userId
-    });
-    const agentResult = await invokeChatAgent({
-      history:
-        existingSession?.messages.map((message) => ({
-          content: message.content,
-          role: message.role
-        })) ?? [],
-      message: payload.data.message,
-      sessionId: preparedTurn.sessionId,
-      supabase: auth.supabase,
-      userId: auth.userId
-    });
-    const session = await persistAssistantReply({
-      assistant: {
-        content: agentResult.content,
-        langsmithRunId: agentResult.langsmithRunId,
-        metadata: agentResult.metadata
-      },
-      sessionId: preparedTurn.sessionId,
-      supabase: auth.supabase,
-      userId: auth.userId
-    });
+    const payload = chatMessagePayloadSchema.safeParse(requestBody);
+
+    if (!payload.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid chat payload.",
+          fieldErrors: payload.error.flatten().fieldErrors
+        },
+        { status: 400 }
+      );
+    }
+
+    const startedAt = Date.now();
 
     appEventLogger.info({
-      durationMs: Date.now() - startedAt,
-      event: "chat.request.completed",
-      langsmithRunId: agentResult.langsmithRunId,
+      event: "chat.request.started",
       metadata: {
-        sourceCount: agentResult.metadata.sources?.length ?? 0,
-        toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
-      },
-      sessionId: preparedTurn.sessionId,
-      userId: auth.userId
-    });
-
-    return NextResponse.json({
-      data: session,
-      langsmithRunId: agentResult.langsmithRunId
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to complete the chat request.";
-
-    appEventLogger.error({
-      durationMs: Date.now() - startedAt,
-      errorMessage: message,
-      event: "chat.request.failed",
-      metadata: {
+        messageLength: payload.data.message.length,
         requestedSessionId: payload.data.sessionId ?? null
       },
       sessionId: payload.data.sessionId,
       userId: auth.userId
     });
 
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
+    try {
+      const existingSession = payload.data.sessionId
+        ? await getChatSession(auth.supabase, {
+            sessionId: payload.data.sessionId,
+            userId: auth.userId
+          })
+        : null;
 
-async function authenticateRequest() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+      if (payload.data.sessionId && !existingSession) {
+        return NextResponse.json(
+          { error: "Chat session not found." },
+          { status: 404 }
+        );
+      }
 
-  return {
-    supabase,
-    userId: user?.id ?? null
-  };
+      const preparedTurn = await prepareChatTurn({
+        message: payload.data.message,
+        sessionId: payload.data.sessionId,
+        supabase: auth.supabase,
+        userId: auth.userId
+      });
+      const agentResult = await invokeChatAgent({
+        history:
+          existingSession?.messages.map((message) => ({
+            content: message.content,
+            role: message.role
+          })) ?? [],
+        message: payload.data.message,
+        sessionId: preparedTurn.sessionId,
+        supabase: auth.supabase,
+        userId: auth.userId
+      });
+      const session = await persistAssistantReply({
+        assistant: {
+          content: agentResult.content,
+          langsmithRunId: agentResult.langsmithRunId,
+          metadata: agentResult.metadata
+        },
+        sessionId: preparedTurn.sessionId,
+        supabase: auth.supabase,
+        userId: auth.userId
+      });
+
+      appEventLogger.info({
+        durationMs: Date.now() - startedAt,
+        event: "chat.request.completed",
+        langsmithRunId: agentResult.langsmithRunId,
+        metadata: {
+          sourceCount: agentResult.metadata.sources?.length ?? 0,
+          toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
+        },
+        sessionId: preparedTurn.sessionId,
+        userId: auth.userId
+      });
+
+      return NextResponse.json({
+        data: session,
+        langsmithRunId: agentResult.langsmithRunId
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to complete the chat request.";
+
+      appEventLogger.error({
+        durationMs: Date.now() - startedAt,
+        errorMessage: message,
+        event: "chat.request.failed",
+        metadata: {
+          requestedSessionId: payload.data.sessionId ?? null
+        },
+        sessionId: payload.data.sessionId,
+        userId: auth.userId
+      });
+
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  });
 }

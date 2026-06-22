@@ -143,6 +143,55 @@ describe("/api/settings route", () => {
     expect(payload.data.embeddingApiKey).toBeUndefined();
   });
 
+  it("ignores any client-supplied userId and saves settings for the authenticated user", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+    saveUserSettingsMock.mockResolvedValue({
+      chatApiKeyMasked: null,
+      chatModel: "gpt-4.1-mini",
+      chatProvider: "openai",
+      embeddingApiKeyMasked: null,
+      embeddingDimensions: 1024,
+      embeddingModel: "text-embedding-3-small",
+      embeddingProvider: "openai"
+    });
+
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/settings", {
+        body: JSON.stringify({
+          chatApiKey: "",
+          chatModel: "gpt-4.1-mini",
+          chatProvider: "openai",
+          embeddingApiKey: "",
+          embeddingDimensions: 1024,
+          embeddingModel: "text-embedding-3-small",
+          embeddingProvider: "openai",
+          userId: "attacker-controlled-user"
+        }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(saveUserSettingsMock).toHaveBeenCalledWith(supabaseMock, "user-123", {
+      chatApiKey: "",
+      chatModel: "gpt-4.1-mini",
+      chatProvider: "openai",
+      embeddingApiKey: "",
+      embeddingDimensions: 1024,
+      embeddingModel: "text-embedding-3-small",
+      embeddingProvider: "openai"
+    });
+  });
+
   it("returns a helpful 400 when a legacy saved key must be re-entered", async () => {
     getUserMock.mockResolvedValue({
       data: {

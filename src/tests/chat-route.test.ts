@@ -206,6 +206,67 @@ describe("/api/chat route", () => {
     );
   });
 
+  it("ignores any client-supplied userId and uses the authenticated user for chat persistence", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-123" }
+      }
+    });
+    prepareChatTurnMock.mockResolvedValue({
+      messageId: "message-1",
+      sessionId: "session-1"
+    });
+    invokeChatAgentMock.mockResolvedValue({
+      content: "Saved assistant reply",
+      langsmithRunId: null,
+      metadata: {
+        sources: [],
+        toolActivity: []
+      }
+    });
+    persistAssistantReplyMock.mockResolvedValue({
+      id: "session-1",
+      messages: [],
+      title: "Summarize my documents",
+      updatedAt: "Jun 21, 10:05 PM"
+    });
+
+    const response = await POST(
+      createJsonRequest({
+        message: "Summarize my documents",
+        userId: "attacker-controlled-user"
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(prepareChatTurnMock).toHaveBeenCalledWith({
+      message: "Summarize my documents",
+      sessionId: undefined,
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
+    expect(invokeChatAgentMock).toHaveBeenCalledWith({
+      history: [],
+      message: "Summarize my documents",
+      sessionId: "session-1",
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
+    expect(persistAssistantReplyMock).toHaveBeenCalledWith({
+      assistant: {
+        content: "Saved assistant reply",
+        langsmithRunId: null,
+        metadata: {
+          sources: [],
+          toolActivity: []
+        }
+      },
+      sessionId: "session-1",
+      supabase: supabaseMock,
+      userId: "user-123"
+    });
+  });
+
   it("returns a JSON 500 response when the agent fails", async () => {
     getUserMock.mockResolvedValue({
       data: {

@@ -1602,3 +1602,60 @@ Pass
 
 ### Follow-up
 - Reuse the structured logger for later smoke-test and deployment instrumentation tasks.
+
+---
+
+## TASK-025: Add server-side auth guards
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-025-server-side-auth-guards
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Ensure all protected APIs enforce auth and derive user identity exclusively from the authenticated server session.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- src/app/api/chat/route.ts
+- src/app/api/chat/sessions/[sessionId]/route.ts
+- src/app/api/chat/sessions/route.ts
+- src/app/api/documents/[documentId]/status/route.ts
+- src/app/api/documents/route.ts
+- src/app/api/documents/upload/route.ts
+- src/app/api/settings/route.ts
+- src/server/auth/api.ts
+- src/tests/chat-route.test.ts
+- src/tests/settings-route.test.ts
+
+### Implementation Notes
+- Added `src/server/auth/api.ts` so every protected route handler can enforce the same server-side Supabase session check and derive `userId` from the authenticated request context.
+- Replaced per-route auth duplication across settings, documents, chat, and chat-session APIs with the shared authenticated route wrapper.
+- Added regression coverage proving client-supplied `userId` fields are ignored in favor of the authenticated server session.
+
+### Tests Added
+- `src/tests/chat-route.test.ts`
+- `src/tests/settings-route.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the authenticated route wrapper for any future protected APIs added during later deployment or MCP phases.
