@@ -1355,12 +1355,13 @@ Pass
 
 ## TASK-021: Implement LangGraph agent
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-021-langgraph-agent
+Commit Hash: 861397e
 Started: 2026-06-22
-Completed:
+Completed: 2026-06-22
 
 ### Objective
 Create a LangGraph-based chat agent that routes between vector retrieval, date/time, and Tavily web search, then composes a grounded answer with LangSmith tracing metadata.

@@ -718,7 +718,7 @@ Acceptance criteria:
 
 ### TASK-021: Implement LangGraph agent
 
-Status: validated
+Status: done
 
 Objective: Create Agentic RAG workflow using LangGraph.js.
 
