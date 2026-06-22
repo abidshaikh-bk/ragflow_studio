@@ -25,6 +25,10 @@ vi.mock("@/lib/supabase/browser", () => ({
   })
 }));
 
+vi.mock("@/lib/e2e", () => ({
+  shouldUseE2ELoginBypass: () => false
+}));
+
 describe("auth page scaffolds", () => {
   beforeEach(() => {
     pushMock.mockReset();

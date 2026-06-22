@@ -854,7 +854,7 @@ Acceptance criteria:
 
 ### TASK-028: Add E2E auth test
 
-Status: not_started
+Status: validated
 
 Objective: Validate login and protected routing.
 

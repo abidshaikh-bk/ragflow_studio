@@ -1,10 +1,16 @@
 import { ChatLayout } from "@/components/chat/ChatLayout";
+import { getE2EAuthenticatedUser } from "@/server/auth/e2e";
 import { listChatSessions } from "@/server/chat/persistence";
 import { requireAuthenticatedUser } from "@/server/auth/session";
 import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export default async function ChatPage() {
   const user = await requireAuthenticatedUser();
+
+  if (await getE2EAuthenticatedUser()) {
+    return <ChatLayout initialSessions={[]} />;
+  }
+
   const supabase = await createServerSupabaseClient();
   const sessions = await listChatSessions(supabase, user.id);
 

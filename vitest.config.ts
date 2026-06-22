@@ -11,6 +11,8 @@ export default defineConfig({
     jsx: "automatic"
   },
   test: {
+    exclude: ["src/tests/e2e/**"],
+    include: ["src/tests/**/*.{test,spec}.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/tests/setup.ts"]

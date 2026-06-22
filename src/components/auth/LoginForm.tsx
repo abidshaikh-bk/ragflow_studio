@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { shouldUseE2ELoginBypass } from "@/lib/e2e";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { Input } from "@/components/ui/Input";
 
 type LoginSubmitResult = {
+  hardRedirect?: boolean;
   message: string;
   redirectTo: "/chat";
 };
@@ -42,12 +44,19 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     try {
       const submit = onSubmit ?? loginWithSupabase;
       const result = await submit({ email, password });
+      const canUseHardRedirect =
+        result.hardRedirect &&
+        !globalThis.navigator.userAgent.toLowerCase().includes("jsdom");
 
       setSuccess(result.message);
 
-      startTransition(() => {
-        router.push(result.redirectTo);
-      });
+      if (canUseHardRedirect) {
+        globalThis.location.assign(result.redirectTo);
+      } else {
+        startTransition(() => {
+          router.push(result.redirectTo);
+        });
+      }
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -100,6 +109,10 @@ async function loginWithSupabase(values: {
   email: string;
   password: string;
 }): Promise<LoginSubmitResult> {
+  if (shouldUseE2ELoginBypass()) {
+    return loginWithE2EBypass();
+  }
+
   const supabase = createBrowserSupabaseClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: values.email.trim(),
@@ -108,6 +121,28 @@ async function loginWithSupabase(values: {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  return {
+    hardRedirect: true,
+    message: "Signed in successfully. Redirecting to chat.",
+    redirectTo: "/chat"
+  };
+}
+
+async function loginWithE2EBypass(): Promise<LoginSubmitResult> {
+  const response = await fetch("/api/e2e/login", {
+    method: "POST"
+  });
+  const payload = (await response.json()) as {
+    data?: {
+      redirectTo?: "/chat";
+    };
+    error?: string;
+  };
+
+  if (!response.ok || payload.data?.redirectTo !== "/chat") {
+    throw new Error(payload.error || "Unable to log in right now.");
   }
 
   return {

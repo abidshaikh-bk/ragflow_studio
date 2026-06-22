@@ -73,6 +73,12 @@ Add these scripts to `package.json`:
 4. Open `/settings`.
 5. Confirm settings page loads.
 
+Implementation note:
+
+- `npm run test:e2e` boots its own Next.js dev server through Playwright on `http://127.0.0.1:3100`.
+- The runner enables a test-only auth bypass so the real login form can complete without seeded Supabase credentials.
+- The bypass is limited to Playwright runs and should not be enabled for normal local development or production.
+
 ### Document upload flow
 
 1. Login.
@@ -139,6 +145,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 
 ## Current tool coverage
 
+- `src/tests/e2e/auth.spec.ts` validates protected-route redirect to `/login`, successful login redirect to `/chat`, and authenticated access to `/settings` using the Playwright-only auth harness.
 - `src/tests/settings-route.test.ts` and `src/tests/chat-route.test.ts` verify protected API routes ignore client-supplied `userId` fields and continue using the authenticated server session user.
 - `src/tests/settings-route.test.ts`, `src/tests/document-upload-route.test.ts`, `src/tests/document-status-route.test.ts`, and `src/tests/chat-sessions-route.test.ts` verify malformed JSON, unsupported file uploads, and invalid UUID params return `400` responses before the routes continue.
 - `src/tests/app-event-logger.test.ts`, `src/tests/langsmith-tracing.test.ts`, and `src/tests/settings-route.test.ts` verify secret-shaped values are redacted from structured logs, trace previews, and reflected settings API errors while the UI continues to show only masked saved credentials.

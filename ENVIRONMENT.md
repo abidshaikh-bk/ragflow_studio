@@ -64,6 +64,7 @@ npm run build
 - `APP_ENCRYPTION_KEY` is used to encrypt saved provider credentials before they are written to Supabase. If it is unset in local development, the server falls back to deriving an encryption key from `SUPABASE_SERVICE_ROLE_KEY`.
 - `DEFAULT_EMBEDDING_PROVIDER=gemini` is supported by the runtime embedding service. When `DEFAULT_EMBEDDING_MODEL` is blank, the server defaults to `gemini-embedding-2`.
 - `PINECONE_VECTOR_DIMENSION` is enforced by the settings API and passed through to embedding requests so generated vectors match the Pinecone index shape before upsert.
+- Playwright injects `E2E_AUTH_BYPASS=true` and `NEXT_PUBLIC_E2E_AUTH_BYPASS=true` only for `npm run test:e2e`; do not add them to committed environment files for normal app usage.
 
 
 ## Git/GitHub prerequisites

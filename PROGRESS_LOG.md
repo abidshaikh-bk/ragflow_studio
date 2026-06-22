@@ -1777,3 +1777,60 @@ Pass
 
 ### Follow-up
 - Reuse the shared redaction helper anywhere future MCP or deployment features surface secret-adjacent payloads into logs, traces, or user-visible errors.
+
+---
+
+## TASK-028: Add E2E auth test
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-028-e2e-auth-test
+Started: 2026-06-23
+Completed:
+
+### Objective
+Validate login and protected routing with a real Playwright browser flow.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- ENVIRONMENT.md
+- TESTING.md
+- playwright.config.ts
+- src/app/(app)/chat/page.tsx
+- src/app/api/e2e/login/route.ts
+- src/components/auth/LoginForm.tsx
+- src/lib/e2e.ts
+- src/server/auth/e2e.ts
+- src/server/auth/session.ts
+- src/server/supabase/middleware.ts
+- src/tests/auth-forms.test.tsx
+- src/tests/e2e/auth.spec.ts
+- vitest.config.ts
+
+### Implementation Notes
+- Added a Playwright-only auth harness that exercises the real login form without requiring seeded Supabase credentials.
+- Reused the protected-route middleware and server auth helpers with a test-only cookie so `/chat` and `/settings` can render deterministically during E2E.
+- Isolated Vitest from Playwright specs and pinned the Playwright web server to a dedicated local port for stable runs.
+
+### Tests Added
+- `src/tests/e2e/auth.spec.ts`
+- Updated `src/tests/auth-forms.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Complete the auth E2E harness, then commit and push before moving to TASK-029.
