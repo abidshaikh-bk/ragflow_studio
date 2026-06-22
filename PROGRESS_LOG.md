@@ -1497,3 +1497,53 @@ Pass
 
 ### Follow-up
 - None
+
+---
+
+## TASK-023: Add LangSmith tracing
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-023-langsmith-tracing
+Commit Hash:
+Started: 2026-06-22
+Completed: 2026-06-22
+
+### Objective
+Trace agent runs, tool calls, and retrieval behavior with redacted LangSmith payloads while persisting the run id for chat history.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/server/agent/workflow.ts
+- src/server/langsmith/tracing.ts
+- src/tests/langsmith-tracing.test.ts
+
+### Implementation Notes
+- Added `src/server/langsmith/tracing.ts` so all LangSmith tracing uses one server-side helper that returns the real runtime result to the app while emitting only redacted summaries to LangSmith.
+- Wrapped the vector-search, date/time, web-search, and answer-composition stages in explicit tool traces so retrieval behavior and tool execution are visible without leaking full prompts, raw document text, or full model outputs.
+- Kept the top-level chat-agent trace ID flow intact so `/api/chat` can continue persisting the LangSmith run id alongside assistant messages.
+
+### Tests Added
+- `src/tests/langsmith-tracing.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the shared tracing helper for app-level structured event logging in `TASK-024`.

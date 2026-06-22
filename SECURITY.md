@@ -118,6 +118,13 @@ Safe trace metadata:
 - latency
 - status
 - run ID
+- short message previews or answer previews with sensitive content removed
+
+LangSmith traces for this app must use redacted summaries only:
+
+- user prompts: preview text only
+- retrieval traces: counts, document IDs, and scores only
+- answer-composition traces: preview text and source counts only
 
 ## Tool logging
 

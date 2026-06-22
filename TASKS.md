@@ -124,7 +124,7 @@ Acceptance criteria:
 
 ---
 
-## Phase 1A — UI Mockups and Page Scaffolding
+## Phase 2 — UI Mockups and Page Scaffolding
 
 ### TASK-002A: Add UI mockup reference docs
 
@@ -230,7 +230,7 @@ Acceptance criteria:
 - Later tasks can wire backend logic into these pages.
 
 
-## Phase 2 — Supabase Auth and Database
+## Phase 3 — Supabase Auth and Database
 
 ### TASK-003: Configure Supabase client/server utilities
 
@@ -335,7 +335,7 @@ Acceptance criteria:
 
 ---
 
-## Phase 3 — Settings Page
+## Phase 4 — Settings Page
 
 ### TASK-007: Build settings UI
 
@@ -393,7 +393,7 @@ Acceptance criteria:
 
 ---
 
-## Phase 4 — Document Upload and Processing
+## Phase 5 — Document Upload and Processing
 
 ### TASK-009: Build document upload page
 
@@ -586,7 +586,7 @@ Acceptance criteria:
 
 ---
 
-## Phase 5 — Chat and Agentic RAG
+## Phase 6 — Chat and Agentic RAG
 
 ### TASK-016: Build chat UI
 
@@ -779,11 +779,11 @@ Acceptance criteria:
 
 ---
 
-## Phase 6 — Observability, Security, QA, Launch
+## Phase 7 — Observability
 
 ### TASK-023: Add LangSmith tracing
 
-Status: not_started
+Status: done
 
 Objective: Trace agent runs, tool calls, and retrieval behavior.
 
@@ -807,6 +807,8 @@ Acceptance criteria:
 - Logs are structured.
 
 ---
+
+## Phase 8 — Security and Validation
 
 ### TASK-025: Add server-side auth guards
 
@@ -847,6 +849,8 @@ Acceptance criteria:
 - UI masks saved keys.
 
 ---
+
+## Phase 9 — QA, Deployment, and Smoke Tests
 
 ### TASK-028: Add E2E auth test
 
@@ -930,7 +934,7 @@ Acceptance criteria:
 
 These tasks are later-phase tasks. Do not implement them before the MVP smoke test passes unless explicitly instructed.
 
-### TASK-041: Add runtime MCP schema
+### TASK-034: Add runtime MCP schema
 
 Status: not_started
 
@@ -957,7 +961,7 @@ Acceptance criteria:
 
 ---
 
-### TASK-042: Add runtime MCP backend adapter
+### TASK-035: Add runtime MCP backend adapter
 
 Status: not_started
 
@@ -987,7 +991,7 @@ Acceptance criteria:
 
 ---
 
-### TASK-043: Add MCP configuration APIs
+### TASK-036: Add MCP configuration APIs
 
 Status: not_started
 
@@ -1016,7 +1020,7 @@ Acceptance criteria:
 
 ---
 
-### TASK-044: Add MCP Tools Settings UI
+### TASK-037: Add MCP Tools Settings UI
 
 Status: not_started
 
@@ -1048,7 +1052,7 @@ Acceptance criteria:
 
 ---
 
-### TASK-045: Integrate runtime MCP tools into Agentic RAG
+### TASK-038: Integrate runtime MCP tools into Agentic RAG
 
 Status: not_started
 

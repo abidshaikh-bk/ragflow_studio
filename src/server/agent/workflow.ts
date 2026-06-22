@@ -3,12 +3,15 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { traceable } from "langsmith/traceable";
 import type { ChatMessageMetadata } from "@/components/chat/types";
 import {
   getProviderCredentialSecret,
   getUserSettings
 } from "@/server/settings/service";
+import {
+  createTracePreview,
+  traceServerExecution
+} from "@/server/langsmith/tracing";
 import { getCurrentDateTime } from "@/server/tools/date-time";
 import {
   queryDocumentVectors,
@@ -160,12 +163,36 @@ function createChatAgentGraph(
       route: classifyRoute(state.message)
     }))
     .addNode("runVectorSearch", async (state) => {
-      const result = await resolvedDeps.vectorSearchTool({
-        query: state.message,
-        sessionId: params.sessionId,
-        supabase: params.supabase,
-        userId: params.userId
-      });
+      const result = (
+        await traceServerExecution({
+          invoke: () =>
+            resolvedDeps.vectorSearchTool({
+              query: state.message,
+              sessionId: params.sessionId,
+              supabase: params.supabase,
+              userId: params.userId
+            }),
+          metadata: {
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          },
+          name: "ragflow-vector-search-tool",
+          runType: "tool",
+          serializeResult: (result) => ({
+            matchCount: result.matches.length,
+            matchedDocumentIds: Array.from(
+              new Set(result.matches.map((match) => match.documentId))
+            ),
+            topScore: result.matches[0]?.score ?? null
+          }),
+          tags: ["chat", "tool", "vector-search", "ragflow-studio"],
+          traceInput: {
+            queryPreview: createTracePreview(state.message),
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          }
+        })
+      ).result;
 
       return {
         toolActivity: [
@@ -177,11 +204,31 @@ function createChatAgentGraph(
       };
     })
     .addNode("runDateTime", async () => {
-      const result = await resolvedDeps.dateTimeTool({
-        sessionId: params.sessionId,
-        supabase: params.supabase,
-        userId: params.userId
-      });
+      const result = (
+        await traceServerExecution({
+          invoke: () =>
+            resolvedDeps.dateTimeTool({
+              sessionId: params.sessionId,
+              supabase: params.supabase,
+              userId: params.userId
+            }),
+          metadata: {
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          },
+          name: "ragflow-date-time-tool",
+          runType: "tool",
+          serializeResult: (result) => ({
+            isoDateTime: result.isoDateTime,
+            timeZone: result.timeZone
+          }),
+          tags: ["chat", "tool", "date-time", "ragflow-studio"],
+          traceInput: {
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          }
+        })
+      ).result;
 
       return {
         timeContext: result,
@@ -189,13 +236,35 @@ function createChatAgentGraph(
       };
     })
     .addNode("runWebSearch", async (state) => {
-      const result = await resolvedDeps.webSearchTool({
-        maxResults: 3,
-        query: state.message,
-        sessionId: params.sessionId,
-        supabase: params.supabase,
-        userId: params.userId
-      });
+      const result = (
+        await traceServerExecution({
+          invoke: () =>
+            resolvedDeps.webSearchTool({
+              maxResults: 3,
+              query: state.message,
+              sessionId: params.sessionId,
+              supabase: params.supabase,
+              userId: params.userId
+            }),
+          metadata: {
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          },
+          name: "ragflow-web-search-tool",
+          runType: "tool",
+          serializeResult: (result) => ({
+            requestId: result.requestId,
+            responseTime: result.responseTime,
+            resultCount: result.results.length
+          }),
+          tags: ["chat", "tool", "web-search", "ragflow-studio"],
+          traceInput: {
+            queryPreview: createTracePreview(state.message),
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          }
+        })
+      ).result;
 
       return {
         toolActivity: [
@@ -207,28 +276,56 @@ function createChatAgentGraph(
       };
     })
     .addNode("composeAnswer", async (state) => {
-      const settings = await resolvedDeps.settingsResolver(
-        params.supabase,
-        params.userId
-      );
-      const chatConfig = await resolveChatModelConfig({
-        credentialResolver: resolvedDeps.credentialResolver,
-        requestedModel: settings.chatModel,
-        requestedProvider: settings.chatProvider,
-        supabase: params.supabase,
-        userId: params.userId
-      });
-      const llm = resolvedDeps.llmFactory(chatConfig);
-      const sources = buildSources(state);
-      const response = await llm.invoke([
-        new SystemMessage(buildSystemPrompt()),
-        new HumanMessage(buildUserPrompt(state))
-      ]);
+      return (
+        await traceServerExecution({
+          invoke: async () => {
+            const settings = await resolvedDeps.settingsResolver(
+              params.supabase,
+              params.userId
+            );
+            const chatConfig = await resolveChatModelConfig({
+              credentialResolver: resolvedDeps.credentialResolver,
+              requestedModel: settings.chatModel,
+              requestedProvider: settings.chatProvider,
+              supabase: params.supabase,
+              userId: params.userId
+            });
+            const llm = resolvedDeps.llmFactory(chatConfig);
+            const sources = buildSources(state);
+            const response = await llm.invoke([
+              new SystemMessage(buildSystemPrompt()),
+              new HumanMessage(buildUserPrompt(state))
+            ]);
 
-      return {
-        answer: normalizeLlmContent(response.content),
-        sources
-      };
+            return {
+              answer: normalizeLlmContent(response.content),
+              sources
+            };
+          },
+          metadata: {
+            route: state.route,
+            sessionId: params.sessionId ?? null,
+            userId: params.userId
+          },
+          name: "ragflow-compose-answer",
+          runType: "tool",
+          serializeResult: (result) => ({
+            answerPreview: createTracePreview(result.answer, 120),
+            sourceCount: result.sources.length
+          }),
+          tags: ["chat", "tool", "answer-composition", "ragflow-studio"],
+          traceInput: {
+            historyCount: state.history.length,
+            route: state.route,
+            sessionId: params.sessionId ?? null,
+            sourceCount:
+              state.vectorMatches.length ||
+              state.webResults.length ||
+              (state.timeContext ? 1 : 0),
+            userId: params.userId
+          }
+        })
+      ).result;
     })
     .addEdge(START, "routeQuestion")
     .addConditionalEdges("routeQuestion", (state) => {
@@ -587,29 +684,22 @@ async function defaultTraceInvocation<T>(
   },
   invoke: () => Promise<T>
 ) {
-  const fallbackRunId = randomUUID();
-  let runId: string | null = null;
-  const tracedInvoke = traceable(invoke, {
+  return traceServerExecution({
+    invoke,
     metadata: {
       sessionId: metadata.sessionId ?? null,
       userId: metadata.userId
     },
     name: "ragflow-chat-agent",
-    on_start: (runTree) => {
-      runId = runTree?.id ?? null;
-    },
-    processInputs: () => ({
-      messagePreview: metadata.message.slice(0, 160),
+    runType: "chain",
+    serializeResult: () => ({
+      status: "completed"
+    }),
+    tags: ["chat", "langgraph", "ragflow-studio"],
+    traceInput: {
+      messagePreview: createTracePreview(metadata.message),
       sessionId: metadata.sessionId ?? null,
       userId: metadata.userId
-    }),
-    run_type: "chain",
-    tags: ["chat", "langgraph", "ragflow-studio"]
+    }
   });
-  const result = await tracedInvoke();
-
-  return {
-    result,
-    runId: runId ?? fallbackRunId
-  };
 }
