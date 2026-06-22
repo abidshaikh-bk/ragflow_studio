@@ -1782,12 +1782,13 @@ Pass
 
 ## TASK-028: Add E2E auth test
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-028-e2e-auth-test
+Commit Hash: 2cc53e6
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Validate login and protected routing with a real Playwright browser flow.
@@ -1833,4 +1834,4 @@ Pass
 - None
 
 ### Follow-up
-- Complete the auth E2E harness, then commit and push before moving to TASK-029.
+- Reuse the Playwright auth harness for the document, chat, and tool-routing E2E tasks in Phase 9.
