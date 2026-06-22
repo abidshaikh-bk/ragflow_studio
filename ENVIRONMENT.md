@@ -61,6 +61,7 @@ npm run build
 - `TAVILY_API_KEY` is consumed only by the server-side web-search helper.
 - `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, and `LANGCHAIN_TRACING_V2` are consumed only by the server-side LangGraph agent tracing path.
 - `APP_ENCRYPTION_KEY` is used to encrypt saved provider credentials before they are written to Supabase. If it is unset in local development, the server falls back to deriving an encryption key from `SUPABASE_SERVICE_ROLE_KEY`.
+- `DEFAULT_EMBEDDING_PROVIDER=gemini` is supported by the runtime embedding service. When `DEFAULT_EMBEDDING_MODEL` is blank, the server defaults to `gemini-embedding-2`.
 
 
 ## Git/GitHub prerequisites

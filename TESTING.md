@@ -140,6 +140,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 
 - `src/tests/vector-search-tool.test.ts` validates Pinecone namespace isolation and tool logging.
 - `src/tests/document-embeddings.test.ts` validates batch progress, provider fallback, and settings-backed embedding API key resolution.
+- `src/tests/document-embeddings.test.ts` also verifies Gemini embedding requests use the saved provider credential and that unsupported providers fall back to the configured default provider instead of hard-coding OpenAI.
 - `src/tests/documents-route.test.ts` validates `/api/documents` auth and authenticated document listing.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.

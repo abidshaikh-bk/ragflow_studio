@@ -6,6 +6,7 @@ import {
 
 export const DEFAULT_EMBEDDING_BATCH_SIZE = 20;
 const DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small";
+const DEFAULT_GEMINI_EMBEDDING_MODEL = "gemini-embedding-2";
 
 export type EmbeddingChunk = {
   chunkIndex: number;
@@ -26,7 +27,7 @@ export type EmbeddingConfig = {
   provider: string;
 };
 
-const MVP_SUPPORTED_EMBEDDING_PROVIDERS = new Set(["openai"]);
+const SUPPORTED_EMBEDDING_PROVIDERS = new Set(["openai", "gemini"]);
 
 type GenerateEmbeddingsParams = {
   chunks: EmbeddingChunk[];
@@ -128,7 +129,7 @@ export async function embedTexts(input: {
   provider: string;
   texts: string[];
 }) {
-  if (!MVP_SUPPORTED_EMBEDDING_PROVIDERS.has(input.provider)) {
+  if (!SUPPORTED_EMBEDDING_PROVIDERS.has(input.provider)) {
     throw new Error(`Unsupported embedding provider for MVP: ${input.provider}.`);
   }
 
@@ -138,30 +139,22 @@ export async function embedTexts(input: {
     throw new Error(`Missing required API key for embedding provider: ${input.provider}`);
   }
 
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
-    body: JSON.stringify({
-      input: input.texts,
-      model: input.model
-    }),
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json"
-    },
-    method: "POST"
-  });
-
-  const payload = (await response.json()) as {
-    data?: Array<{ embedding: number[] }>;
-    error?: { message?: string };
-  };
-
-  if (!response.ok || !payload.data) {
-    throw new Error(
-      payload.error?.message || "The embedding provider rejected the request."
-    );
+  switch (input.provider) {
+    case "openai":
+      return embedWithOpenAi({
+        apiKey,
+        model: input.model,
+        texts: input.texts
+      });
+    case "gemini":
+      return embedWithGemini({
+        apiKey,
+        model: input.model,
+        texts: input.texts
+      });
+    default:
+      throw new Error(`Unsupported embedding provider for MVP: ${input.provider}.`);
   }
-
-  return payload.data.map((item) => item.embedding);
 }
 
 export async function resolveEmbeddingConfig(
@@ -169,13 +162,13 @@ export async function resolveEmbeddingConfig(
   userId: string
 ): Promise<EmbeddingConfig> {
   const userSettings = await getUserSettings(supabase, userId);
-  const defaultProvider =
-    getSupportedEmbeddingProvider(process.env.DEFAULT_EMBEDDING_PROVIDER) || "openai";
-  const defaultModel =
-    process.env.DEFAULT_EMBEDDING_MODEL || DEFAULT_OPENAI_EMBEDDING_MODEL;
   const requestedProvider = userSettings.embeddingProvider?.trim().toLowerCase();
   const requestedModel = userSettings.embeddingModel?.trim();
+  const defaultProvider =
+    getSupportedEmbeddingProvider(process.env.DEFAULT_EMBEDDING_PROVIDER) || "openai";
   const provider = getSupportedEmbeddingProvider(requestedProvider) ?? defaultProvider;
+  const defaultModel =
+    process.env.DEFAULT_EMBEDDING_MODEL?.trim() || getDefaultEmbeddingModel(provider);
   const model =
     provider === requestedProvider && requestedModel ? requestedModel : defaultModel;
   const apiKey =
@@ -205,7 +198,17 @@ function getSupportedEmbeddingProvider(provider?: string | null) {
     return null;
   }
 
-  return MVP_SUPPORTED_EMBEDDING_PROVIDERS.has(provider) ? provider : null;
+  return SUPPORTED_EMBEDDING_PROVIDERS.has(provider) ? provider : null;
+}
+
+function getDefaultEmbeddingModel(provider: string) {
+  switch (provider) {
+    case "gemini":
+      return DEFAULT_GEMINI_EMBEDDING_MODEL;
+    case "openai":
+    default:
+      return DEFAULT_OPENAI_EMBEDDING_MODEL;
+  }
 }
 
 function getProviderApiKeyFromEnv(provider: string) {
@@ -221,6 +224,91 @@ function getProviderApiKeyFromEnv(provider: string) {
     default:
       return null;
   }
+}
+
+async function embedWithOpenAi(input: {
+  apiKey: string;
+  model: string;
+  texts: string[];
+}) {
+  const response = await fetch("https://api.openai.com/v1/embeddings", {
+    body: JSON.stringify({
+      input: input.texts,
+      model: input.model
+    }),
+    headers: {
+      authorization: `Bearer ${input.apiKey}`,
+      "content-type": "application/json"
+    },
+    method: "POST"
+  });
+
+  const payload = (await response.json()) as {
+    data?: Array<{ embedding: number[] }>;
+    error?: { message?: string };
+  };
+
+  if (!response.ok || !payload.data) {
+    throw new Error(
+      payload.error?.message || "The embedding provider rejected the request."
+    );
+  }
+
+  return payload.data.map((item) => item.embedding);
+}
+
+async function embedWithGemini(input: {
+  apiKey: string;
+  model: string;
+  texts: string[];
+}) {
+  const modelName = normalizeGeminiModelName(input.model);
+  const vectors = await Promise.all(
+    input.texts.map(async (text) => {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:embedContent`,
+        {
+          body: JSON.stringify({
+            content: {
+              parts: [
+                {
+                  text
+                }
+              ]
+            },
+            model: `models/${modelName}`
+          }),
+          headers: {
+            "content-type": "application/json",
+            "x-goog-api-key": input.apiKey
+          },
+          method: "POST"
+        }
+      );
+
+      const payload = (await response.json()) as {
+        embedding?: { values?: number[] };
+        embeddings?: Array<{ values?: number[] }>;
+        error?: { message?: string };
+      };
+      const values =
+        payload.embedding?.values ?? payload.embeddings?.[0]?.values ?? null;
+
+      if (!response.ok || !values) {
+        throw new Error(
+          payload.error?.message || "The embedding provider rejected the request."
+        );
+      }
+
+      return values;
+    })
+  );
+
+  return vectors;
+}
+
+function normalizeGeminiModelName(model: string) {
+  return model.startsWith("models/") ? model.slice("models/".length) : model;
 }
 
 async function updateDocumentStatus(

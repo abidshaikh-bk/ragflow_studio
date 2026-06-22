@@ -128,19 +128,55 @@ describe("document embeddings", () => {
     });
   });
 
-  it("falls back to the MVP default provider when saved settings use an unsupported provider", async () => {
+  it("uses the saved Gemini embedding provider when configured", async () => {
     eqUserMock.mockResolvedValue({ error: null });
-    getProviderCredentialSecretMock.mockResolvedValue(null);
+    getProviderCredentialSecretMock.mockResolvedValue("saved-gemini-key");
     getUserSettingsMock.mockResolvedValue({
       embeddingModel: "gemini-embedding-001",
       embeddingProvider: "gemini"
     });
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({
+        embedding: { values: [0.1, 0.2, 0.3] }
+      }),
+      ok: true
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await generateDocumentEmbeddings({
+        chunks: [baseChunks[0]],
+        documentId: "doc-123",
+        supabase: supabaseMock as never,
+        userId: "user-123"
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "x-goog-api-key": "saved-gemini-key"
+          })
+        })
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("falls back to the configured default provider when saved settings use an unsupported provider", async () => {
+    eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue(null);
+    getUserSettingsMock.mockResolvedValue({
+      embeddingModel: "sentence-transformers/all-MiniLM-L6-v2",
+      embeddingProvider: "huggingface"
+    });
     const originalDefaultProvider = process.env.DEFAULT_EMBEDDING_PROVIDER;
     const originalDefaultModel = process.env.DEFAULT_EMBEDDING_MODEL;
-    const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
-    process.env.DEFAULT_EMBEDDING_PROVIDER = "openai";
-    process.env.DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
-    process.env.OPENAI_API_KEY = "fallback-openai-key";
+    const originalGeminiApiKey = process.env.GEMINI_API_KEY;
+    process.env.DEFAULT_EMBEDDING_PROVIDER = "gemini";
+    process.env.DEFAULT_EMBEDDING_MODEL = "";
+    process.env.GEMINI_API_KEY = "fallback-gemini-key";
 
     try {
       const embedder = vi.fn().mockResolvedValue([
@@ -160,14 +196,14 @@ describe("document embeddings", () => {
       );
 
       expect(embedder).toHaveBeenCalledWith({
-        model: "text-embedding-3-small",
-        provider: "openai",
+        model: "gemini-embedding-2",
+        provider: "gemini",
         texts: ["first chunk text", "second chunk text", "third chunk text"]
       });
     } finally {
       process.env.DEFAULT_EMBEDDING_PROVIDER = originalDefaultProvider;
       process.env.DEFAULT_EMBEDDING_MODEL = originalDefaultModel;
-      process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+      process.env.GEMINI_API_KEY = originalGeminiApiKey;
     }
   });
 

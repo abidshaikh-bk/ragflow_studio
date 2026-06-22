@@ -1412,7 +1412,7 @@ Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-022-chat-api-endpoint
-Commit Hash: dd79c7a
+Commit Hash: pending
 Started: 2026-06-22
 Completed: 2026-06-22
 
@@ -1443,6 +1443,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - src/tests/page-scaffolds.test.tsx
 - src/tests/settings-service.test.ts
 - src/tests/vector-search-tool.test.ts
+- ENVIRONMENT.md
 
 ### Implementation Notes
 - Replaced the mock `/api/chat` path with a real authenticated flow that loads prior session history, stores the user message, invokes the LangGraph agent, stores the assistant reply, and returns the updated session plus LangSmith run id.
@@ -1451,6 +1452,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Added encrypted provider-credential storage and server-only decryption helpers so saved `/settings` embedding keys can drive document ingestion and vector search when `OPENAI_API_KEY` is not present in the environment.
 - Prevented legacy metadata-only credentials from appearing as usable masked secrets in `/settings`, so users are prompted to re-enter keys that predate encrypted storage instead of hitting a later ingestion failure.
 - Hardened the shared embedding config resolver so unsupported saved embedding providers such as `gemini` still fall back to the MVP server default provider and model without crashing document ingestion or vector search.
+- Fixed a regression where the runtime embedding service only supported `openai`, which caused both saved Gemini settings and `DEFAULT_EMBEDDING_PROVIDER=gemini` to collapse back to OpenAI and fail with a missing OpenAI key. The embedding runtime now supports Gemini directly and uses `gemini-embedding-2` as the default model when the default provider is Gemini and no explicit model is set.
 
 ### Tests Added
 - Updated `src/tests/chat-route.test.ts`
@@ -1458,6 +1460,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Added `src/tests/documents-route.test.ts` for authenticated document listing.
 - Expanded `src/tests/documents-page.test.tsx` and `src/tests/page-scaffolds.test.tsx` so the documents UI loads backend history instead of seed data.
 - Added `src/tests/settings-service.test.ts` to verify legacy credentials without encrypted payloads are not presented as reusable saved secrets.
+- Extended the embedding and vector-search tests to verify saved Gemini settings resolve to Gemini instead of silently falling back to OpenAI.
 
 ### Validation Commands
 ```bash

@@ -167,7 +167,7 @@ describe("vector search tool", () => {
     );
   });
 
-  it("falls back to the MVP default embedding provider for query vectors", async () => {
+  it("uses the saved Gemini embedding provider for query vectors when configured", async () => {
     insertMock.mockResolvedValue({ error: null });
     getUserSettingsMock.mockResolvedValue({
       chatApiKeyMasked: null,
@@ -177,14 +177,7 @@ describe("vector search tool", () => {
       embeddingModel: "gemini-embedding-001",
       embeddingProvider: "gemini"
     });
-
-    const originalDefaultProvider = process.env.DEFAULT_EMBEDDING_PROVIDER;
-    const originalDefaultModel = process.env.DEFAULT_EMBEDDING_MODEL;
-    const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
-    process.env.DEFAULT_EMBEDDING_PROVIDER = "openai";
-    process.env.DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
-    process.env.OPENAI_API_KEY = "fallback-openai-key";
-    getProviderCredentialSecretMock.mockResolvedValue(null);
+    getProviderCredentialSecretMock.mockResolvedValue("saved-gemini-key");
 
     try {
       const embedder = vi.fn().mockResolvedValue([[0.1, 0.2, 0.3]]);
@@ -208,14 +201,12 @@ describe("vector search tool", () => {
       );
 
       expect(embedder).toHaveBeenCalledWith({
-        model: "text-embedding-3-small",
-        provider: "openai",
+        model: "gemini-embedding-001",
+        provider: "gemini",
         texts: ["approval flow"]
       });
     } finally {
-      process.env.DEFAULT_EMBEDDING_PROVIDER = originalDefaultProvider;
-      process.env.DEFAULT_EMBEDDING_MODEL = originalDefaultModel;
-      process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+      getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     }
   });
 });
