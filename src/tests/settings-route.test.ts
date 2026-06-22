@@ -137,4 +137,43 @@ describe("/api/settings route", () => {
     expect(payload.data.chatApiKey).toBeUndefined();
     expect(payload.data.embeddingApiKey).toBeUndefined();
   });
+
+  it("returns a helpful 400 when a legacy saved key must be re-entered", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+    saveUserSettingsMock.mockRejectedValue(
+      new Error(
+        "Your saved embedding gemini API key must be re-entered in Settings before it can be used."
+      )
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/settings", {
+        body: JSON.stringify({
+          chatApiKey: "",
+          chatModel: "gemini-3.1-flash-lite",
+          chatProvider: "gemini",
+          embeddingApiKey: "",
+          embeddingModel: "gemini-embedding-2-preview",
+          embeddingProvider: "gemini"
+        }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      error:
+        "Your saved embedding gemini API key must be re-entered in Settings before it can be used."
+    });
+  });
 });

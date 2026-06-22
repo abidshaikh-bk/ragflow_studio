@@ -241,7 +241,9 @@ async function syncCredentialMetadata(
 
   const existingResult = await supabase
     .from("user_provider_credentials")
-    .select("id, provider, label, api_key_last4, is_active")
+    .select(
+      "id, provider, label, api_key_ciphertext, api_key_iv, api_key_tag, api_key_last4, is_active"
+    )
     .eq("user_id", userId)
     .eq("label", label)
     .eq("is_active", true)
@@ -266,6 +268,17 @@ async function syncCredentialMetadata(
       assertSupabaseSuccess(
         clearResult.error,
         `Unable to clear stale ${kind} provider credentials.`
+      );
+    }
+
+    if (
+      existingCredential &&
+      existingCredential.provider === provider &&
+      existingCredential.api_key_last4 &&
+      !hasDecryptableSecret(existingCredential)
+    ) {
+      throw new Error(
+        `Your saved ${kind} ${provider} API key must be re-entered in Settings before it can be used.`
       );
     }
 
@@ -346,6 +359,12 @@ export async function getProviderCredentialSecret(
     !credential.api_key_iv ||
     !credential.api_key_tag
   ) {
+    if (credential?.api_key_last4) {
+      throw new Error(
+        `Your saved ${input.provider} API key must be re-entered in Settings before it can be used.`
+      );
+    }
+
     return null;
   }
 

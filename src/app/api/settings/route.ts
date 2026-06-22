@@ -34,9 +34,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const settings = await saveUserSettings(auth.supabase, auth.userId, payload.data);
+  try {
+    const settings = await saveUserSettings(auth.supabase, auth.userId, payload.data);
 
-  return NextResponse.json({ data: settings });
+    return NextResponse.json({ data: settings });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to save your settings right now.";
+    const status = message.includes("must be re-entered in Settings") ? 400 : 500;
+
+    return NextResponse.json({ error: message }, { status });
+  }
 }
 
 async function authenticateRequest() {

@@ -1,7 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserSettings } from "@/server/settings/service";
+import {
+  getProviderCredentialSecret,
+  getUserSettings
+} from "@/server/settings/service";
 
 const credentialsInMock = vi.fn();
+const credentialsMaybeSingleMock = vi.fn();
+const credentialsEqLabelMock = vi.fn(() => ({
+  eq: credentialsEqIsActiveMock
+}));
+const credentialsEqProviderMock = vi.fn(() => ({
+  eq: credentialsEqLabelMock
+}));
 const credentialsEqIsActiveMock = vi.fn();
 const credentialsEqUserMock = vi.fn(() => ({
   eq: credentialsEqIsActiveMock
@@ -50,8 +60,11 @@ describe("settings service", () => {
     configsEqIsActiveMock.mockReset();
     credentialsSelectMock.mockClear();
     credentialsEqUserMock.mockClear();
+    credentialsEqProviderMock.mockClear();
+    credentialsEqLabelMock.mockClear();
     credentialsEqIsActiveMock.mockReset();
     credentialsInMock.mockReset();
+    credentialsMaybeSingleMock.mockReset();
 
     configsEqIsActiveMock.mockResolvedValue({
       data: [
@@ -107,5 +120,36 @@ describe("settings service", () => {
 
     expect(result.chatApiKeyMasked).toBeNull();
     expect(result.embeddingApiKeyMasked).toBeNull();
+  });
+
+  it("throws a re-entry error when a legacy credential row has no encrypted secret", async () => {
+    credentialsEqUserMock.mockReturnValue({
+      eq: credentialsEqProviderMock
+    });
+    credentialsEqIsActiveMock.mockReturnValue({
+      maybeSingle: credentialsMaybeSingleMock
+    });
+    credentialsMaybeSingleMock.mockResolvedValue({
+      data: {
+        api_key_ciphertext: null,
+        api_key_iv: null,
+        api_key_last4: "5678",
+        api_key_tag: null,
+        encryption_key_version: null,
+        id: "cred-2",
+        is_active: true,
+        label: "default-embedding",
+        provider: "gemini"
+      },
+      error: null
+    });
+
+    await expect(
+      getProviderCredentialSecret(supabaseMock as never, {
+        label: "default-embedding",
+        provider: "gemini",
+        userId: "user-123"
+      })
+    ).rejects.toThrow(/must be re-entered in Settings/i);
   });
 });
