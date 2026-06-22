@@ -15,7 +15,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = chatMessagePayloadSchema.safeParse(await request.json());
+  let requestBody: unknown;
+
+  try {
+    requestBody = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON request body." },
+      { status: 400 }
+    );
+  }
+
+  const payload = chatMessagePayloadSchema.safeParse(requestBody);
 
   if (!payload.success) {
     return NextResponse.json(
@@ -27,49 +38,56 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existingSession = payload.data.sessionId
-    ? await getChatSession(auth.supabase, {
-        sessionId: payload.data.sessionId,
-        userId: auth.userId
-      })
-    : null;
+  try {
+    const existingSession = payload.data.sessionId
+      ? await getChatSession(auth.supabase, {
+          sessionId: payload.data.sessionId,
+          userId: auth.userId
+        })
+      : null;
 
-  if (payload.data.sessionId && !existingSession) {
-    return NextResponse.json({ error: "Chat session not found." }, { status: 404 });
+    if (payload.data.sessionId && !existingSession) {
+      return NextResponse.json({ error: "Chat session not found." }, { status: 404 });
+    }
+
+    const preparedTurn = await prepareChatTurn({
+      message: payload.data.message,
+      sessionId: payload.data.sessionId,
+      supabase: auth.supabase,
+      userId: auth.userId
+    });
+    const agentResult = await invokeChatAgent({
+      history:
+        existingSession?.messages.map((message) => ({
+          content: message.content,
+          role: message.role
+        })) ?? [],
+      message: payload.data.message,
+      sessionId: preparedTurn.sessionId,
+      supabase: auth.supabase,
+      userId: auth.userId
+    });
+    const session = await persistAssistantReply({
+      assistant: {
+        content: agentResult.content,
+        langsmithRunId: agentResult.langsmithRunId,
+        metadata: agentResult.metadata
+      },
+      sessionId: preparedTurn.sessionId,
+      supabase: auth.supabase,
+      userId: auth.userId
+    });
+
+    return NextResponse.json({
+      data: session,
+      langsmithRunId: agentResult.langsmithRunId
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to complete the chat request.";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const preparedTurn = await prepareChatTurn({
-    message: payload.data.message,
-    sessionId: payload.data.sessionId,
-    supabase: auth.supabase,
-    userId: auth.userId
-  });
-  const agentResult = await invokeChatAgent({
-    history:
-      existingSession?.messages.map((message) => ({
-        content: message.content,
-        role: message.role
-      })) ?? [],
-    message: payload.data.message,
-    sessionId: preparedTurn.sessionId,
-    supabase: auth.supabase,
-    userId: auth.userId
-  });
-  const session = await persistAssistantReply({
-    assistant: {
-      content: agentResult.content,
-      langsmithRunId: agentResult.langsmithRunId,
-      metadata: agentResult.metadata
-    },
-    sessionId: preparedTurn.sessionId,
-    supabase: auth.supabase,
-    userId: auth.userId
-  });
-
-  return NextResponse.json({
-    data: session,
-    langsmithRunId: agentResult.langsmithRunId
-  });
 }
 
 async function authenticateRequest() {

@@ -146,8 +146,8 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 - `src/tests/documents-route.test.ts` validates `/api/documents` auth and authenticated document listing.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
-- `src/tests/agent-workflow.test.ts` validates LangGraph routing for vector, date/time, and Tavily-backed current-information questions.
-- `src/tests/chat-route.test.ts` validates `/api/chat` auth, user-message persistence, agent invocation, and LangSmith-aware assistant persistence.
+- `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.
+- `src/tests/chat-route.test.ts` validates `/api/chat` auth, user-message persistence, JSON error handling for malformed requests, agent invocation, and LangSmith-aware assistant persistence.
 
 
 ## UI testing requirements

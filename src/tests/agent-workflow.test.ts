@@ -1,9 +1,26 @@
-import { describe, expect, it, vi } from "vitest";
-import { invokeChatAgent } from "@/server/agent/workflow";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createChatModel,
+  invokeChatAgent,
+  resolveChatModelConfig
+} from "@/server/agent/workflow";
 
 const supabaseMock = {} as never;
+const credentialResolverMock = vi.fn();
+const fetchMock = vi.fn();
 
 describe("chat agent workflow", () => {
+  beforeEach(() => {
+    credentialResolverMock.mockReset();
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    delete process.env.DEFAULT_CHAT_PROVIDER;
+    delete process.env.DEFAULT_CHAT_MODEL;
+    process.env.OPENAI_API_KEY = "test-openai-key";
+    delete process.env.GEMINI_API_KEY;
+  });
+
   it("uses vector search for document-grounded questions", async () => {
     const vectorSearchTool = vi.fn().mockResolvedValue({
       matches: [
@@ -34,6 +51,7 @@ describe("chat agent workflow", () => {
         userId: "user-123"
       },
       {
+        credentialResolver: credentialResolverMock as never,
         dateTimeTool: dateTimeTool as never,
         llmFactory: () => llm,
         settingsResolver: async () => ({
@@ -90,6 +108,7 @@ describe("chat agent workflow", () => {
         userId: "user-123"
       },
       {
+        credentialResolver: credentialResolverMock as never,
         dateTimeTool: dateTimeTool as never,
         llmFactory: () => llm,
         settingsResolver: async () => ({
@@ -150,6 +169,7 @@ describe("chat agent workflow", () => {
         userId: "user-123"
       },
       {
+        credentialResolver: credentialResolverMock as never,
         dateTimeTool: vi.fn() as never,
         llmFactory: () => llm,
         settingsResolver: async () => ({
@@ -183,5 +203,83 @@ describe("chat agent workflow", () => {
     expect(result.metadata.toolActivity).toEqual([
       "tavily.search -> returned 1 web result"
     ]);
+  });
+
+  it("resolves a saved Gemini chat configuration", async () => {
+    credentialResolverMock.mockResolvedValue("saved-gemini-key");
+
+    await expect(
+      resolveChatModelConfig({
+        credentialResolver: credentialResolverMock as never,
+        requestedModel: "gemini-2.5-flash",
+        requestedProvider: "gemini",
+        supabase: supabaseMock,
+        userId: "user-123"
+      })
+    ).resolves.toEqual({
+      apiKey: "saved-gemini-key",
+      model: "gemini-2.5-flash",
+      provider: "gemini"
+    });
+  });
+
+  it("falls back to the configured default chat provider when saved settings use an unsupported provider", async () => {
+    process.env.DEFAULT_CHAT_PROVIDER = "gemini";
+    process.env.GEMINI_API_KEY = "fallback-gemini-key";
+
+    await expect(
+      resolveChatModelConfig({
+        credentialResolver: credentialResolverMock as never,
+        requestedModel: "claude-sonnet",
+        requestedProvider: "anthropic",
+        supabase: supabaseMock,
+        userId: "user-123"
+      })
+    ).resolves.toEqual({
+      apiKey: "fallback-gemini-key",
+      model: "gemini-2.5-flash-lite",
+      provider: "gemini"
+    });
+    expect(credentialResolverMock).not.toHaveBeenCalled();
+  });
+
+  it("invokes Gemini chat models without throwing the unsupported-provider error", async () => {
+    fetchMock.mockResolvedValue({
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: "Grounded Gemini answer"
+                }
+              ]
+            }
+          }
+        ]
+      }),
+      ok: true
+    });
+
+    const model = createChatModel({
+      apiKey: "gemini-key",
+      model: "models/gemini-2.5-flash",
+      provider: "gemini"
+    });
+    const response = await model.invoke([
+      new SystemMessage("You are helpful."),
+      new HumanMessage("Summarize the supplied context.")
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "x-goog-api-key": "gemini-key"
+        }),
+        method: "POST"
+      })
+    );
+    expect(response.content).toBe("Grounded Gemini answer");
   });
 });

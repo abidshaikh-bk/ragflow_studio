@@ -1408,13 +1408,13 @@ Pass
 
 ## TASK-022: Implement `/api/chat`
 
-Status: done
+Status: validated
 
 Owner Agent: Codex
 Git Branch: task/TASK-022-chat-api-endpoint
 Commit Hash: 1457c8b
 Started: 2026-06-22
-Completed: 2026-06-22
+Completed:
 
 ### Objective
 Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow, persisting the user message before invocation and the assistant reply afterward.
@@ -1438,11 +1438,13 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - src/lib/validations/settings.ts
 - src/server/documents/list.ts
 - src/server/embeddings/service.ts
+- src/server/agent/workflow.ts
 - src/server/chat/persistence.ts
 - src/server/settings/crypto.ts
 - src/server/settings/service.ts
 - src/server/tools/vector-search.ts
 - src/tests/chat-route.test.ts
+- src/tests/agent-workflow.test.ts
 - src/tests/document-embeddings.test.ts
 - src/tests/documents-page.test.tsx
 - src/tests/documents-route.test.ts
@@ -1461,6 +1463,10 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Fixed a regression where the runtime embedding service only supported `openai`, which caused both saved Gemini settings and `DEFAULT_EMBEDDING_PROVIDER=gemini` to collapse back to OpenAI and fail with a missing OpenAI key. The embedding runtime now supports Gemini directly and uses `gemini-embedding-2` as the default model when the default provider is Gemini and no explicit model is set.
 - Inspected the live Supabase rows for the failing user and confirmed the remaining Gemini failure was caused by a legacy `default-embedding` credential row that still had only `api_key_last4` metadata but no encrypted secret payload. The settings service and route now surface a clear “re-enter this key in Settings” error instead of letting ingestion fail later with a generic missing-key message.
 - Added a Pinecone-dimension-aware embedding settings flow: the settings UI now captures embedding dimensions, the settings API validates that they match `PINECONE_VECTOR_DIMENSION`, and the embedding runtime passes that dimension into OpenAI/Gemini requests while rejecting any returned vector length mismatch before Pinecone upsert.
+- Reopened the task to fix a runtime chat regression where saved Gemini chat settings crashed the agent before it could respond, and to make `/api/chat` return JSON error payloads even when the agent fails.
+- Added server-side chat-model resolution that accepts saved Gemini settings, uses encrypted user credentials when available, and falls back to the configured default chat provider instead of hard-failing on unsupported saved providers.
+- Added a Gemini chat runtime path for the LangGraph answer-composition step so the agent can invoke Gemini models directly without tripping the prior MVP-only OpenAI guard.
+- Hardened `/api/chat` request handling so malformed JSON bodies and agent runtime exceptions both return structured JSON responses, which prevents the frontend composer from failing with `Unexpected end of JSON input`.
 
 ### Tests Added
 - Updated `src/tests/chat-route.test.ts`
@@ -1471,6 +1477,8 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Extended the embedding and vector-search tests to verify saved Gemini settings resolve to Gemini instead of silently falling back to OpenAI.
 - Expanded the settings service and route tests to verify legacy metadata-only credentials produce an explicit re-entry error.
 - Expanded settings, embedding, and vector-search tests to cover embedding-dimension persistence, request shaping, and wrong-dimension rejection.
+- Expanded `src/tests/agent-workflow.test.ts` to cover saved Gemini chat settings, default-provider fallback, and Gemini invocation.
+- Expanded `src/tests/chat-route.test.ts` to cover malformed JSON request bodies and structured error responses when the chat agent throws.
 
 ### Validation Commands
 ```bash

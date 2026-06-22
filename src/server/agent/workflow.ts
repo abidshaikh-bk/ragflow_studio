@@ -5,7 +5,10 @@ import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { traceable } from "langsmith/traceable";
 import type { ChatMessageMetadata } from "@/components/chat/types";
-import { getUserSettings } from "@/server/settings/service";
+import {
+  getProviderCredentialSecret,
+  getUserSettings
+} from "@/server/settings/service";
 import { getCurrentDateTime } from "@/server/tools/date-time";
 import {
   queryDocumentVectors,
@@ -39,8 +42,10 @@ type LlmLike = {
 };
 
 type AgentDeps = {
+  credentialResolver: typeof getProviderCredentialSecret;
   dateTimeTool: typeof getCurrentDateTime;
   llmFactory: (input: {
+    apiKey: string;
     model: string;
     provider: string;
   }) => LlmLike;
@@ -63,6 +68,9 @@ type AgentDeps = {
 type AgentRoute = "date" | "vector" | "web";
 
 const LOW_CONFIDENCE_SCORE = 0.65;
+const DEFAULT_OPENAI_CHAT_MODEL = "gpt-4.1-mini";
+const DEFAULT_GEMINI_CHAT_MODEL = "gemini-2.5-flash-lite";
+const SUPPORTED_CHAT_PROVIDERS = new Set(["openai", "gemini"]);
 
 const AgentState = Annotation.Root({
   answer: Annotation<string>,
@@ -139,6 +147,7 @@ function createChatAgentGraph(
   deps?: Partial<AgentDeps>
 ) {
   const resolvedDeps = {
+    credentialResolver: deps?.credentialResolver ?? getProviderCredentialSecret,
     dateTimeTool: deps?.dateTimeTool ?? getCurrentDateTime,
     llmFactory: deps?.llmFactory ?? createChatModel,
     settingsResolver: deps?.settingsResolver ?? getUserSettings,
@@ -202,10 +211,14 @@ function createChatAgentGraph(
         params.supabase,
         params.userId
       );
-      const llm = resolvedDeps.llmFactory({
-        model: settings.chatModel,
-        provider: settings.chatProvider
+      const chatConfig = await resolveChatModelConfig({
+        credentialResolver: resolvedDeps.credentialResolver,
+        requestedModel: settings.chatModel,
+        requestedProvider: settings.chatProvider,
+        supabase: params.supabase,
+        userId: params.userId
       });
+      const llm = resolvedDeps.llmFactory(chatConfig);
       const sources = buildSources(state);
       const response = await llm.invoke([
         new SystemMessage(buildSystemPrompt()),
@@ -365,20 +378,205 @@ function normalizeLlmContent(content: unknown) {
   return "I could not generate an answer from the available context.";
 }
 
-function createChatModel(input: {
+export function createChatModel(input: {
+  apiKey: string;
   model: string;
   provider: string;
 }) {
-  if (input.provider !== "openai") {
-    throw new Error(
-      `Unsupported chat provider "${input.provider}" for the MVP chat agent.`
-    );
+  switch (input.provider) {
+    case "openai":
+      return new ChatOpenAI({
+        apiKey: input.apiKey,
+        model: input.model,
+        temperature: 0
+      });
+    case "gemini":
+      return createGeminiChatModel(input);
+    default:
+      throw new Error(
+        `Unsupported chat provider "${input.provider}" for the MVP chat agent.`
+      );
+  }
+}
+
+export async function resolveChatModelConfig(input: {
+  credentialResolver: typeof getProviderCredentialSecret;
+  requestedModel: string;
+  requestedProvider: string;
+  supabase: SupabaseClient;
+  userId: string;
+}) {
+  const requestedProvider = input.requestedProvider?.trim().toLowerCase();
+  const requestedModel = input.requestedModel?.trim();
+  const defaultProvider =
+    getSupportedChatProvider(process.env.DEFAULT_CHAT_PROVIDER) || "openai";
+  const provider = getSupportedChatProvider(requestedProvider) ?? defaultProvider;
+  const defaultModel =
+    process.env.DEFAULT_CHAT_MODEL?.trim() || getDefaultChatModel(provider);
+  const model =
+    provider === requestedProvider && requestedModel ? requestedModel : defaultModel;
+  const apiKey =
+    provider === requestedProvider
+      ? await input.credentialResolver(input.supabase, {
+          label: "default-chat",
+          provider,
+          userId: input.userId
+        })
+      : null;
+  const fallbackApiKey = getProviderApiKeyFromEnv(provider);
+  const resolvedApiKey = apiKey ?? fallbackApiKey;
+
+  if (!resolvedApiKey) {
+    throw new Error(`Missing required API key for chat provider: ${provider}`);
   }
 
-  return new ChatOpenAI({
-    model: input.model,
-    temperature: 0
-  });
+  return {
+    apiKey: resolvedApiKey,
+    model,
+    provider
+  };
+}
+
+function createGeminiChatModel(input: {
+  apiKey: string;
+  model: string;
+  provider: string;
+}): LlmLike {
+  return {
+    invoke: async (messages) => {
+      const systemInstruction = messages
+        .filter((message) => message instanceof SystemMessage)
+        .map((message) => stringifyMessageContent(message.content))
+        .join("\n\n");
+      const userContent = messages
+        .filter((message) => message instanceof HumanMessage)
+        .map((message) => stringifyMessageContent(message.content))
+        .join("\n\n");
+      const modelName = normalizeGeminiModelName(input.model);
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
+        {
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: userContent
+                  }
+                ],
+                role: "user"
+              }
+            ],
+            ...(systemInstruction
+              ? {
+                  systemInstruction: {
+                    parts: [
+                      {
+                        text: systemInstruction
+                      }
+                    ]
+                  }
+                }
+              : {})
+          }),
+          headers: {
+            "content-type": "application/json",
+            "x-goog-api-key": input.apiKey
+          },
+          method: "POST"
+        }
+      );
+      const payload = (await response.json()) as {
+        candidates?: Array<{
+          content?: {
+            parts?: Array<{
+              text?: string;
+            }>;
+          };
+        }>;
+        error?: {
+          message?: string;
+        };
+      };
+      const content =
+        payload.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text ?? "")
+          .join("")
+          .trim() ?? "";
+
+      if (!response.ok || !content) {
+        throw new Error(
+          payload.error?.message || "The Gemini chat provider rejected the request."
+        );
+      }
+
+      return {
+        content
+      };
+    }
+  };
+}
+
+function getSupportedChatProvider(provider?: string | null) {
+  if (!provider) {
+    return null;
+  }
+
+  return SUPPORTED_CHAT_PROVIDERS.has(provider) ? provider : null;
+}
+
+function getDefaultChatModel(provider: string) {
+  switch (provider) {
+    case "gemini":
+      return DEFAULT_GEMINI_CHAT_MODEL;
+    case "openai":
+    default:
+      return DEFAULT_OPENAI_CHAT_MODEL;
+  }
+}
+
+function getProviderApiKeyFromEnv(provider: string) {
+  switch (provider) {
+    case "openai":
+      return process.env.OPENAI_API_KEY || null;
+    case "gemini":
+      return process.env.GEMINI_API_KEY || null;
+    default:
+      return null;
+  }
+}
+
+function normalizeGeminiModelName(model: string) {
+  return model.startsWith("models/") ? model.slice("models/".length) : model;
+}
+
+function stringifyMessageContent(content: HumanMessage["content"] | SystemMessage["content"]) {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") {
+          return part;
+        }
+
+        if (
+          typeof part === "object" &&
+          part !== null &&
+          "text" in part &&
+          typeof part.text === "string"
+        ) {
+          return part.text;
+        }
+
+        return "";
+      })
+      .join("");
+  }
+
+  return "";
 }
 
 async function defaultTraceInvocation<T>(

@@ -177,6 +177,53 @@ describe("/api/chat route", () => {
     expect(payload.data.id).toBe("session-1");
     expect(payload.langsmithRunId).toBe("trace-123");
   });
+
+  it("returns a JSON 500 response when the agent fails", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-123" }
+      }
+    });
+    prepareChatTurnMock.mockResolvedValue({
+      messageId: "message-1",
+      sessionId: "session-1"
+    });
+    invokeChatAgentMock.mockRejectedValue(
+      new Error('Unsupported chat provider "gemini" for the MVP chat agent.')
+    );
+
+    const response = await POST(
+      createJsonRequest({
+        message: "Summarize my documents"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({
+      error: 'Unsupported chat provider "gemini" for the MVP chat agent.'
+    });
+  });
+
+  it("returns 400 when the request body is not valid JSON", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-123" }
+      }
+    });
+
+    const response = await POST({
+      json: async () => {
+        throw new Error("Unexpected end of JSON input");
+      }
+    } as unknown as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      error: "Invalid JSON request body."
+    });
+  });
 });
 
 function createJsonRequest(payload: unknown) {
