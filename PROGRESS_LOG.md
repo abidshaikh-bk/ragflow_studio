@@ -1607,13 +1607,13 @@ Pass
 
 ## TASK-025: Add server-side auth guards
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-025-server-side-auth-guards
-Commit Hash:
+Commit Hash: a7290a7
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Ensure all protected APIs enforce auth and derive user identity exclusively from the authenticated server session.
