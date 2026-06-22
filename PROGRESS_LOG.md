@@ -1412,7 +1412,7 @@ Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-022-chat-api-endpoint
-Commit Hash: 0573621
+Commit Hash: acd3343
 Started: 2026-06-22
 Completed: 2026-06-22
 
@@ -1424,18 +1424,37 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - SECURITY.md
 - TASKS.md
 - TESTING.md
+- UI_PAGES.md
 - design.md
 - src/app/api/chat/route.ts
+- src/app/api/documents/route.ts
 - src/components/chat/types.ts
+- src/components/documents/DocumentsWorkspace.tsx
+- src/server/documents/list.ts
+- src/server/embeddings/service.ts
 - src/server/chat/persistence.ts
+- src/server/settings/crypto.ts
+- src/server/settings/service.ts
+- src/server/tools/vector-search.ts
 - src/tests/chat-route.test.ts
+- src/tests/document-embeddings.test.ts
+- src/tests/documents-page.test.tsx
+- src/tests/documents-route.test.ts
+- src/tests/page-scaffolds.test.tsx
+- src/tests/vector-search-tool.test.ts
 
 ### Implementation Notes
 - Replaced the mock `/api/chat` path with a real authenticated flow that loads prior session history, stores the user message, invokes the LangGraph agent, stores the assistant reply, and returns the updated session plus LangSmith run id.
 - Extended chat persistence so assistant rows can store `langsmith_run_id` and surface it back through message metadata without exposing any raw secrets.
+- Reopened the task to remove the remaining dummy document-history behavior: the `/documents` workspace now hydrates from authenticated `GET /api/documents` results and resumes polling any in-flight backend ingestion record instead of seeding placeholder rows.
+- Added encrypted provider-credential storage and server-only decryption helpers so saved `/settings` embedding keys can drive document ingestion and vector search when `OPENAI_API_KEY` is not present in the environment.
+- Hardened the shared embedding config resolver so unsupported saved embedding providers such as `gemini` still fall back to the MVP server default provider and model without crashing document ingestion or vector search.
 
 ### Tests Added
 - Updated `src/tests/chat-route.test.ts`
+- Added regression coverage to `src/tests/document-embeddings.test.ts` and `src/tests/vector-search-tool.test.ts` for unsupported saved embedding providers and saved-key resolution.
+- Added `src/tests/documents-route.test.ts` for authenticated document listing.
+- Expanded `src/tests/documents-page.test.tsx` and `src/tests/page-scaffolds.test.tsx` so the documents UI loads backend history instead of seed data.
 
 ### Validation Commands
 ```bash
@@ -1453,4 +1472,4 @@ Pass
 - None
 
 ### Follow-up
-- Phase 5 is complete once full validation passes and the task is committed.
+- None
