@@ -1302,12 +1302,13 @@ Pass
 
 ## TASK-020: Implement Tavily web search tool
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-020-tavily-web-search-tool
+Commit Hash: 5ac0cd4
 Started: 2026-06-22
-Completed:
+Completed: 2026-06-22
 
 ### Objective
 Create a server-side Tavily web-search tool with validated inputs, normalized results, and logged tool-call records.
