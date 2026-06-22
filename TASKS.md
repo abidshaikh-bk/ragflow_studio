@@ -825,7 +825,7 @@ Acceptance criteria:
 
 ### TASK-026: Validate all API inputs with Zod
 
-Status: validated
+Status: done
 
 Objective: Add schema validation to all API routes.
 

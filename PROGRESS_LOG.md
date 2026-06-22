@@ -1664,13 +1664,13 @@ Pass
 
 ## TASK-026: Validate all API inputs with Zod
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-026-api-zod-validation
-Commit Hash:
+Commit Hash: fbc8d66
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Add explicit Zod-backed validation to every API input boundary so malformed JSON, invalid params, and unsupported upload payloads fail with `400`.
