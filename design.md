@@ -333,6 +333,12 @@ Persistence:
 - Save tool calls in `agent_tool_calls`.
 - Save LangSmith run IDs where available.
 
+Initial MVP execution shape:
+
+- LangGraph state graph routes each chat turn into date/time, vector search, or Tavily web search.
+- Low-confidence vector retrieval may fall back to Tavily web search.
+- A server-side chat model composes the final answer from the selected tool context.
+
 ## 9. UI design system
 
 ### Visual direction

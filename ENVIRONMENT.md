@@ -57,6 +57,7 @@ npm run build
 - Never commit `.env.local`.
 - `DATABASE_URL` must be a valid, reachable Postgres connection string for the Supabase project if migrations or live RLS validation will run.
 - `TAVILY_API_KEY` is consumed only by the server-side web-search helper.
+- `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, and `LANGCHAIN_TRACING_V2` are consumed only by the server-side LangGraph agent tracing path.
 
 
 ## Git/GitHub prerequisites

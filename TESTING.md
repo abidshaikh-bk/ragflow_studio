@@ -139,6 +139,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 - `src/tests/vector-search-tool.test.ts` validates Pinecone namespace isolation and tool logging.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
+- `src/tests/agent-workflow.test.ts` validates LangGraph routing for vector, date/time, and Tavily-backed current-information questions.
 
 
 ## UI testing requirements

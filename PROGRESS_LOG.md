@@ -1350,3 +1350,55 @@ Pass
 
 ### Follow-up
 - After validation, move on to the LangGraph agent wiring in `TASK-021`.
+
+---
+
+## TASK-021: Implement LangGraph agent
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-021-langgraph-agent
+Started: 2026-06-22
+Completed:
+
+### Objective
+Create a LangGraph-based chat agent that routes between vector retrieval, date/time, and Tavily web search, then composes a grounded answer with LangSmith tracing metadata.
+
+### Files Changed
+- ENVIRONMENT.md
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- design.md
+- package-lock.json
+- package.json
+- src/server/agent/workflow.ts
+- src/server/tools/vector-search.ts
+- src/tests/agent-workflow.test.ts
+
+### Implementation Notes
+- Added a compact LangGraph state graph with explicit route, tool, and answer-composition nodes so the agent stays deterministic and easy to test for MVP behavior.
+- Wrapped agent invocation in LangSmith `traceable()` tracing with redacted inputs and a returned run id for downstream chat persistence.
+- Reused the existing tool helpers so vector, date/time, and Tavily calls stay user-scoped and continue logging through `agent_tool_calls`.
+
+### Tests Added
+- `src/tests/agent-workflow.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Wire the new agent into `/api/chat` in `TASK-022` after validation passes.

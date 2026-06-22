@@ -12,7 +12,7 @@ import type {
   PineconeQueryMatch
 } from "@/server/pinecone/indexing";
 
-type VectorSearchMatch = {
+export type VectorSearchMatch = {
   chunkIndex: number;
   contentPreview: string;
   documentId: string;
