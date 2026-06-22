@@ -58,7 +58,9 @@ export async function getUserSettings(
       .eq("is_active", true),
     supabase
       .from("user_provider_credentials")
-      .select("id, provider, label, api_key_last4, is_active")
+      .select(
+        "id, provider, label, api_key_ciphertext, api_key_iv, api_key_tag, api_key_last4, is_active"
+      )
       .eq("user_id", userId)
       .eq("is_active", true)
       .in("label", [SETTINGS_LABELS.chat, SETTINGS_LABELS.embedding])
@@ -84,12 +86,14 @@ export async function getUserSettings(
   )?.find((credential) => credential.label === SETTINGS_LABELS.embedding);
 
   return {
-    chatApiKeyMasked: formatMaskedSecret(chatCredential?.api_key_last4 ?? null),
+    chatApiKeyMasked: hasDecryptableSecret(chatCredential)
+      ? formatMaskedSecret(chatCredential?.api_key_last4 ?? null)
+      : null,
     chatModel: chatConfig?.model_name ?? DEFAULT_SETTINGS.chatModel,
     chatProvider: chatConfig?.provider ?? DEFAULT_SETTINGS.chatProvider,
-    embeddingApiKeyMasked: formatMaskedSecret(
-      embeddingCredential?.api_key_last4 ?? null
-    ),
+    embeddingApiKeyMasked: hasDecryptableSecret(embeddingCredential)
+      ? formatMaskedSecret(embeddingCredential?.api_key_last4 ?? null)
+      : null,
     embeddingModel: embeddingConfig?.model_name ?? DEFAULT_SETTINGS.embeddingModel,
     embeddingProvider:
       embeddingConfig?.provider ?? DEFAULT_SETTINGS.embeddingProvider
@@ -303,6 +307,12 @@ async function syncCredentialMetadata(
 
 function formatMaskedSecret(last4: string | null) {
   return last4 ? `********${last4}` : null;
+}
+
+function hasDecryptableSecret(credential: CredentialRow | undefined) {
+  return Boolean(
+    credential?.api_key_ciphertext && credential.api_key_iv && credential.api_key_tag
+  );
 }
 
 export async function getProviderCredentialSecret(
