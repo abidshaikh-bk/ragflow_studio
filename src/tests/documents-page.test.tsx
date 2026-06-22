@@ -13,8 +13,17 @@ describe("documents page upload flow", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows an error for unsupported files", () => {
+  it("shows an error for unsupported files", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      createJsonResponse(true, {
+        data: []
+      })
+    );
+
     render(<DocumentsPage />);
+    await act(async () => {
+      await flushAsyncWork();
+    });
 
     fireEvent.change(screen.getByLabelText(/upload document/i), {
       target: {
@@ -46,6 +55,12 @@ describe("documents page upload flow", () => {
     ];
 
     fetchMock.mockImplementation(async (input) => {
+      if (input === "/api/documents") {
+        return createJsonResponse(true, {
+          data: []
+        });
+      }
+
       if (input === "/api/documents/upload") {
         return createJsonResponse(true, {
           data: {
@@ -135,6 +150,12 @@ describe("documents page upload flow", () => {
     ];
 
     fetchMock.mockImplementation(async (input) => {
+      if (input === "/api/documents") {
+        return createJsonResponse(true, {
+          data: []
+        });
+      }
+
       if (input === "/api/documents/upload") {
         return createJsonResponse(true, {
           data: {
@@ -193,9 +214,18 @@ describe("documents page upload flow", () => {
     expect(fetchMock.mock.calls.length).toBe(statusCallCountBeforeFailure + 1);
   });
 
-  it("renders a failed terminal state from the preview action", () => {
+  it("renders a failed terminal state from the preview action", async () => {
     vi.useFakeTimers();
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      createJsonResponse(true, {
+        data: []
+      })
+    );
+
     render(<DocumentsPage />);
+    await act(async () => {
+      await flushAsyncWork();
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /preview failed state/i }));
     act(() => {
@@ -217,11 +247,17 @@ describe("documents page upload flow", () => {
   });
 
   it("shows an upload error when the API rejects the file", async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValue(
-      createJsonResponse(false, {
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      if (input === "/api/documents") {
+        return createJsonResponse(true, {
+          data: []
+        });
+      }
+
+      return createJsonResponse(false, {
         error: "Unauthorized"
-      })
-    );
+      });
+    });
 
     render(<DocumentsPage />);
 
@@ -234,6 +270,29 @@ describe("documents page upload flow", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent("Unauthorized")
     );
+  });
+
+  it("loads previously uploaded documents from the backend", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      createJsonResponse(true, {
+        data: [
+          {
+            documentId: "doc-123",
+            fileName: "already-uploaded-handbook.md",
+            processedChunks: 24,
+            status: "completed",
+            totalChunks: 24,
+            updatedAt: "2026-06-22T10:00:00.000Z"
+          }
+        ]
+      })
+    );
+
+    render(<DocumentsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/already-uploaded-handbook\.md/i)).toBeInTheDocument();
+    });
   });
 });
 

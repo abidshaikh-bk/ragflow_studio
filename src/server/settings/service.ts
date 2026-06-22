@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SettingsPayload } from "@/lib/validations/settings";
+import { decryptSecret, encryptSecret } from "@/server/settings/crypto";
 
 const DEFAULT_SETTINGS = {
   chatModel: "gpt-4.1-mini",
@@ -24,7 +25,11 @@ type ModelConfigRow = {
 };
 
 type CredentialRow = {
+  api_key_ciphertext?: string | null;
   api_key_last4: string | null;
+  api_key_tag?: string | null;
+  api_key_iv?: string | null;
+  encryption_key_version?: string | null;
   id: string;
   is_active: boolean;
   label: string;
@@ -277,6 +282,7 @@ async function syncCredentialMetadata(
 
   const upsertResult = await supabase.from("user_provider_credentials").upsert(
     {
+      ...encryptSecret(nextSecret),
       api_key_hash: createHash("sha256").update(nextSecret).digest("hex"),
       api_key_last4: nextSecret.slice(-4),
       is_active: true,
@@ -297,6 +303,48 @@ async function syncCredentialMetadata(
 
 function formatMaskedSecret(last4: string | null) {
   return last4 ? `********${last4}` : null;
+}
+
+export async function getProviderCredentialSecret(
+  supabase: SupabaseClient,
+  input: {
+    label: string;
+    provider: string;
+    userId: string;
+  }
+): Promise<string | null> {
+  const result = await supabase
+    .from("user_provider_credentials")
+    .select(
+      "id, provider, label, api_key_ciphertext, api_key_iv, api_key_tag, encryption_key_version, is_active"
+    )
+    .eq("user_id", input.userId)
+    .eq("label", input.label)
+    .eq("provider", input.provider)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  assertSupabaseSuccess(
+    result.error,
+    "Unable to load the saved provider credentials for this user."
+  );
+
+  const credential = result.data as CredentialRow | null;
+
+  if (
+    !credential?.api_key_ciphertext ||
+    !credential.api_key_iv ||
+    !credential.api_key_tag
+  ) {
+    return null;
+  }
+
+  return decryptSecret({
+    ciphertext: credential.api_key_ciphertext,
+    iv: credential.api_key_iv,
+    keyVersion: credential.encryption_key_version ?? undefined,
+    tag: credential.api_key_tag
+  });
 }
 
 function assertSupabaseSuccess(error: { message?: string } | null, fallback: string) {

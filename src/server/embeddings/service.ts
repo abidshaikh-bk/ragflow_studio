@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getUserSettings } from "@/server/settings/service";
+import {
+  getProviderCredentialSecret,
+  getUserSettings
+} from "@/server/settings/service";
 
 export const DEFAULT_EMBEDDING_BATCH_SIZE = 20;
 const DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small";
@@ -18,9 +21,12 @@ export type EmbeddingVector = {
 };
 
 export type EmbeddingConfig = {
+  apiKey: string;
   model: string;
   provider: string;
 };
+
+const MVP_SUPPORTED_EMBEDDING_PROVIDERS = new Set(["openai"]);
 
 type GenerateEmbeddingsParams = {
   chunks: EmbeddingChunk[];
@@ -60,10 +66,18 @@ export async function generateDocumentEmbeddings(
   try {
     const config = await resolveEmbeddingConfig(supabase, userId);
     const vectors: EmbeddingVector[] = [];
+    const runtimeEmbedder =
+      embedder === embedTexts
+        ? (input: { model: string; provider: string; texts: string[] }) =>
+            embedTexts({
+              ...input,
+              apiKey: config.apiKey
+            })
+        : embedder;
 
     for (let index = 0; index < chunks.length; index += batchSize) {
       const batch = chunks.slice(index, index + batchSize);
-      const values = await embedder({
+      const values = await runtimeEmbedder({
         model: config.model,
         provider: config.provider,
         texts: batch.map((chunk) => chunk.content)
@@ -109,18 +123,19 @@ export async function generateDocumentEmbeddings(
 }
 
 export async function embedTexts(input: {
+  apiKey?: string;
   model: string;
   provider: string;
   texts: string[];
 }) {
-  if (input.provider !== "openai") {
+  if (!MVP_SUPPORTED_EMBEDDING_PROVIDERS.has(input.provider)) {
     throw new Error(`Unsupported embedding provider for MVP: ${input.provider}.`);
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = input.apiKey || getProviderApiKeyFromEnv(input.provider);
 
   if (!apiKey) {
-    throw new Error("Missing required environment variable: OPENAI_API_KEY");
+    throw new Error(`Missing required API key for embedding provider: ${input.provider}`);
   }
 
   const response = await fetch("https://api.openai.com/v1/embeddings", {
@@ -154,19 +169,58 @@ export async function resolveEmbeddingConfig(
   userId: string
 ): Promise<EmbeddingConfig> {
   const userSettings = await getUserSettings(supabase, userId);
-  const provider =
-    userSettings.embeddingProvider ||
-    process.env.DEFAULT_EMBEDDING_PROVIDER ||
-    "openai";
+  const defaultProvider =
+    getSupportedEmbeddingProvider(process.env.DEFAULT_EMBEDDING_PROVIDER) || "openai";
+  const defaultModel =
+    process.env.DEFAULT_EMBEDDING_MODEL || DEFAULT_OPENAI_EMBEDDING_MODEL;
+  const requestedProvider = userSettings.embeddingProvider?.trim().toLowerCase();
+  const requestedModel = userSettings.embeddingModel?.trim();
+  const provider = getSupportedEmbeddingProvider(requestedProvider) ?? defaultProvider;
   const model =
-    userSettings.embeddingModel ||
-    process.env.DEFAULT_EMBEDDING_MODEL ||
-    DEFAULT_OPENAI_EMBEDDING_MODEL;
+    provider === requestedProvider && requestedModel ? requestedModel : defaultModel;
+  const apiKey =
+    provider === requestedProvider
+      ? await getProviderCredentialSecret(supabase, {
+          label: "default-embedding",
+          provider,
+          userId
+        })
+      : null;
+  const fallbackApiKey = getProviderApiKeyFromEnv(provider);
+  const resolvedApiKey = apiKey ?? fallbackApiKey;
+
+  if (!resolvedApiKey) {
+    throw new Error(`Missing required API key for embedding provider: ${provider}`);
+  }
 
   return {
+    apiKey: resolvedApiKey,
     model,
     provider
   };
+}
+
+function getSupportedEmbeddingProvider(provider?: string | null) {
+  if (!provider) {
+    return null;
+  }
+
+  return MVP_SUPPORTED_EMBEDDING_PROVIDERS.has(provider) ? provider : null;
+}
+
+function getProviderApiKeyFromEnv(provider: string) {
+  switch (provider) {
+    case "openai":
+      return process.env.OPENAI_API_KEY || null;
+    case "anthropic":
+      return process.env.ANTHROPIC_API_KEY || null;
+    case "gemini":
+      return process.env.GEMINI_API_KEY || null;
+    case "huggingface":
+      return process.env.HUGGINGFACE_API_KEY || null;
+    default:
+      return null;
+  }
 }
 
 async function updateDocumentStatus(

@@ -55,7 +55,13 @@ export async function queryDocumentVectors(
 
   try {
     const config = await resolveEmbeddingConfig(supabase, userId);
-    const embedder = deps?.embedder ?? embedTexts;
+    const embedder =
+      deps?.embedder ??
+      ((input: { model: string; provider: string; texts: string[] }) =>
+        embedTexts({
+          ...input,
+          apiKey: config.apiKey
+        }));
     const pineconeClient = deps?.pineconeClient ?? createPineconeQueryClient();
     const [vector] = await embedder({
       model: config.model,

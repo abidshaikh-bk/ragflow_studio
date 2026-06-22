@@ -55,7 +55,9 @@ Add these scripts to `package.json`:
 
 - All protected APIs return 401 when unauthenticated.
 - Settings API never returns raw keys.
+- Saved encrypted provider credentials can drive embedding requests when environment keys are absent.
 - Upload API validates type and size.
+- Document list API returns only the authenticated user's documents.
 - Document status API is user-scoped.
 - Chat API persists messages and logs tool calls.
 - Tool endpoints validate input and handle upstream failures.
@@ -137,6 +139,8 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 ## Current tool coverage
 
 - `src/tests/vector-search-tool.test.ts` validates Pinecone namespace isolation and tool logging.
+- `src/tests/document-embeddings.test.ts` validates batch progress, provider fallback, and settings-backed embedding API key resolution.
+- `src/tests/documents-route.test.ts` validates `/api/documents` auth and authenticated document listing.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing for vector, date/time, and Tavily-backed current-information questions.

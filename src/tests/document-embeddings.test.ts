@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateDocumentEmbeddings } from "@/server/embeddings/service";
 
 const getUserSettingsMock = vi.fn();
+const getProviderCredentialSecretMock = vi.fn();
 const eqUserMock = vi.fn();
 const eqIdMock = vi.fn(() => ({
   eq: eqUserMock
@@ -18,6 +19,8 @@ const supabaseMock = {
 };
 
 vi.mock("@/server/settings/service", () => ({
+  getProviderCredentialSecret: (...args: unknown[]) =>
+    getProviderCredentialSecretMock(...args),
   getUserSettings: (...args: unknown[]) => getUserSettingsMock(...args)
 }));
 
@@ -48,6 +51,7 @@ const baseChunks = [
 describe("document embeddings", () => {
   beforeEach(() => {
     getUserSettingsMock.mockReset();
+    getProviderCredentialSecretMock.mockReset();
     fromMock.mockClear();
     updateMock.mockClear();
     eqIdMock.mockClear();
@@ -56,6 +60,7 @@ describe("document embeddings", () => {
 
   it("passes the expected chunk text to the embedding client", async () => {
     eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
@@ -90,6 +95,7 @@ describe("document embeddings", () => {
 
   it("batches embedding requests and tracks progress", async () => {
     eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
@@ -122,8 +128,52 @@ describe("document embeddings", () => {
     });
   });
 
+  it("falls back to the MVP default provider when saved settings use an unsupported provider", async () => {
+    eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue(null);
+    getUserSettingsMock.mockResolvedValue({
+      embeddingModel: "gemini-embedding-001",
+      embeddingProvider: "gemini"
+    });
+    const originalDefaultProvider = process.env.DEFAULT_EMBEDDING_PROVIDER;
+    const originalDefaultModel = process.env.DEFAULT_EMBEDDING_MODEL;
+    const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
+    process.env.DEFAULT_EMBEDDING_PROVIDER = "openai";
+    process.env.DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
+    process.env.OPENAI_API_KEY = "fallback-openai-key";
+
+    try {
+      const embedder = vi.fn().mockResolvedValue([
+        [0.1, 0.2],
+        [0.3, 0.4],
+        [0.5, 0.6]
+      ]);
+
+      await generateDocumentEmbeddings(
+        {
+          chunks: baseChunks,
+          documentId: "doc-123",
+          supabase: supabaseMock as never,
+          userId: "user-123"
+        },
+        embedder
+      );
+
+      expect(embedder).toHaveBeenCalledWith({
+        model: "text-embedding-3-small",
+        provider: "openai",
+        texts: ["first chunk text", "second chunk text", "third chunk text"]
+      });
+    } finally {
+      process.env.DEFAULT_EMBEDDING_PROVIDER = originalDefaultProvider;
+      process.env.DEFAULT_EMBEDDING_MODEL = originalDefaultModel;
+      process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+    }
+  });
+
   it("marks the document as failed when embedding generation fails", async () => {
     eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
     getUserSettingsMock.mockResolvedValue({
       embeddingModel: "text-embedding-3-small",
       embeddingProvider: "openai"
@@ -150,5 +200,45 @@ describe("document embeddings", () => {
       error_message: "Embedding provider timed out.",
       status: "failed"
     });
+  });
+
+  it("uses the saved embedding credential when no environment key is present", async () => {
+    const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
+    eqUserMock.mockResolvedValue({ error: null });
+    getProviderCredentialSecretMock.mockResolvedValue("saved-user-openai-key");
+    getUserSettingsMock.mockResolvedValue({
+      embeddingModel: "text-embedding-3-small",
+      embeddingProvider: "openai"
+    });
+    delete process.env.OPENAI_API_KEY;
+
+    try {
+      const fetchMock = vi.fn().mockResolvedValue({
+        json: async () => ({
+          data: [{ embedding: [0.1, 0.2, 0.3] }]
+        }),
+        ok: true
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await generateDocumentEmbeddings({
+        chunks: [baseChunks[0]],
+        documentId: "doc-123",
+        supabase: supabaseMock as never,
+        userId: "user-123"
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://api.openai.com/v1/embeddings",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            authorization: "Bearer saved-user-openai-key"
+          })
+        })
+      );
+    } finally {
+      process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+      vi.unstubAllGlobals();
+    }
   });
 });

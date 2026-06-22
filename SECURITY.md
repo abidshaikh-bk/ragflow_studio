@@ -62,8 +62,9 @@ Every protected route must:
 - Tavily and LangSmith credentials must be loaded only in server helpers or route handlers.
 - Settings API may accept keys, but must not return raw keys.
 - Saved keys must be masked in the UI.
+- Saved provider keys must be encrypted at rest with `APP_ENCRYPTION_KEY` and decrypted only inside server helpers when needed for a model call.
 - Prefer server environment keys for MVP.
-- Add production TODO for encryption/KMS if user-owned keys are persisted.
+- Add production TODO for managed key rotation/KMS if user-owned keys are persisted long-term.
 
 ## S3 rules
 

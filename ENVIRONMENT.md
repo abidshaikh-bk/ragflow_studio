@@ -30,6 +30,8 @@ cp .env.example .env.local
 | `ANTHROPIC_API_KEY` | Optional | No | Chat provider |
 | `GEMINI_API_KEY` | Optional | No | Chat provider |
 | `HUGGINGFACE_API_KEY` | Optional | No | Model provider |
+| `APP_ENCRYPTION_KEY` | Recommended | No | Encrypt saved user provider credentials at rest |
+| `APP_ENCRYPTION_KEY_VERSION` | Recommended | No | Version tag stored with encrypted provider credentials |
 | `APP_URL` | Yes | No | Local or deployed app URL |
 
 ## Local development
@@ -58,6 +60,7 @@ npm run build
 - `DATABASE_URL` must be a valid, reachable Postgres connection string for the Supabase project if migrations or live RLS validation will run.
 - `TAVILY_API_KEY` is consumed only by the server-side web-search helper.
 - `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, and `LANGCHAIN_TRACING_V2` are consumed only by the server-side LangGraph agent tracing path.
+- `APP_ENCRYPTION_KEY` is used to encrypt saved provider credentials before they are written to Supabase. If it is unset in local development, the server falls back to deriving an encryption key from `SUPABASE_SERVICE_ROLE_KEY`.
 
 
 ## Git/GitHub prerequisites

@@ -92,6 +92,7 @@ UI:
   - completed
   - failed
 - Document list
+- Load the existing authenticated user's documents on page load
 - Error state with retry option if feasible
 
 ### `/settings`
@@ -102,10 +103,10 @@ UI:
 
 - Chat provider select: OpenAI, Anthropic, Gemini, Hugging Face
 - Chat model input
-- Chat API key input, masked after save
+- Chat API key input, masked after save and stored encrypted server-side
 - Embedding provider select
 - Embedding model input
-- Embedding API key input, masked after save
+- Embedding API key input, masked after save and stored encrypted server-side
 - Save button
 
 
@@ -184,7 +185,7 @@ created_at timestamptz default now()
 updated_at timestamptz default now()
 ```
 
-MVP rule: prefer server environment keys. Do not store plaintext API keys. If encryption is not implemented, store only masked metadata or provider/model choices.
+MVP rule: prefer server environment keys when no user-scoped credential is available. Do not store plaintext API keys. Saved user credentials must be encrypted server-side and returned only as masked metadata.
 
 ### `documents`
 

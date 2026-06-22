@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { queryDocumentVectors } from "@/server/tools/vector-search";
 
+const { getProviderCredentialSecretMock, getUserSettingsMock } = vi.hoisted(() => ({
+  getProviderCredentialSecretMock: vi.fn(),
+  getUserSettingsMock: vi.fn()
+}));
+
 vi.mock("@/server/settings/service", () => ({
-  getUserSettings: async () => ({
-    chatApiKeyMasked: null,
-    chatModel: "gpt-4.1-mini",
-    chatProvider: "openai",
-    embeddingApiKeyMasked: null,
-    embeddingModel: "text-embedding-3-small",
-    embeddingProvider: "openai"
-  })
+  getProviderCredentialSecret: getProviderCredentialSecretMock,
+  getUserSettings: getUserSettingsMock
 }));
 
 const insertMock = vi.fn();
@@ -31,6 +30,17 @@ describe("vector search tool", () => {
   beforeEach(() => {
     fromMock.mockClear();
     insertMock.mockReset();
+    getProviderCredentialSecretMock.mockReset();
+    getUserSettingsMock.mockReset();
+    getProviderCredentialSecretMock.mockResolvedValue("user-openai-key");
+    getUserSettingsMock.mockResolvedValue({
+      chatApiKeyMasked: null,
+      chatModel: "gpt-4.1-mini",
+      chatProvider: "openai",
+      embeddingApiKeyMasked: null,
+      embeddingModel: "text-embedding-3-small",
+      embeddingProvider: "openai"
+    });
   });
 
   it("validates the input query", async () => {
@@ -155,5 +165,57 @@ describe("vector search tool", () => {
         tool_name: "pinecone.query"
       })
     );
+  });
+
+  it("falls back to the MVP default embedding provider for query vectors", async () => {
+    insertMock.mockResolvedValue({ error: null });
+    getUserSettingsMock.mockResolvedValue({
+      chatApiKeyMasked: null,
+      chatModel: "gpt-4.1-mini",
+      chatProvider: "openai",
+      embeddingApiKeyMasked: null,
+      embeddingModel: "gemini-embedding-001",
+      embeddingProvider: "gemini"
+    });
+
+    const originalDefaultProvider = process.env.DEFAULT_EMBEDDING_PROVIDER;
+    const originalDefaultModel = process.env.DEFAULT_EMBEDDING_MODEL;
+    const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
+    process.env.DEFAULT_EMBEDDING_PROVIDER = "openai";
+    process.env.DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small";
+    process.env.OPENAI_API_KEY = "fallback-openai-key";
+    getProviderCredentialSecretMock.mockResolvedValue(null);
+
+    try {
+      const embedder = vi.fn().mockResolvedValue([[0.1, 0.2, 0.3]]);
+      const pineconeQuery = vi.fn().mockResolvedValue({
+        matches: []
+      });
+
+      await queryDocumentVectors(
+        {
+          query: "approval flow",
+          sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef",
+          supabase: supabaseMock as never,
+          userId: "user-123"
+        },
+        {
+          embedder,
+          pineconeClient: {
+            query: pineconeQuery
+          }
+        }
+      );
+
+      expect(embedder).toHaveBeenCalledWith({
+        model: "text-embedding-3-small",
+        provider: "openai",
+        texts: ["approval flow"]
+      });
+    } finally {
+      process.env.DEFAULT_EMBEDDING_PROVIDER = originalDefaultProvider;
+      process.env.DEFAULT_EMBEDDING_MODEL = originalDefaultModel;
+      process.env.OPENAI_API_KEY = originalOpenAiApiKey;
+    }
   });
 });

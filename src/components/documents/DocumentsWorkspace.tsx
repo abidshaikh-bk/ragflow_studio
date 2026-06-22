@@ -59,29 +59,21 @@ type DocumentStatusApiResponse = {
   error?: string;
 };
 
+type DocumentListApiResponse = {
+  data?: Array<{
+    documentId: string;
+    errorMessage?: string;
+    fileName: string;
+    processedChunks: number;
+    status: DocumentStatus;
+    totalChunks: number;
+    updatedAt: string;
+  }>;
+  error?: string;
+};
+
 const STATUS_POLL_INTERVAL_MS = 1200;
 const PREVIEW_TOTAL_CHUNKS = 24;
-
-const initialDocuments: DocumentRecord[] = [
-  {
-    id: "seed-1",
-    name: "employee-handbook.md",
-    processedChunks: 24,
-    status: "completed",
-    totalChunks: 24,
-    updatedAt: "Completed earlier today",
-    uploadProgress: 100
-  },
-  {
-    id: "seed-2",
-    name: "security-policy.txt",
-    processedChunks: 11,
-    status: "indexing",
-    totalChunks: 16,
-    updatedAt: "Indexing now",
-    uploadProgress: 100
-  }
-];
 
 function createSnapshots(shouldFail: boolean): UploadSnapshot[] {
   const snapshots: UploadSnapshot[] = [
@@ -161,8 +153,9 @@ function formatUpdatedAt(status: DocumentStatus): string {
 }
 
 export function DocumentsWorkspace() {
-  const [documents, setDocuments] = useState<DocumentRecord[]>(initialDocuments);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeUpload, setActiveUpload] = useState<ActiveUpload | null>(null);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const [uploadError, setUploadError] = useState("");
   const [uploadMessage, setUploadMessage] = useState(
     "Upload a document to send it to private S3 storage before the backend pipeline reports each processing stage."
@@ -173,6 +166,63 @@ export function DocumentsWorkspace() {
     : null;
   const activeUploadDocumentId = activeUpload?.documentId;
   const activeUploadMode = activeUpload?.mode;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDocuments() {
+      try {
+        const response = await fetch("/api/documents", {
+          method: "GET"
+        });
+        const payload = (await response.json()) as DocumentListApiResponse;
+
+        if (!response.ok || !payload.data) {
+          throw new Error(payload.error || "Unable to load your documents.");
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        const nextDocuments = payload.data.map(mapListedDocumentToRecord);
+        const activeBackendDocument = nextDocuments.find(
+          (document) => !isTerminalDocumentStatus(document.status)
+        );
+
+        setDocuments(nextDocuments);
+
+        if (activeBackendDocument) {
+          setActiveUpload({
+            documentId: activeBackendDocument.id,
+            failedStage: activeBackendDocument.status as TimelineStage,
+            mode: "live"
+          });
+          setUploadMessage(
+            `Resuming live processing updates for ${activeBackendDocument.name}.`
+          );
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        const message =
+          error instanceof Error ? error.message : "Unable to load your documents.";
+        setUploadError(message);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingDocuments(false);
+        }
+      }
+    }
+
+    void loadDocuments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!activeUpload || activeUpload.mode !== "preview") {
@@ -423,6 +473,9 @@ export function DocumentsWorkspace() {
           description="Successful uploads now write to S3 and then poll the live backend ingestion status until processing completes."
         >
           <DocumentTable documents={documents} />
+          {isLoadingDocuments ? (
+            <p className="mt-4 text-sm text-slate-400">Loading your uploaded documents...</p>
+          ) : null}
         </Card>
       </div>
       <div className="space-y-6">
@@ -457,4 +510,35 @@ function createDocumentRecord(input: {
     updatedAt: "Queued just now",
     uploadProgress: input.snapshot.uploadProgress
   };
+}
+
+function mapListedDocumentToRecord(document: {
+  documentId: string;
+  errorMessage?: string;
+  fileName: string;
+  processedChunks: number;
+  status: DocumentStatus;
+  totalChunks: number;
+  updatedAt: string;
+}): DocumentRecord {
+  return {
+    id: document.documentId,
+    ...(document.errorMessage ? { errorMessage: document.errorMessage } : {}),
+    name: document.fileName,
+    processedChunks: document.processedChunks,
+    status: document.status,
+    totalChunks: document.totalChunks,
+    updatedAt: formatTimestamp(document.updatedAt),
+    uploadProgress: 100
+  };
+}
+
+function formatTimestamp(value: string) {
+  const timestamp = new Date(value);
+
+  if (Number.isNaN(timestamp.getTime())) {
+    return "Updated recently";
+  }
+
+  return timestamp.toLocaleString();
 }

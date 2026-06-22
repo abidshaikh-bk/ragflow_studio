@@ -514,7 +514,9 @@ Objective: Generate embeddings for document chunks.
 Implementation:
 
 - Use user embedding settings where available.
+- Use the saved encrypted embedding credential when the selected provider is supported.
 - Fall back to server default embedding provider.
+- Fall back to the provider environment key when no user-scoped credential is available.
 - Batch embeddings.
 - Update document status to `embedding`.
 - Track processed chunk count.

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 import ChatPage from "@/app/(app)/chat/page";
 import DocumentsPage from "@/app/(app)/documents/page";
@@ -51,19 +51,24 @@ describe("phase 1a page scaffolds", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({
-          data: {
-            chatApiKeyMasked: "********1234",
-            chatModel: "gpt-4.1-mini",
-            chatProvider: "openai",
-            embeddingApiKeyMasked: "********5678",
-            embeddingModel: "text-embedding-3-small",
-            embeddingProvider: "openai"
-          }
-        }),
+      vi.fn().mockImplementation(async (input) => ({
+        json: async () =>
+          input === "/api/documents"
+            ? {
+                data: []
+              }
+            : {
+                data: {
+                  chatApiKeyMasked: "********1234",
+                  chatModel: "gpt-4.1-mini",
+                  chatProvider: "openai",
+                  embeddingApiKeyMasked: "********5678",
+                  embeddingModel: "text-embedding-3-small",
+                  embeddingProvider: "openai"
+                }
+              },
         ok: true
-      })
+      }))
     );
   });
 
@@ -85,8 +90,12 @@ describe("phase 1a page scaffolds", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the documents workspace shell", () => {
+  it("renders the documents workspace shell", async () => {
     render(<DocumentsPage />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
     expect(
       screen.getByRole("heading", { name: /document ingestion workspace/i })

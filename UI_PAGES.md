@@ -149,6 +149,7 @@ Phase 1A scaffold note:
 - List current user's documents.
 - Upload files through `/api/documents/upload`.
 - Trigger processing through `/api/documents/:id/process`.
+- Hydrate the document history from `GET /api/documents` on initial load instead of seed data.
 - Poll `/api/documents/:id/status` every 1–2 seconds while processing.
 - Stop polling on `completed` or `failed`.
 - Show total and processed chunk counts.
@@ -191,7 +192,7 @@ TASK-009 implementation note:
 
 MVP note:
 
-- Keep saved secrets masked after save.
+- Keep saved secrets masked after save and encrypted server-side for later model calls.
 - Allow provider and model editing without rendering raw stored API keys.
 
 ## Test requirements
