@@ -132,6 +132,12 @@ LangSmith traces for this app must use redacted summaries only:
 - Tavily result logging should store title, URL, snippet, score, and timestamps, but not raw response headers or secrets.
 - `/api/chat` must persist the authenticated user's message and assistant reply under the same user-scoped session, and any stored `langsmith_run_id` must come from the server-side agent only.
 
+## App event logging
+
+- App lifecycle logs must be structured JSON objects with stable event names.
+- Chat logs may store message length, session IDs, run IDs, and counts, but not full prompt or answer bodies.
+- Document logs may store file metadata, document IDs, chunk counts, namespaces, vector counts, and sanitized error messages.
+
 ## Security task completion criteria
 
 Security-related tasks are complete only when tests prove:

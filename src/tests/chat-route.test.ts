@@ -7,6 +7,8 @@ const getChatSessionMock = vi.fn();
 const prepareChatTurnMock = vi.fn();
 const persistAssistantReplyMock = vi.fn();
 const invokeChatAgentMock = vi.fn();
+const logInfoMock = vi.fn();
+const logErrorMock = vi.fn();
 const supabaseMock = {
   auth: {
     getUser: getUserMock
@@ -19,6 +21,13 @@ vi.mock("@/server/supabase/server", () => ({
 
 vi.mock("@/server/agent/workflow", () => ({
   invokeChatAgent: (...args: unknown[]) => invokeChatAgentMock(...args)
+}));
+
+vi.mock("@/server/logging/events", () => ({
+  appEventLogger: {
+    error: (...args: unknown[]) => logErrorMock(...args),
+    info: (...args: unknown[]) => logInfoMock(...args)
+  }
 }));
 
 vi.mock("@/server/chat/persistence", () => ({
@@ -34,6 +43,8 @@ describe("/api/chat route", () => {
     prepareChatTurnMock.mockReset();
     persistAssistantReplyMock.mockReset();
     invokeChatAgentMock.mockReset();
+    logInfoMock.mockReset();
+    logErrorMock.mockReset();
   });
 
   it("returns 401 when the request is unauthenticated", async () => {
@@ -176,6 +187,23 @@ describe("/api/chat route", () => {
     });
     expect(payload.data.id).toBe("session-1");
     expect(payload.langsmithRunId).toBe("trace-123");
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "chat.request.started",
+        metadata: expect.objectContaining({
+          messageLength: "Summarize my documents".length
+        }),
+        userId: "user-123"
+      })
+    );
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "chat.request.completed",
+        langsmithRunId: "trace-123",
+        sessionId: "session-1",
+        userId: "user-123"
+      })
+    );
   });
 
   it("returns a JSON 500 response when the agent fails", async () => {
@@ -203,6 +231,13 @@ describe("/api/chat route", () => {
     expect(payload).toEqual({
       error: 'Unsupported chat provider "gemini" for the MVP chat agent.'
     });
+    expect(logErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorMessage: 'Unsupported chat provider "gemini" for the MVP chat agent.',
+        event: "chat.request.failed",
+        userId: "user-123"
+      })
+    );
   });
 
   it("returns 400 when the request body is not valid JSON", async () => {

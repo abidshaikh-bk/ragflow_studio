@@ -797,7 +797,7 @@ Acceptance criteria:
 
 ### TASK-024: Add app-level event logging
 
-Status: not_started
+Status: done
 
 Objective: Log document and chat lifecycle events.
 

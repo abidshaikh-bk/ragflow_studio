@@ -10,6 +10,7 @@ import {
   indexDocumentEmbeddings,
   type PineconeUpsertClient
 } from "@/server/pinecone/indexing";
+import { appEventLogger } from "@/server/logging/events";
 
 type ProcessUploadedDocumentParams = {
   documentId: string;
@@ -36,42 +37,88 @@ export async function processUploadedDocument(
   }: ProcessUploadedDocumentParams,
   deps?: Partial<ProcessUploadedDocumentDeps>
 ) {
-  const parsedDocument = await parseDocument({
+  const startedAt = Date.now();
+
+  appEventLogger.info({
     documentId,
-    fileContents,
-    fileName,
-    fileType,
-    supabase,
+    event: "documents.processing.started",
+    metadata: {
+      fileName,
+      fileType
+    },
     userId
   });
 
-  const chunkedDocument = await chunkDocument({
-    documentId,
-    fileName,
-    supabase,
-    text: parsedDocument.text,
-    userId
-  });
-
-  const embeddingResult = await generateDocumentEmbeddings(
-    {
-      chunks: chunkedDocument.chunks,
+  try {
+    const parsedDocument = await parseDocument({
       documentId,
+      fileContents,
+      fileName,
+      fileType,
       supabase,
       userId
-    },
-    deps?.embedder
-  );
+    });
 
-  return indexDocumentEmbeddings(
-    {
-      chunks: chunkedDocument.chunks,
+    const chunkedDocument = await chunkDocument({
       documentId,
       fileName,
       supabase,
-      userId,
-      vectors: embeddingResult.vectors
-    },
-    deps?.pineconeClient ?? createPineconeUpsertClient()
-  );
+      text: parsedDocument.text,
+      userId
+    });
+
+    const embeddingResult = await generateDocumentEmbeddings(
+      {
+        chunks: chunkedDocument.chunks,
+        documentId,
+        supabase,
+        userId
+      },
+      deps?.embedder
+    );
+    const indexingResult = await indexDocumentEmbeddings(
+      {
+        chunks: chunkedDocument.chunks,
+        documentId,
+        fileName,
+        supabase,
+        userId,
+        vectors: embeddingResult.vectors
+      },
+      deps?.pineconeClient ?? createPineconeUpsertClient()
+    );
+
+    appEventLogger.info({
+      documentId,
+      durationMs: Date.now() - startedAt,
+      event: "documents.processing.completed",
+      metadata: {
+        chunkCount: chunkedDocument.chunks.length,
+        namespace: indexingResult.namespace,
+        vectorCount: indexingResult.vectorCount
+      },
+      userId
+    });
+
+    return indexingResult;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to process the uploaded document.";
+
+    appEventLogger.error({
+      documentId,
+      durationMs: Date.now() - startedAt,
+      errorMessage: message,
+      event: "documents.processing.failed",
+      metadata: {
+        fileName,
+        fileType
+      },
+      userId
+    });
+
+    throw error;
+  }
 }

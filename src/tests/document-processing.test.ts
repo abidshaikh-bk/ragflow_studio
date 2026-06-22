@@ -5,6 +5,8 @@ const parseDocumentMock = vi.fn();
 const chunkDocumentMock = vi.fn();
 const generateDocumentEmbeddingsMock = vi.fn();
 const indexDocumentEmbeddingsMock = vi.fn();
+const logInfoMock = vi.fn();
+const logErrorMock = vi.fn();
 
 vi.mock("@/server/documents/parser", () => ({
   parseDocument: (...args: unknown[]) => parseDocumentMock(...args)
@@ -29,12 +31,21 @@ vi.mock("@/server/pinecone/indexing", () => ({
   indexDocumentEmbeddings: (...args: unknown[]) => indexDocumentEmbeddingsMock(...args)
 }));
 
+vi.mock("@/server/logging/events", () => ({
+  appEventLogger: {
+    error: (...args: unknown[]) => logErrorMock(...args),
+    info: (...args: unknown[]) => logInfoMock(...args)
+  }
+}));
+
 describe("processUploadedDocument", () => {
   beforeEach(() => {
     parseDocumentMock.mockReset();
     chunkDocumentMock.mockReset();
     generateDocumentEmbeddingsMock.mockReset();
     indexDocumentEmbeddingsMock.mockReset();
+    logInfoMock.mockReset();
+    logErrorMock.mockReset();
   });
 
   it("runs parsing, chunking, embedding, and Pinecone indexing in order", async () => {
@@ -137,5 +148,48 @@ describe("processUploadedDocument", () => {
       namespace: "user:user-123",
       vectorCount: 1
     });
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: "doc-123",
+        event: "documents.processing.started",
+        userId: "user-123"
+      })
+    );
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: "doc-123",
+        event: "documents.processing.completed",
+        metadata: expect.objectContaining({
+          chunkCount: 1,
+          namespace: "user:user-123",
+          vectorCount: 1
+        }),
+        userId: "user-123"
+      })
+    );
+  });
+
+  it("logs a structured failure event when processing fails", async () => {
+    parseDocumentMock.mockRejectedValue(new Error("Parser failed."));
+
+    await expect(
+      processUploadedDocument({
+        documentId: "doc-123",
+        fileContents: "# team handbook",
+        fileName: "handbook.md",
+        fileType: "text/markdown",
+        supabase: { from: vi.fn() } as never,
+        userId: "user-123"
+      })
+    ).rejects.toThrow(/parser failed/i);
+
+    expect(logErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: "doc-123",
+        errorMessage: "Parser failed.",
+        event: "documents.processing.failed",
+        userId: "user-123"
+      })
+    );
   });
 });

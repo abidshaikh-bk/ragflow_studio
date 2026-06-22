@@ -1547,3 +1547,58 @@ Pass
 
 ### Follow-up
 - Reuse the shared tracing helper for app-level structured event logging in `TASK-024`.
+
+---
+
+## TASK-024: Add app-level event logging
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-024-app-event-logging
+Commit Hash:
+Started: 2026-06-22
+Completed: 2026-06-22
+
+### Objective
+Log document and chat lifecycle events with consistent structured payloads that are safe for server-side observability.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/app/api/chat/route.ts
+- src/app/api/documents/upload/route.ts
+- src/server/documents/process.ts
+- src/server/logging/events.ts
+- src/tests/app-event-logger.test.ts
+- src/tests/chat-route.test.ts
+- src/tests/document-processing.test.ts
+- src/tests/document-upload-route.test.ts
+
+### Implementation Notes
+- Added `src/server/logging/events.ts` to emit structured JSON lifecycle events with stable names, timestamps, IDs, counts, durations, and sanitized error messages.
+- Logged chat request start/completion/failure in `/api/chat` without storing raw prompts or assistant bodies in the event payload.
+- Logged document upload start/completion/failure in `/api/documents/upload` and document processing start/completion/failure in `processUploadedDocument`.
+
+### Tests Added
+- `src/tests/app-event-logger.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the structured logger for later smoke-test and deployment instrumentation tasks.

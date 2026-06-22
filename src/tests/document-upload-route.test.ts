@@ -5,6 +5,8 @@ import { POST } from "@/app/api/documents/upload/route";
 const getUserMock = vi.fn();
 const processUploadedDocumentMock = vi.fn();
 const uploadDocumentMock = vi.fn();
+const logInfoMock = vi.fn();
+const logErrorMock = vi.fn();
 const supabaseMock = {
   auth: {
     getUser: getUserMock
@@ -23,11 +25,20 @@ vi.mock("@/server/documents/process", () => ({
   processUploadedDocument: (...args: unknown[]) => processUploadedDocumentMock(...args)
 }));
 
+vi.mock("@/server/logging/events", () => ({
+  appEventLogger: {
+    error: (...args: unknown[]) => logErrorMock(...args),
+    info: (...args: unknown[]) => logInfoMock(...args)
+  }
+}));
+
 describe("/api/documents/upload route", () => {
   beforeEach(() => {
     getUserMock.mockReset();
     processUploadedDocumentMock.mockReset();
     uploadDocumentMock.mockReset();
+    logInfoMock.mockReset();
+    logErrorMock.mockReset();
   });
 
   it("returns 401 when the upload request is unauthenticated", async () => {
@@ -106,6 +117,51 @@ describe("/api/documents/upload route", () => {
         status: "uploaded"
       }
     });
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "documents.upload.started",
+        metadata: expect.objectContaining({
+          fileName: "handbook.md"
+        }),
+        userId: "user-123"
+      })
+    );
+    expect(logInfoMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: "doc-456",
+        event: "documents.upload.completed",
+        userId: "user-123"
+      })
+    );
+  });
+
+  it("logs a structured upload failure event", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+    uploadDocumentMock.mockRejectedValue(new Error("S3 unavailable."));
+
+    const formData = new FormData();
+    formData.append("file", createFile("# handbook", "handbook.md", "text/markdown"));
+
+    const response = await POST(createMultipartRequest(formData));
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({
+      error: "S3 unavailable."
+    });
+    expect(logErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorMessage: "S3 unavailable.",
+        event: "documents.upload.failed",
+        userId: "user-123"
+      })
+    );
   });
 });
 

@@ -16,6 +16,7 @@
 - Tool support for Pinecone search, date/time, and Tavily web search.
 - Persistent chat history, document metadata, tool calls, and LangSmith trace IDs.
 - Redacted LangSmith spans for the top-level agent run plus vector-search, date/time, web-search, and answer-composition stages.
+- Structured server-side lifecycle logs for uploads, document processing, chat turns, and failures.
 
 ## 3. Tech stack
 

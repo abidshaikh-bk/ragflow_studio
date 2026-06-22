@@ -149,6 +149,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.
 - `src/tests/chat-route.test.ts` validates `/api/chat` auth, user-message persistence, JSON error handling for malformed requests, agent invocation, and LangSmith-aware assistant persistence.
 - `src/tests/langsmith-tracing.test.ts` validates that LangSmith tracing keeps the real server result out of trace payloads, uses redacted previews, and still returns a stable run ID to the application.
+- `src/tests/app-event-logger.test.ts`, `src/tests/document-processing.test.ts`, and `src/tests/document-upload-route.test.ts` validate structured app-level lifecycle logging for chat, upload, processing, and failure paths.
 
 
 ## UI testing requirements

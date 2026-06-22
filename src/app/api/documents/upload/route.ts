@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { processUploadedDocument } from "@/server/documents/process";
 import { uploadDocument } from "@/server/documents/upload";
+import { appEventLogger } from "@/server/logging/events";
 import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -20,6 +21,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  appEventLogger.info({
+    event: "documents.upload.started",
+    metadata: {
+      fileName: maybeFile.name,
+      fileSize: maybeFile.size,
+      fileType: maybeFile.type
+    },
+    userId: auth.userId
+  });
+
   try {
     const result = await uploadDocument({
       file: maybeFile,
@@ -35,8 +46,18 @@ export async function POST(request: NextRequest) {
       fileType: maybeFile.type,
       supabase: auth.supabase,
       userId: auth.userId
-    }).catch((error) => {
-      console.error("Document processing failed after upload.", error);
+    }).catch(() => undefined);
+
+    appEventLogger.info({
+      documentId: result.documentId,
+      event: "documents.upload.completed",
+      metadata: {
+        fileName: maybeFile.name,
+        fileSize: maybeFile.size,
+        fileType: maybeFile.type,
+        status: result.status
+      },
+      userId: auth.userId
     });
 
     return NextResponse.json(
@@ -60,6 +81,17 @@ export async function POST(request: NextRequest) {
       message.includes("must be 10MB or smaller")
         ? 400
         : 500;
+
+    appEventLogger.error({
+      errorMessage: message,
+      event: "documents.upload.failed",
+      metadata: {
+        fileName: maybeFile.name,
+        fileSize: maybeFile.size,
+        fileType: maybeFile.type
+      },
+      userId: auth.userId
+    });
 
     return NextResponse.json({ error: message }, { status });
   }

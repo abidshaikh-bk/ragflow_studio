@@ -6,6 +6,7 @@ import {
   prepareChatTurn
 } from "@/server/chat/persistence";
 import { invokeChatAgent } from "@/server/agent/workflow";
+import { appEventLogger } from "@/server/logging/events";
 import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -37,6 +38,18 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const startedAt = Date.now();
+
+  appEventLogger.info({
+    event: "chat.request.started",
+    metadata: {
+      messageLength: payload.data.message.length,
+      requestedSessionId: payload.data.sessionId ?? null
+    },
+    sessionId: payload.data.sessionId,
+    userId: auth.userId
+  });
 
   try {
     const existingSession = payload.data.sessionId
@@ -78,6 +91,18 @@ export async function POST(request: NextRequest) {
       userId: auth.userId
     });
 
+    appEventLogger.info({
+      durationMs: Date.now() - startedAt,
+      event: "chat.request.completed",
+      langsmithRunId: agentResult.langsmithRunId,
+      metadata: {
+        sourceCount: agentResult.metadata.sources?.length ?? 0,
+        toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
+      },
+      sessionId: preparedTurn.sessionId,
+      userId: auth.userId
+    });
+
     return NextResponse.json({
       data: session,
       langsmithRunId: agentResult.langsmithRunId
@@ -85,6 +110,17 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to complete the chat request.";
+
+    appEventLogger.error({
+      durationMs: Date.now() - startedAt,
+      errorMessage: message,
+      event: "chat.request.failed",
+      metadata: {
+        requestedSessionId: payload.data.sessionId ?? null
+      },
+      sessionId: payload.data.sessionId,
+      userId: auth.userId
+    });
 
     return NextResponse.json({ error: message }, { status: 500 });
   }
