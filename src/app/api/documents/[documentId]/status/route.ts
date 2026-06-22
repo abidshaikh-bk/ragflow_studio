@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseDocumentStatusParams } from "@/lib/validations/documents";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { getDocumentStatus } from "@/server/documents/status";
 
@@ -10,9 +11,8 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   return withAuthenticatedApiRoute(async (auth) => {
-    const { documentId } = await context.params;
-
     try {
+      const { documentId } = parseDocumentStatusParams(await context.params);
       const snapshot = await getDocumentStatus(auth.supabase, {
         documentId,
         userId: auth.userId

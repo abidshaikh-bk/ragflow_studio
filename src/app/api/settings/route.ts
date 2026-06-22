@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { settingsPayloadSchema } from "@/lib/validations/settings";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
+import { parseJsonBody } from "@/server/http/validation";
 import { getUserSettings, saveUserSettings } from "@/server/settings/service";
 
 export async function GET() {
@@ -13,16 +14,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   return withAuthenticatedApiRoute(async (auth) => {
-    const payload = settingsPayloadSchema.safeParse(await request.json());
+    const payload = await parseJsonBody(
+      request,
+      settingsPayloadSchema,
+      "Invalid settings payload."
+    );
 
-    if (!payload.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid settings payload.",
-          fieldErrors: payload.error.flatten().fieldErrors
-        },
-        { status: 400 }
-      );
+    if (payload.response) {
+      return payload.response;
     }
 
     try {

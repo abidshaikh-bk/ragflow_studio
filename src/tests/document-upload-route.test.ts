@@ -72,6 +72,26 @@ describe("/api/documents/upload route", () => {
     expect(payload.error).toMatch(/document file is required/i);
   });
 
+  it("returns 400 when the uploaded file type is unsupported", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+
+    const formData = new FormData();
+    formData.append("file", createFile("id,name", "contacts.csv", "text/csv"));
+
+    const response = await POST(createMultipartRequest(formData));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.error).toMatch(/unsupported file type/i);
+    expect(uploadDocumentMock).not.toHaveBeenCalled();
+  });
+
   it("returns the created document id for a valid authenticated upload", async () => {
     getUserMock.mockResolvedValue({
       data: {

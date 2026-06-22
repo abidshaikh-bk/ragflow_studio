@@ -57,6 +57,28 @@ describe("/api/settings route", () => {
     expect(postResponse.status).toBe(401);
   });
 
+  it("returns 400 when the request body is not valid JSON", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+
+    const response = await POST({
+      json: async () => {
+        throw new Error("Unexpected end of JSON input");
+      }
+    } as unknown as NextRequest);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      error: "Invalid JSON request body."
+    });
+  });
+
   it("returns masked saved settings for an authenticated user", async () => {
     getUserMock.mockResolvedValue({
       data: {

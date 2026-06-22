@@ -51,11 +51,22 @@ const documentStatusParamsSchema = z.object({
   documentId: z.string().uuid("Invalid document id.")
 });
 
+const uploadDocumentRequestSchema = z.object({
+  file: z.instanceof(File, {
+    message: "A document file is required."
+  })
+});
+
 export type UploadDocumentMetadata = {
   extension: keyof typeof allowedDocumentTypes;
   fileName: string;
   fileSize: number;
   mimeType: string;
+};
+
+export type UploadDocumentRequest = {
+  file: File;
+  metadata: UploadDocumentMetadata;
 };
 
 export function parseUploadDocumentMetadata(input: {
@@ -94,4 +105,25 @@ export function parseDocumentStatusParams(input: {
   }
 
   return parsed.data;
+}
+
+export function parseUploadDocumentRequest(input: {
+  file: unknown;
+}): UploadDocumentRequest {
+  const parsed = uploadDocumentRequestSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new Error(
+      parsed.error.issues[0]?.message ?? "A document file is required."
+    );
+  }
+
+  return {
+    file: parsed.data.file,
+    metadata: parseUploadDocumentMetadata({
+      fileName: parsed.data.file.name,
+      fileSize: parsed.data.file.size,
+      fileType: parsed.data.file.type
+    })
+  };
 }

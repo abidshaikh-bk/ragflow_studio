@@ -7,31 +7,19 @@ import {
 } from "@/server/chat/persistence";
 import { invokeChatAgent } from "@/server/agent/workflow";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
+import { parseJsonBody } from "@/server/http/validation";
 import { appEventLogger } from "@/server/logging/events";
 
 export async function POST(request: NextRequest) {
   return withAuthenticatedApiRoute(async (auth) => {
-    let requestBody: unknown;
+    const payload = await parseJsonBody(
+      request,
+      chatMessagePayloadSchema,
+      "Invalid chat payload."
+    );
 
-    try {
-      requestBody = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid JSON request body." },
-        { status: 400 }
-      );
-    }
-
-    const payload = chatMessagePayloadSchema.safeParse(requestBody);
-
-    if (!payload.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid chat payload.",
-          fieldErrors: payload.error.flatten().fieldErrors
-        },
-        { status: 400 }
-      );
+    if (payload.response) {
+      return payload.response;
     }
 
     const startedAt = Date.now();

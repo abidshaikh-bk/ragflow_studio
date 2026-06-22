@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getS3Env } from "@/lib/env";
-import { parseUploadDocumentMetadata } from "@/lib/validations/documents";
+import { parseUploadDocumentRequest } from "@/lib/validations/documents";
 import { createS3Client } from "@/server/s3/client";
 
 type DocumentUploadResult = {
@@ -35,11 +35,7 @@ export async function uploadDocument(
   { file, supabase, userId }: UploadDocumentParams,
   deps?: Partial<UploadDocumentDeps>
 ): Promise<DocumentUploadResult> {
-  const metadata = parseUploadDocumentMetadata({
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: file.type
-  });
+  const { metadata } = parseUploadDocumentRequest({ file });
   const documentId = randomUUID();
   const s3Key = buildDocumentS3Key(userId, documentId, metadata.extension);
   const { bucketName, s3Client } = resolveUploadDeps(deps);

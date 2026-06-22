@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { parseUploadDocumentRequest } from "@/lib/validations/documents";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { processUploadedDocument } from "@/server/documents/process";
 import { uploadDocument } from "@/server/documents/upload";
@@ -7,11 +8,20 @@ import { appEventLogger } from "@/server/logging/events";
 export async function POST(request: NextRequest) {
   return withAuthenticatedApiRoute(async (auth) => {
     const formData = await request.formData();
-    const maybeFile = formData.get("file");
+    let uploadRequest;
 
-    if (!(maybeFile instanceof File)) {
+    try {
+      uploadRequest = parseUploadDocumentRequest({
+        file: formData.get("file")
+      });
+    } catch (error) {
       return NextResponse.json(
-        { error: "A document file is required." },
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "A document file is required."
+        },
         { status: 400 }
       );
     }
@@ -19,26 +29,26 @@ export async function POST(request: NextRequest) {
     appEventLogger.info({
       event: "documents.upload.started",
       metadata: {
-        fileName: maybeFile.name,
-        fileSize: maybeFile.size,
-        fileType: maybeFile.type
+        fileName: uploadRequest.metadata.fileName,
+        fileSize: uploadRequest.metadata.fileSize,
+        fileType: uploadRequest.metadata.mimeType
       },
       userId: auth.userId
     });
 
     try {
       const result = await uploadDocument({
-        file: maybeFile,
+        file: uploadRequest.file,
         supabase: auth.supabase,
         userId: auth.userId
       });
-      const fileContents = Buffer.from(await maybeFile.arrayBuffer());
+      const fileContents = Buffer.from(await uploadRequest.file.arrayBuffer());
 
       void processUploadedDocument({
         documentId: result.documentId,
         fileContents,
-        fileName: maybeFile.name,
-        fileType: maybeFile.type,
+        fileName: uploadRequest.metadata.fileName,
+        fileType: uploadRequest.metadata.mimeType,
         supabase: auth.supabase,
         userId: auth.userId
       }).catch(() => undefined);
@@ -47,9 +57,9 @@ export async function POST(request: NextRequest) {
         documentId: result.documentId,
         event: "documents.upload.completed",
         metadata: {
-          fileName: maybeFile.name,
-          fileSize: maybeFile.size,
-          fileType: maybeFile.type,
+          fileName: uploadRequest.metadata.fileName,
+          fileSize: uploadRequest.metadata.fileSize,
+          fileType: uploadRequest.metadata.mimeType,
           status: result.status
         },
         userId: auth.userId
@@ -81,9 +91,9 @@ export async function POST(request: NextRequest) {
         errorMessage: message,
         event: "documents.upload.failed",
         metadata: {
-          fileName: maybeFile.name,
-          fileSize: maybeFile.size,
-          fileType: maybeFile.type
+          fileName: uploadRequest.metadata.fileName,
+          fileSize: uploadRequest.metadata.fileSize,
+          fileType: uploadRequest.metadata.mimeType
         },
         userId: auth.userId
       });

@@ -1659,3 +1659,65 @@ Pass
 
 ### Follow-up
 - Reuse the authenticated route wrapper for any future protected APIs added during later deployment or MCP phases.
+
+---
+
+## TASK-026: Validate all API inputs with Zod
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-026-api-zod-validation
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Add explicit Zod-backed validation to every API input boundary so malformed JSON, invalid params, and unsupported upload payloads fail with `400`.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- src/app/api/chat/route.ts
+- src/app/api/chat/sessions/[sessionId]/route.ts
+- src/app/api/documents/[documentId]/status/route.ts
+- src/app/api/documents/upload/route.ts
+- src/app/api/settings/route.ts
+- src/lib/validations/documents.ts
+- src/server/documents/upload.ts
+- src/server/http/validation.ts
+- src/tests/chat-sessions-route.test.ts
+- src/tests/document-status-route.test.ts
+- src/tests/document-upload-route.test.ts
+- src/tests/settings-route.test.ts
+
+### Implementation Notes
+- Added `src/server/http/validation.ts` so JSON route handlers can reject malformed JSON and return schema field errors consistently.
+- Added `parseUploadDocumentRequest` to validate multipart file presence and metadata with Zod before upload processing begins.
+- Moved UUID param parsing to the document-status and chat-session route boundaries so invalid params fail early with `400`.
+
+### Tests Added
+- `src/tests/chat-sessions-route.test.ts`
+- `src/tests/document-status-route.test.ts`
+- `src/tests/document-upload-route.test.ts`
+- `src/tests/settings-route.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the shared JSON parser for future protected APIs so new routes inherit the same `400` behavior for malformed payloads.

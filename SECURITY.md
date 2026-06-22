@@ -53,7 +53,7 @@ Every protected route must:
 2. Read authenticated user from session.
 3. Return 401 if no user exists.
 4. Use server-derived `user.id` for all queries/mutations.
-5. Validate request body with Zod.
+5. Validate request bodies, route params, and form-data inputs with Zod before executing business logic.
 
 Implementation note:
 

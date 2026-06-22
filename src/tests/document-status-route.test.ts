@@ -60,6 +60,29 @@ describe("/api/documents/[documentId]/status route", () => {
     expect(payload.error).toMatch(/document not found/i);
   });
 
+  it("returns 400 when the document id is not a valid uuid", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+
+    const response = await GET(new Request("http://localhost"), {
+      params: Promise.resolve({
+        documentId: "not-a-uuid"
+      })
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      error: "Invalid document id."
+    });
+    expect(getDocumentStatusMock).not.toHaveBeenCalled();
+  });
+
   it("returns the current status snapshot for the authenticated user's document", async () => {
     getUserMock.mockResolvedValue({
       data: {

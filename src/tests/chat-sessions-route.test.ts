@@ -95,4 +95,26 @@ describe("chat session routes", () => {
     });
     expect(payload.data.id).toBe("session-1");
   });
+
+  it("returns 400 when the session id is not a valid uuid", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: { id: "user-123" }
+      }
+    });
+    getChatSessionMock.mockRejectedValue(new Error("Invalid chat session id."));
+
+    const response = await getSession(new Request("http://localhost"), {
+      params: Promise.resolve({
+        sessionId: "not-a-uuid"
+      })
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      error: "Invalid chat session id."
+    });
+    expect(getChatSessionMock).not.toHaveBeenCalled();
+  });
 });

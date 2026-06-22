@@ -140,6 +140,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 ## Current tool coverage
 
 - `src/tests/settings-route.test.ts` and `src/tests/chat-route.test.ts` verify protected API routes ignore client-supplied `userId` fields and continue using the authenticated server session user.
+- `src/tests/settings-route.test.ts`, `src/tests/document-upload-route.test.ts`, `src/tests/document-status-route.test.ts`, and `src/tests/chat-sessions-route.test.ts` verify malformed JSON, unsupported file uploads, and invalid UUID params return `400` responses before the routes continue.
 - `src/tests/vector-search-tool.test.ts` validates Pinecone namespace isolation and tool logging.
 - `src/tests/document-embeddings.test.ts` validates batch progress, provider fallback, and settings-backed embedding API key resolution.
 - `src/tests/document-embeddings.test.ts` also verifies Gemini embedding requests use the saved provider credential and that unsupported providers fall back to the configured default provider instead of hard-coding OpenAI.

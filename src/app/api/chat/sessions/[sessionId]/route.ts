@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseChatSessionParams } from "@/lib/validations/chat";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { getChatSession } from "@/server/chat/persistence";
 
@@ -10,9 +11,8 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   return withAuthenticatedApiRoute(async (auth) => {
-    const { sessionId } = await context.params;
-
     try {
+      const { sessionId } = parseChatSessionParams(await context.params);
       const session = await getChatSession(auth.supabase, {
         sessionId,
         userId: auth.userId
