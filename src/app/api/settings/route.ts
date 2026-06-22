@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { settingsPayloadSchema } from "@/lib/validations/settings";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { parseJsonBody } from "@/server/http/validation";
+import { redactSecretsInText } from "@/server/security/redaction";
 import { getUserSettings, saveUserSettings } from "@/server/settings/service";
 
 export async function GET() {
@@ -29,10 +30,11 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ data: settings });
     } catch (error) {
-      const message =
+      const message = redactSecretsInText(
         error instanceof Error
           ? error.message
-          : "Unable to save your settings right now.";
+          : "Unable to save your settings right now."
+      );
       const status =
         message.includes("must be re-entered in Settings") ||
         message.includes("Embedding dimension must match")

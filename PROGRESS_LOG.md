@@ -1721,3 +1721,59 @@ Pass
 
 ### Follow-up
 - Reuse the shared JSON parser for future protected APIs so new routes inherit the same `400` behavior for malformed payloads.
+
+---
+
+## TASK-027: Add secret handling safeguards
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-027-secret-handling-safeguards
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Prevent provider key leakage across API responses, structured logs, and tracing previews while preserving masked credential UX.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- src/app/api/settings/route.ts
+- src/server/langsmith/tracing.ts
+- src/server/logging/events.ts
+- src/server/security/redaction.ts
+- src/tests/app-event-logger.test.ts
+- src/tests/langsmith-tracing.test.ts
+- src/tests/settings-route.test.ts
+
+### Implementation Notes
+- Added `src/server/security/redaction.ts` to recursively scrub secret-shaped keys and inline credential text such as bearer tokens and API keys.
+- Applied shared redaction to structured app-event logging, LangSmith trace previews, and settings API error responses before they can surface raw secret material.
+- Kept the existing masked-settings flow intact and extended tests to prove raw secrets never reappear in logs or reflected error payloads.
+
+### Tests Added
+- `src/tests/app-event-logger.test.ts`
+- `src/tests/langsmith-tracing.test.ts`
+- `src/tests/settings-route.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the shared redaction helper anywhere future MCP or deployment features surface secret-adjacent payloads into logs, traces, or user-visible errors.

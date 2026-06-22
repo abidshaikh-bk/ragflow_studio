@@ -838,7 +838,7 @@ Acceptance criteria:
 
 ### TASK-027: Add secret handling safeguards
 
-Status: not_started
+Status: validated
 
 Objective: Prevent provider key leakage.
 

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { traceable } from "langsmith/traceable";
+import { redactSecretsInText } from "@/server/security/redaction";
 
 type TraceExecutionOptions<T> = {
   invoke: () => Promise<T>;
@@ -58,5 +59,5 @@ export async function traceServerExecution<T>({
 }
 
 export function createTracePreview(value: string, maxLength = 160) {
-  return value.trim().slice(0, maxLength);
+  return redactSecretsInText(value).trim().slice(0, maxLength);
 }

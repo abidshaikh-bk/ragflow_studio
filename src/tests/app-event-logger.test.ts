@@ -68,4 +68,40 @@ describe("appEventLogger", () => {
       userId: "user-123"
     });
   });
+
+  it("redacts secret-shaped metadata and error content before logging", () => {
+    const logger = createAppEventLogger({
+      errorSink,
+      infoSink
+    });
+
+    logger.error({
+      errorMessage: "Authorization Bearer super-secret-token failed for api key raw-chat-secret",
+      event: "settings.save.failed",
+      metadata: {
+        authorization: "Bearer super-secret-token",
+        nested: {
+          chatApiKey: "raw-chat-secret"
+        },
+        safeField: "visible"
+      },
+      userId: "user-123"
+    });
+
+    const payload = JSON.parse(errorSink.mock.calls[0][0]);
+
+    expect(payload).toMatchObject({
+      error: {
+        message:
+          "Authorization Bearer [REDACTED] failed for api key [REDACTED]"
+      },
+      metadata: {
+        authorization: "[REDACTED]",
+        nested: {
+          chatApiKey: "[REDACTED]"
+        },
+        safeField: "visible"
+      }
+    });
+  });
 });

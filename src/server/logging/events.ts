@@ -1,3 +1,5 @@
+import { redactSecretsInText, redactSecretsInValue } from "@/server/security/redaction";
+
 type AppEventBase = {
   documentId?: string;
   durationMs?: number;
@@ -56,13 +58,13 @@ function buildEventPayload(level: "error" | "info", event: AppEventBase) {
     ...(event.errorMessage
       ? {
           error: {
-            message: event.errorMessage
+            message: redactSecretsInText(event.errorMessage)
           }
         }
       : {}),
     ...(event.metadata && Object.keys(event.metadata).length
       ? {
-          metadata: event.metadata
+          metadata: redactSecretsInValue(event.metadata)
         }
       : {})
   };

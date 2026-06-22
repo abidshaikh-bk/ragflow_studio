@@ -253,4 +253,42 @@ describe("/api/settings route", () => {
         "Your saved embedding gemini API key must be re-entered in Settings before it can be used."
     });
   });
+
+  it("redacts raw secret values from settings API error responses", async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: "user-123"
+        }
+      }
+    });
+    saveUserSettingsMock.mockRejectedValue(
+      new Error("Invalid API key raw-chat-secret supplied.")
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/settings", {
+        body: JSON.stringify({
+          chatApiKey: "raw-chat-secret",
+          chatModel: "claude-3-5-sonnet",
+          chatProvider: "anthropic",
+          embeddingApiKey: "",
+          embeddingDimensions: 1024,
+          embeddingModel: "text-embedding-3-small",
+          embeddingProvider: "openai"
+        }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(payload).toEqual({
+      error: "Invalid API key [REDACTED] supplied."
+    });
+    expect(payload.error).not.toContain("raw-chat-secret");
+  });
 });

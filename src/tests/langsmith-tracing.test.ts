@@ -109,4 +109,12 @@ describe("LangSmith tracing helpers", () => {
       queryPreview: "latest ai news"
     });
   });
+
+  it("redacts credential-shaped content from trace previews", async () => {
+    const { createTracePreview } = await import("@/server/langsmith/tracing");
+
+    expect(
+      createTracePreview("Authorization Bearer super-secret-token and api key raw-chat-secret")
+    ).toBe("Authorization Bearer [REDACTED] and api key [REDACTED]");
+  });
 });

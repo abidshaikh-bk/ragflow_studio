@@ -67,6 +67,7 @@ Implementation note:
 - Settings API may accept keys, but must not return raw keys.
 - Saved keys must be masked in the UI.
 - Saved provider keys must be encrypted at rest with `APP_ENCRYPTION_KEY` and decrypted only inside server helpers when needed for a model call.
+- Structured app logs, trace previews, and reflected API error messages must pass through shared secret redaction helpers before they are persisted or returned.
 - Prefer server environment keys for MVP.
 - Add production TODO for managed key rotation/KMS if user-owned keys are persisted long-term.
 
