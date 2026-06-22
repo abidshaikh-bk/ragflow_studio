@@ -59,6 +59,7 @@ Every protected route must:
 
 - `NEXT_PUBLIC_*` variables are browser-visible. Only Supabase URL and anon key may use this prefix.
 - Provider API keys must be server-only.
+- Tavily and LangSmith credentials must be loaded only in server helpers or route handlers.
 - Settings API may accept keys, but must not return raw keys.
 - Saved keys must be masked in the UI.
 - Prefer server environment keys for MVP.
@@ -116,6 +117,11 @@ Safe trace metadata:
 - latency
 - status
 - run ID
+
+## Tool logging
+
+- `agent_tool_calls.tool_input` and `agent_tool_calls.tool_output` must contain normalized, minimal payloads only.
+- Tavily result logging should store title, URL, snippet, score, and timestamps, but not raw response headers or secrets.
 
 ## Security task completion criteria
 

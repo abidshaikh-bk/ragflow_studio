@@ -1297,3 +1297,55 @@ Pass
 
 ### Follow-up
 - The next tool step is Tavily-backed web search for current-information questions.
+
+---
+
+## TASK-020: Implement Tavily web search tool
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-020-tavily-web-search-tool
+Started: 2026-06-22
+Completed:
+
+### Objective
+Create a server-side Tavily web-search tool with validated inputs, normalized results, and logged tool-call records.
+
+### Files Changed
+- ENVIRONMENT.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- package-lock.json
+- package.json
+- src/lib/env.ts
+- src/lib/validations/web-search.ts
+- src/server/tools/web-search.ts
+- src/tests/web-search-tool.test.ts
+
+### Implementation Notes
+- Added the Tavily SDK and created a typed server-only web-search helper that validates the query/max-result inputs, applies a timeout, and normalizes the returned snippets for chat metadata usage.
+- Reused the `agent_tool_calls` logging pattern so successful and failed Tavily executions are observable without leaking secrets into logs.
+
+### Tests Added
+- `src/tests/web-search-tool.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- After validation, move on to the LangGraph agent wiring in `TASK-021`.

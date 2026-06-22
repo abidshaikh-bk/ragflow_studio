@@ -692,7 +692,7 @@ Acceptance criteria:
 
 ### TASK-020: Implement Tavily web search tool
 
-Status: not_started
+Status: validated
 
 Objective: Create Tavily-powered web search tool.
 

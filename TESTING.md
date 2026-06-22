@@ -39,6 +39,7 @@ Add these scripts to `package.json`:
 - Pinecone vector ID generation.
 - Tool input/output normalization.
 - Secret masking utilities.
+- Tavily tool query validation, result normalization, and timeout/failure handling.
 
 ## Component test targets
 
@@ -132,6 +133,12 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 - No secrets appear in browser or logs.
 - RLS prevents cross-user access.
 - Production build succeeds.
+
+## Current tool coverage
+
+- `src/tests/vector-search-tool.test.ts` validates Pinecone namespace isolation and tool logging.
+- `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
+- `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 
 
 ## UI testing requirements

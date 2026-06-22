@@ -65,3 +65,15 @@ export function getPineconeEnv() {
     indexName
   };
 }
+
+export function getTavilyEnv() {
+  const apiKey = process.env.TAVILY_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing required environment variable: TAVILY_API_KEY");
+  }
+
+  return {
+    apiKey
+  };
+}
