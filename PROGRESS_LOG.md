@@ -1840,12 +1840,13 @@ Pass
 
 ## TASK-029: Add E2E document upload test
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-029-e2e-document-upload-test
+Commit Hash: 18a77e7
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Validate TXT or Markdown upload, live processing updates, and completed document visibility in a real browser flow.
