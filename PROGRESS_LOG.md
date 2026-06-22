@@ -1412,7 +1412,7 @@ Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-022-chat-api-endpoint
-Commit Hash: acd3343
+Commit Hash: dd79c7a
 Started: 2026-06-22
 Completed: 2026-06-22
 
@@ -1441,6 +1441,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - src/tests/documents-page.test.tsx
 - src/tests/documents-route.test.ts
 - src/tests/page-scaffolds.test.tsx
+- src/tests/settings-service.test.ts
 - src/tests/vector-search-tool.test.ts
 
 ### Implementation Notes
@@ -1448,6 +1449,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Extended chat persistence so assistant rows can store `langsmith_run_id` and surface it back through message metadata without exposing any raw secrets.
 - Reopened the task to remove the remaining dummy document-history behavior: the `/documents` workspace now hydrates from authenticated `GET /api/documents` results and resumes polling any in-flight backend ingestion record instead of seeding placeholder rows.
 - Added encrypted provider-credential storage and server-only decryption helpers so saved `/settings` embedding keys can drive document ingestion and vector search when `OPENAI_API_KEY` is not present in the environment.
+- Prevented legacy metadata-only credentials from appearing as usable masked secrets in `/settings`, so users are prompted to re-enter keys that predate encrypted storage instead of hitting a later ingestion failure.
 - Hardened the shared embedding config resolver so unsupported saved embedding providers such as `gemini` still fall back to the MVP server default provider and model without crashing document ingestion or vector search.
 
 ### Tests Added
@@ -1455,6 +1457,7 @@ Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow
 - Added regression coverage to `src/tests/document-embeddings.test.ts` and `src/tests/vector-search-tool.test.ts` for unsupported saved embedding providers and saved-key resolution.
 - Added `src/tests/documents-route.test.ts` for authenticated document listing.
 - Expanded `src/tests/documents-page.test.tsx` and `src/tests/page-scaffolds.test.tsx` so the documents UI loads backend history instead of seed data.
+- Added `src/tests/settings-service.test.ts` to verify legacy credentials without encrypted payloads are not presented as reusable saved secrets.
 
 ### Validation Commands
 ```bash
