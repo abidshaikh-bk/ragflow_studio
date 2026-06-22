@@ -749,7 +749,7 @@ Acceptance criteria:
 
 ### TASK-022: Implement `/api/chat`
 
-Status: validated
+Status: done
 
 Objective: Create chat API endpoint that invokes the LangGraph agent.
 

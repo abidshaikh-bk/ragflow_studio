@@ -1408,12 +1408,13 @@ Pass
 
 ## TASK-022: Implement `/api/chat`
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
-Git Branch: task/TASK-021-langgraph-agent
+Git Branch: task/TASK-022-chat-api-endpoint
+Commit Hash: 0573621
 Started: 2026-06-22
-Completed:
+Completed: 2026-06-22
 
 ### Objective
 Replace the mock chat endpoint with the authenticated LangGraph-backed chat flow, persisting the user message before invocation and the assistant reply afterward.
