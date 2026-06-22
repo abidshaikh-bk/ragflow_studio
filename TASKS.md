@@ -867,7 +867,7 @@ Acceptance criteria:
 
 ### TASK-029: Add E2E document upload test
 
-Status: not_started
+Status: validated
 
 Objective: Validate document upload and processing flow.
 

@@ -1835,3 +1835,51 @@ Pass
 
 ### Follow-up
 - Reuse the Playwright auth harness for the document, chat, and tool-routing E2E tasks in Phase 9.
+
+---
+
+## TASK-029: Add E2E document upload test
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-029-e2e-document-upload-test
+Started: 2026-06-23
+Completed:
+
+### Objective
+Validate TXT or Markdown upload, live processing updates, and completed document visibility in a real browser flow.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- src/tests/e2e/auth.spec.ts
+- src/tests/e2e/document-upload.spec.ts
+- src/tests/e2e/helpers.ts
+
+### Implementation Notes
+- Added a Playwright document-upload flow that logs in through the existing auth harness, uploads a Markdown file, and waits for the mocked ingestion pipeline to reach `completed`.
+- Introduced a shared E2E helper for login and settings mocking so the Phase 9 browser suite stays consistent across scenarios.
+- Made the mocked document API stateful so dev-mode rerenders do not wipe the uploaded row before the completion assertions run.
+
+### Tests Added
+- `src/tests/e2e/document-upload.spec.ts`
+- Refined `src/tests/e2e/auth.spec.ts` through shared helpers
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the shared E2E helper for the chat RAG and tool-routing browser tasks.
