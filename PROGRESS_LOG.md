@@ -1726,13 +1726,13 @@ Pass
 
 ## TASK-027: Add secret handling safeguards
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-027-secret-handling-safeguards
-Commit Hash:
+Commit Hash: e54c914
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Prevent provider key leakage across API responses, structured logs, and tracing previews while preserving masked credential UX.
