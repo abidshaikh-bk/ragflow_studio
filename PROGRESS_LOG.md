@@ -1992,12 +1992,13 @@ Pass
 
 ## TASK-032: Add production deployment config
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-032-production-deployment-config
+Commit Hash: 0275674
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Prepare the app for production deployment and confirm the build path is documented and validated.
