@@ -1054,7 +1054,7 @@ Acceptance criteria:
 
 ### TASK-038: Integrate runtime MCP tools into Agentic RAG
 
-Status: validated
+Status: done
 
 Objective: Allow the Agentic RAG assistant to use enabled MCP tools after document retrieval.
 

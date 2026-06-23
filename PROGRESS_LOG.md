@@ -2322,13 +2322,13 @@ npm run build
 
 ## TASK-038: Integrate runtime MCP tools into Agentic RAG
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-038-integrate-runtime-mcp-tools
-Commit Hash:
+Commit Hash: 3fff9a2
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Allow the chat assistant to fall back to enabled runtime MCP tools after document retrieval without breaking the existing vector-search-first behavior.
