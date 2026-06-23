@@ -893,7 +893,7 @@ Acceptance criteria:
 
 ### TASK-031: Add E2E tool-routing test
 
-Status: validated
+Status: done
 
 Objective: Validate agent tool routing.
 

@@ -1943,12 +1943,13 @@ Pass
 
 ## TASK-031: Add E2E tool-routing test
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-031-e2e-tool-routing-test
+Commit Hash: ad29c36
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Validate date, vector-search, and Tavily-style web routing in a real browser flow.
