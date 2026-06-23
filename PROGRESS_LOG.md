@@ -2043,3 +2043,50 @@ Pass
 
 ### Follow-up
 - Carry the stable standalone build and parallel-safe E2E harness into the final MVP smoke-check task.
+
+---
+
+## TASK-033: Add MVP smoke test checklist
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-033-mvp-smoke-test-checklist
+Started: 2026-06-23
+Completed:
+
+### Objective
+Create the final MVP launch checklist and back it with the current validation evidence.
+
+### Files Changed
+- PROGRESS_LOG.md
+- README.md
+- SMOKE_CHECKLIST.md
+- TASKS.md
+- TESTING.md
+
+### Implementation Notes
+- Started the Phase 9 smoke-checklist task on its own branch.
+
+### Tests Added
+- No new test files; this task records the current validation evidence.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+npm run db:migrate
+npm run test:db
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Keep `SMOKE_CHECKLIST.md` current whenever future changes alter the MVP launch gate.

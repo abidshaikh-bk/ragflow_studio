@@ -144,6 +144,10 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 - RLS prevents cross-user access.
 - Production build succeeds.
 
+Current recorded status:
+
+- See `SMOKE_CHECKLIST.md` for the dated MVP smoke run and command evidence.
+
 ## Current tool coverage
 
 - `src/tests/e2e/auth.spec.ts` validates protected-route redirect to `/login`, successful login redirect to `/chat`, and authenticated access to `/settings` using the Playwright-only auth harness.

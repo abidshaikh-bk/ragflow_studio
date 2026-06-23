@@ -47,6 +47,7 @@ This repository also contains the operating documents for Codex/coding agents bu
 - `TASKS.md` — granular task list with acceptance criteria and validation commands.
 - `MCP_SERVERS.md` — MCP server usage plan for Next.js, Supabase, Pinecone, LangSmith, Tavily, and S3.
 - `TESTING.md` — unit, integration, E2E, security, and smoke testing strategy.
+- `SMOKE_CHECKLIST.md` — dated MVP launch checklist with the latest validation evidence.
 - `SECURITY.md` — security requirements, RLS expectations, and secret-handling rules.
 - `PROGRESS_LOG.md` — task-progress tracker template agents must update.
 - `ENVIRONMENT.md` — required environment variables and setup notes.
