@@ -468,3 +468,4 @@ Phase 10 adds the persistent runtime MCP storage layer:
 - `mcp_tool_invocations` stores redacted MCP audit logs tied back to chat sessions.
 - Stored HTTP headers and stdio env values must remain encrypted and server-only.
 - A server-only adapter under `src/server/mcp` loads enabled configs, enforces stdio allowlists and timeouts, and converts MCP tool definitions into LangChain-compatible tools.
+- The chat agent keeps Pinecone retrieval as the first grounding step and only falls back to enabled runtime MCP tools when document retrieval is weak.

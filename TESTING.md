@@ -213,5 +213,6 @@ Only after Phase 4 begins:
 - HTTP MCP config validation.
 - stdio MCP config validation with allowlist.
 - disabled MCP server is not loaded.
+- Agent workflow tests for runtime MCP fallback, disabled-tool avoidance, and vector-search-first behavior.
 - MCP tool call logging redacts inputs/outputs.
 - MCP tools do not break default vector-search RAG.

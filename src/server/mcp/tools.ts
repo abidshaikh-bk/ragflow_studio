@@ -1,6 +1,7 @@
 import { tool, type StructuredToolInterface } from "@langchain/core/tools";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { getRuntimeMcpEnv } from "@/lib/env";
 import {
   createRuntimeMcpClient,
   type RuntimeMcpClient,
@@ -9,6 +10,7 @@ import {
 } from "@/server/mcp/client";
 import { loadEnabledMcpConfigs } from "@/server/mcp/registry";
 import { redactMcpLogValue } from "@/server/mcp/redaction";
+import { createTracePreview, traceServerExecution } from "@/server/langsmith/tracing";
 
 type LoadRuntimeMcpToolsParams = {
   sessionId?: string;
@@ -19,6 +21,7 @@ type LoadRuntimeMcpToolsParams = {
 type ToolDeps = {
   clientFactory?: (config: RuntimeMcpResolvedConfig) => RuntimeMcpClient;
   configLoader?: typeof loadEnabledMcpConfigs;
+  runtimeEnabled?: boolean;
 };
 
 const GENERIC_MCP_INPUT_SCHEMA = z.record(z.string(), z.unknown()).default({});
@@ -27,6 +30,12 @@ export async function loadRuntimeMcpTools(
   params: LoadRuntimeMcpToolsParams,
   deps?: ToolDeps
 ): Promise<StructuredToolInterface[]> {
+  const runtimeEnabled = deps?.runtimeEnabled ?? getRuntimeMcpEnv().runtimeEnabled;
+
+  if (!runtimeEnabled) {
+    return [];
+  }
+
   const configLoader = deps?.configLoader ?? loadEnabledMcpConfigs;
   const clientFactory = deps?.clientFactory ?? createRuntimeMcpClient;
   const configs = await configLoader({
@@ -69,13 +78,38 @@ function createLangChainMcpTool(input: {
       const startedAt = Date.now();
 
       try {
-        const result = await input.client.callTool({
-          arguments: args,
-          name: input.definition.name
+        const traced = await traceServerExecution({
+          invoke: () =>
+            input.client.callTool({
+              arguments: args,
+              name: input.definition.name
+            }),
+          metadata: {
+            runtime_mcp_server_id: input.client.config.id,
+            sessionId: input.sessionId ?? null,
+            toolName: input.definition.name,
+            userId: input.userId
+          },
+          name: `runtime-mcp-${sanitizeToolName(input.definition.name)}`,
+          runType: "tool",
+          serializeResult: (result) => ({
+            preview:
+              typeof result === "string"
+                ? createTracePreview(result, 120)
+                : redactMcpLogValue(result)
+          }),
+          tags: ["chat", "tool", "runtime-mcp", "ragflow-studio"],
+          traceInput: {
+            args: redactMcpLogValue(args),
+            serverName: input.client.config.name,
+            toolName: input.definition.name
+          }
         });
+        const result = traced.result;
 
         await logMcpInvocation(input.supabase, {
           config: input.client.config,
+          langsmithRunId: traced.runId,
           latencyMs: Date.now() - startedAt,
           result,
           sessionId: input.sessionId,
@@ -134,6 +168,7 @@ async function logMcpInvocation(
   input: {
     config: RuntimeMcpResolvedConfig;
     errorMessage?: string;
+    langsmithRunId?: string | null;
     latencyMs: number;
     result: unknown;
     sessionId?: string;
@@ -149,6 +184,7 @@ async function logMcpInvocation(
 
   const result = await supabase.from("mcp_tool_invocations").insert({
     error_message: input.errorMessage ?? null,
+    langsmith_run_id: input.langsmithRunId ?? null,
     latency_ms: input.latencyMs,
     server_config_id: input.config.id,
     session_id: input.sessionId,

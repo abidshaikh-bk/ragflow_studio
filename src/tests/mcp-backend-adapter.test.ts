@@ -198,7 +198,8 @@ describe("runtime MCP backend adapter", () => {
           ]),
           transport: "http"
         }),
-        configLoader: vi.fn().mockResolvedValue([httpConfig])
+        configLoader: vi.fn().mockResolvedValue([httpConfig]),
+        runtimeEnabled: true
       }
     );
 
@@ -210,6 +211,7 @@ describe("runtime MCP backend adapter", () => {
 
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        langsmith_run_id: expect.any(String),
         server_config_id: "http-config",
         status: "success",
         tool_input_redacted: {

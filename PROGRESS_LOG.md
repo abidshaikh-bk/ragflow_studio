@@ -2317,3 +2317,56 @@ npm run build
 
 ### Follow-up
 - Keep raw stored secrets masked in the UI and defer live agent usage to `TASK-038`.
+
+---
+
+## TASK-038: Integrate runtime MCP tools into Agentic RAG
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-038-integrate-runtime-mcp-tools
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Allow the chat assistant to fall back to enabled runtime MCP tools after document retrieval without breaking the existing vector-search-first behavior.
+
+### Files Changed
+- AGENTIC_RAG_MCP.md
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/server/agent/workflow.ts
+- src/server/mcp/tools.ts
+- src/tests/agent-workflow.test.ts
+- src/tests/mcp-backend-adapter.test.ts
+
+### Implementation Notes
+- Started the Phase 10 runtime MCP integration task on its own branch.
+- Added a runtime MCP fallback node to the chat workflow that runs only after low-confidence document retrieval.
+- Kept vector search as the first document-grounding step and preserved the existing date/web routing behavior.
+- Attached LangSmith run IDs to runtime MCP invocation logs and surfaced MCP fallback sources/tool activity in chat metadata.
+
+### Tests Added
+- Runtime MCP fallback coverage in `src/tests/agent-workflow.test.ts`
+- LangSmith-linked MCP logging coverage in `src/tests/mcp-backend-adapter.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Keep vector search as the first document-grounding step and use runtime MCP only as a safe fallback path.

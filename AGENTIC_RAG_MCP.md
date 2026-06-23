@@ -187,9 +187,8 @@ Phase 10 graph:
 
 ```txt
 user message
-  -> classify intent
   -> retrieve user docs
-  -> optionally select MCP tools
+  -> if docs are weak, optionally select enabled runtime MCP tools
   -> call allowed tools
   -> answer with citations/tool metadata
   -> persist messages, tool calls, trace IDs

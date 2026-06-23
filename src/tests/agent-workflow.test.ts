@@ -205,6 +205,120 @@ describe("chat agent workflow", () => {
     ]);
   });
 
+  it("uses an enabled runtime MCP tool after low-confidence document retrieval", async () => {
+    const vectorSearchTool = vi.fn().mockResolvedValue({
+      matches: []
+    });
+    const runtimeMcpTool = {
+      description: "Look up live weather",
+      invoke: vi.fn().mockResolvedValue("Weather is 31C with light rain."),
+      name: "weather_lookup"
+    };
+    const llm = {
+      invoke: vi.fn().mockResolvedValue({
+        content: "The runtime MCP weather tool says it is 31C with light rain."
+      })
+    };
+
+    const result = await invokeChatAgent(
+      {
+        history: [],
+        message: "What is the weather in Pune?",
+        sessionId: "session-mcp-1",
+        supabase: supabaseMock,
+        userId: "user-123"
+      },
+      {
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: vi.fn() as never,
+        llmFactory: () => llm,
+        runtimeMcpToolsLoader: vi.fn().mockResolvedValue([runtimeMcpTool]) as never,
+        settingsResolver: async () => ({
+          chatApiKeyMasked: null,
+          chatModel: "gpt-4.1-mini",
+          chatProvider: "openai",
+          embeddingApiKeyMasked: null,
+          embeddingDimensions: 1024,
+          embeddingModel: "text-embedding-3-small",
+          embeddingProvider: "openai"
+        }),
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-mcp-123"
+        }),
+        vectorSearchTool: vectorSearchTool as never,
+        webSearchTool: vi.fn() as never
+      }
+    );
+
+    expect(vectorSearchTool).toHaveBeenCalled();
+    expect(runtimeMcpTool.invoke).toHaveBeenCalledWith({
+      query: "What is the weather in Pune?"
+    });
+    expect(result.metadata.sources).toEqual([
+      "Runtime MCP (weather_lookup) - Weather is 31C with light rain."
+    ]);
+    expect(result.metadata.toolActivity).toContain(
+      "weather_lookup -> returned runtime MCP output"
+    );
+  });
+
+  it("does not call runtime MCP tools when document retrieval is strong", async () => {
+    const runtimeMcpTool = {
+      description: "Fallback live tool",
+      invoke: vi.fn(),
+      name: "remote_lookup"
+    };
+
+    await invokeChatAgent(
+      {
+        history: [],
+        message: "What does the onboarding runbook say about approval?",
+        sessionId: "session-mcp-2",
+        supabase: supabaseMock,
+        userId: "user-123"
+      },
+      {
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: vi.fn() as never,
+        llmFactory: () => ({
+          invoke: vi.fn().mockResolvedValue({
+            content: "Manager approval is required."
+          })
+        }),
+        runtimeMcpToolsLoader: vi.fn().mockResolvedValue([runtimeMcpTool]) as never,
+        settingsResolver: async () => ({
+          chatApiKeyMasked: null,
+          chatModel: "gpt-4.1-mini",
+          chatProvider: "openai",
+          embeddingApiKeyMasked: null,
+          embeddingDimensions: 1024,
+          embeddingModel: "text-embedding-3-small",
+          embeddingProvider: "openai"
+        }),
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-mcp-456"
+        }),
+        vectorSearchTool: vi.fn().mockResolvedValue({
+          matches: [
+            {
+              chunkIndex: 2,
+              contentPreview: "The onboarding runbook requires manager approval.",
+              documentId: "doc-1",
+              fileName: "runbook.md",
+              id: "match-1",
+              score: 0.92
+            }
+          ]
+        }) as never,
+        webSearchTool: vi.fn() as never
+      }
+    );
+
+    expect(runtimeMcpTool.invoke).not.toHaveBeenCalled();
+  });
+
   it("resolves a saved Gemini chat configuration", async () => {
     credentialResolverMock.mockResolvedValue("saved-gemini-key");
 

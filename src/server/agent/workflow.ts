@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -18,6 +19,7 @@ import {
   type VectorSearchMatch
 } from "@/server/tools/vector-search";
 import { searchWeb, type WebSearchResult } from "@/server/tools/web-search";
+import { loadRuntimeMcpTools } from "@/server/mcp/tools";
 
 type AgentHistoryMessage = {
   content: string;
@@ -64,11 +66,16 @@ type AgentDeps = {
     result: T;
     runId: string | null;
   }>;
+  runtimeMcpToolsLoader: typeof loadRuntimeMcpTools;
   vectorSearchTool: typeof queryDocumentVectors;
   webSearchTool: typeof searchWeb;
 };
 
 type AgentRoute = "date" | "vector" | "web";
+type RuntimeMcpResult = {
+  output: string;
+  toolName: string;
+};
 
 const LOW_CONFIDENCE_SCORE = 0.65;
 const DEFAULT_OPENAI_CHAT_MODEL = "gpt-4.1-mini";
@@ -96,6 +103,10 @@ const AgentState = Annotation.Root({
     reducer: (_, right) => right
   }),
   toolActivity: Annotation<string[]>({
+    default: () => [],
+    reducer: (_, right) => right
+  }),
+  runtimeMcpResults: Annotation<RuntimeMcpResult[]>({
     default: () => [],
     reducer: (_, right) => right
   }),
@@ -153,6 +164,7 @@ function createChatAgentGraph(
     credentialResolver: deps?.credentialResolver ?? getProviderCredentialSecret,
     dateTimeTool: deps?.dateTimeTool ?? getCurrentDateTime,
     llmFactory: deps?.llmFactory ?? createChatModel,
+    runtimeMcpToolsLoader: deps?.runtimeMcpToolsLoader ?? loadRuntimeMcpTools,
     settingsResolver: deps?.settingsResolver ?? getUserSettings,
     vectorSearchTool: deps?.vectorSearchTool ?? queryDocumentVectors,
     webSearchTool: deps?.webSearchTool ?? searchWeb
@@ -275,6 +287,37 @@ function createChatAgentGraph(
         webResults: result.results
       };
     })
+    .addNode("runRuntimeMcp", async (state) => {
+      const runtimeMcpTools = await resolvedDeps.runtimeMcpToolsLoader({
+        sessionId: params.sessionId,
+        supabase: params.supabase,
+        userId: params.userId
+      });
+      const selectedTool = selectRuntimeMcpTool(state.message, runtimeMcpTools);
+
+      if (!selectedTool) {
+        return {
+          runtimeMcpResults: [],
+          toolActivity: ["runtime.mcp -> no enabled MCP tools available"]
+        };
+      }
+
+      const result = await selectedTool.invoke({
+        query: state.message
+      });
+      const output =
+        typeof result === "string" ? result : JSON.stringify(result);
+
+      return {
+        runtimeMcpResults: [
+          {
+            output,
+            toolName: selectedTool.name
+          }
+        ],
+        toolActivity: [`${selectedTool.name} -> returned runtime MCP output`]
+      };
+    })
     .addNode("composeAnswer", async (state) => {
       return (
         await traceServerExecution({
@@ -340,7 +383,10 @@ function createChatAgentGraph(
       return "runVectorSearch";
     })
     .addConditionalEdges("runVectorSearch", (state) =>
-      shouldFallbackToWeb(state.vectorMatches) ? "runWebSearch" : "composeAnswer"
+      shouldFallbackToWeb(state.vectorMatches) ? "runRuntimeMcp" : "composeAnswer"
+    )
+    .addConditionalEdges("runRuntimeMcp", (state) =>
+      state.runtimeMcpResults.length ? "composeAnswer" : "runWebSearch"
     )
     .addEdge("runDateTime", "composeAnswer")
     .addEdge("runWebSearch", "composeAnswer")
@@ -412,11 +458,17 @@ function buildUserPrompt(state: typeof AgentState.State) {
   const timeContext = state.timeContext
     ? `${state.timeContext.friendlyDateTime} (${state.timeContext.isoDateTime})`
     : "None";
+  const mcpContext = state.runtimeMcpResults.length
+    ? state.runtimeMcpResults
+        .map((result) => `- ${result.toolName}: ${result.output}`)
+        .join("\n")
+    : "None";
 
   return [
     `Conversation history:\n${history || "None"}`,
     `User question:\n${state.message}`,
     `Document context:\n${vectorContext}`,
+    `Runtime MCP context:\n${mcpContext}`,
     `Web context:\n${webContext}`,
     `Date/time context:\n${timeContext}`,
     "Write a concise helpful answer grounded in the provided context."
@@ -436,6 +488,13 @@ function buildSources(state: typeof AgentState.State) {
     );
   }
 
+  if (state.runtimeMcpResults.length) {
+    return state.runtimeMcpResults.map(
+      (result) =>
+        `Runtime MCP (${result.toolName}) - ${createTracePreview(result.output, 160)}`
+    );
+  }
+
   if (state.timeContext) {
     return [
       `Current date/time (${state.timeContext.timeZone}) - ${state.timeContext.isoDateTime}`
@@ -443,6 +502,22 @@ function buildSources(state: typeof AgentState.State) {
   }
 
   return [];
+}
+
+function selectRuntimeMcpTool(
+  message: string,
+  tools: StructuredToolInterface[]
+) {
+  if (!tools.length) {
+    return null;
+  }
+
+  const normalized = message.toLowerCase();
+  const exactMatch = tools.find((tool) =>
+    normalized.includes(tool.name.toLowerCase().replace(/_/g, " "))
+  );
+
+  return exactMatch ?? tools[0]!;
 }
 
 function normalizeLlmContent(content: unknown) {
