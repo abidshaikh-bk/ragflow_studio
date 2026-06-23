@@ -993,7 +993,7 @@ Acceptance criteria:
 
 ### TASK-036: Add MCP configuration APIs
 
-Status: validated
+Status: done
 
 Objective: Add backend APIs for managing runtime MCP server configs.
 

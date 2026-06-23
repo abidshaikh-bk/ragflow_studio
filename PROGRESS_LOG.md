@@ -2213,13 +2213,13 @@ npm run build
 
 ## TASK-036: Add MCP configuration APIs
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-036-add-mcp-configuration-apis
-Commit Hash:
+Commit Hash: 117a68f
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Add authenticated server APIs for creating, reading, updating, deleting, testing, and previewing runtime MCP server configs without leaking stored secrets.
