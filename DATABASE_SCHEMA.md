@@ -190,7 +190,63 @@ create table public.agent_tool_calls (
 );
 ```
 
-## 10. RLS policies
+## 10. Runtime MCP server configs
+
+```sql
+create table public.mcp_server_configs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  name text not null,
+  description text,
+  transport text not null check (transport in ('stdio', 'http')),
+  command text,
+  args jsonb default '[]'::jsonb not null,
+  url text,
+  env_encrypted jsonb default '{}'::jsonb not null,
+  headers_encrypted jsonb default '{}'::jsonb not null,
+  secret_fingerprint text,
+  allowed_tools jsonb default '[]'::jsonb not null,
+  enabled boolean default false not null,
+  is_default boolean default false not null,
+  timeout_ms int default 30000 not null,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+```
+
+Rules:
+
+- `transport` supports only `stdio` or `http`.
+- `command` is required for `stdio`; `url` is required for `http`.
+- `env_encrypted` and `headers_encrypted` must remain encrypted-at-rest server-side only.
+- Browser-safe responses must expose only derived booleans such as whether secrets are present, never the stored encrypted values.
+
+## 11. Runtime MCP tool invocations
+
+```sql
+create table public.mcp_tool_invocations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  session_id uuid references public.chat_sessions(id) on delete set null,
+  server_config_id uuid references public.mcp_server_configs(id) on delete set null,
+  tool_name text not null,
+  tool_input_redacted jsonb default '{}'::jsonb not null,
+  tool_output_preview jsonb default '{}'::jsonb not null,
+  status text not null,
+  latency_ms int,
+  error_message text,
+  langsmith_run_id text,
+  created_at timestamptz default now() not null
+);
+```
+
+Rules:
+
+- Inputs must be redacted before insert.
+- Outputs must be stored as previews, not full unbounded payloads.
+- Invocation logs remain user-scoped through `user_id` and session ownership checks.
+
+## 12. RLS policies
 
 Enable RLS on all tables and enforce user ownership.
 
@@ -204,6 +260,8 @@ alter table public.document_chunks enable row level security;
 alter table public.chat_sessions enable row level security;
 alter table public.chat_messages enable row level security;
 alter table public.agent_tool_calls enable row level security;
+alter table public.mcp_server_configs enable row level security;
+alter table public.mcp_tool_invocations enable row level security;
 ```
 
 Use this pattern for `user_id` tables:
@@ -261,7 +319,7 @@ Keep `updated_at` fresh with a shared trigger function and create a profile row 
 
 # Runtime MCP schema extension
 
-These tables are for Phase 4 and should not block the default MVP.
+These tables land in Phase 10 and should not block the default MVP path when runtime MCP remains disabled.
 
 ## `mcp_server_configs`
 
@@ -323,4 +381,4 @@ RLS:
 
 ## MVP schema note
 
-The MVP can launch without these MCP tables. If migrations are applied early, the UI/API may remain disabled until Phase 4.
+The MVP can launch without these MCP-backed features enabled. The schema may exist before the UI and APIs are turned on.

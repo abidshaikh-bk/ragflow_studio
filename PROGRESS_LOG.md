@@ -2091,3 +2091,64 @@ Pass
 
 ### Follow-up
 - Keep `SMOKE_CHECKLIST.md` current whenever future changes alter the MVP launch gate.
+
+---
+
+## TASK-034: Add runtime MCP schema
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-034-add-runtime-mcp-schema
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Add database support for configurable runtime MCP servers with secure per-user storage and audit logging.
+
+### Files Changed
+- AGENTIC_RAG_MCP.md
+- DATABASE_SCHEMA.md
+- ENVIRONMENT.md
+- MCP_SERVERS.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- scripts/apply-supabase-migration.mjs
+- src/lib/validations/mcp.ts
+- src/server/mcp/redaction.ts
+- src/server/security/redaction.ts
+- src/tests/database-schema.test.ts
+- src/tests/mcp-config.test.ts
+- supabase/migrations/0002_runtime_mcp_schema.sql
+
+### Implementation Notes
+- Started the Phase 10 runtime MCP schema task on its own branch.
+- Added an ordered `0002` migration for runtime MCP tables, constraints, indexes, triggers, and RLS policies.
+- Updated the migration runner and database schema test harness to apply all SQL migrations in order.
+- Added runtime MCP validation and browser-safe redaction helpers so later APIs can reuse secure response shaping.
+
+### Tests Added
+- `src/tests/mcp-config.test.ts`
+- Runtime MCP coverage in `src/tests/database-schema.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:db
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Validate secure schema storage, RLS, and browser-safe response shaping before closing the task.

@@ -204,6 +204,9 @@ The first required E2E smoke path is:
 
 Only after Phase 4 begins:
 
+- Schema/RLS test for `mcp_server_configs` isolation.
+- Schema validation test for `stdio` vs `http` transport constraints.
+- Browser-response shaping test proving encrypted MCP secrets are omitted.
 - HTTP MCP config validation.
 - stdio MCP config validation with allowlist.
 - disabled MCP server is not loaded.

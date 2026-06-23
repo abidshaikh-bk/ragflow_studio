@@ -454,3 +454,9 @@ The MVP UI should expose only the pages needed for the working flow:
 The future runtime MCP layer must support both `stdio` and `http` transports and must be configurable through backend APIs and later Settings UI. See `AGENTIC_RAG_MCP.md`.
 
 MVP default behavior must not depend on runtime MCP. The simple RAG chain should be usable even when no MCP server is configured.
+
+Phase 10 adds the persistent runtime MCP storage layer:
+
+- `mcp_server_configs` stores user-scoped or admin-managed server definitions.
+- `mcp_tool_invocations` stores redacted MCP audit logs tied back to chat sessions.
+- Stored HTTP headers and stdio env values must remain encrypted and server-only.

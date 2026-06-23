@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { Pool, type PoolClient } from "pg";
@@ -36,14 +36,16 @@ describeDatabase("Supabase schema and RLS", () => {
         : { rejectUnauthorized: false }
     });
 
-    const migrationPath = path.join(
-      process.cwd(),
-      "supabase",
-      "migrations",
-      "0001_core_schema.sql"
-    );
-    const migrationSql = await readFile(migrationPath, "utf8");
-    await pool.query(migrationSql);
+    const migrationsDir = path.join(process.cwd(), "supabase", "migrations");
+    const migrationPaths = readdirSync(migrationsDir)
+      .filter((fileName) => fileName.endsWith(".sql"))
+      .sort()
+      .map((fileName) => path.join(migrationsDir, fileName));
+
+    for (const migrationPath of migrationPaths) {
+      const migrationSql = await readFile(migrationPath, "utf8");
+      await pool.query(migrationSql);
+    }
 
     supabaseAdmin = createClient(supabaseUrl!, serviceRoleKey!, {
       auth: {
@@ -237,6 +239,56 @@ describeDatabase("Supabase schema and RLS", () => {
         true
       )
     ).rejects.toThrow(/chat_messages_session_owner_fk|row-level security/i);
+  }, 15_000);
+
+  it("prevents cross-user MCP config reads and rejects invalid transports", async () => {
+    await pool.query(
+      `
+        insert into public.mcp_server_configs (
+          user_id,
+          name,
+          transport,
+          command,
+          args,
+          env_encrypted,
+          enabled
+        )
+        values
+          ($1::uuid, 'User A tools', 'stdio', 'npx', '["allowed-server"]'::jsonb, '{"TOKEN":"cipher"}'::jsonb, true),
+          ($2::uuid, 'User B tools', 'stdio', 'npx', '["other-server"]'::jsonb, '{"TOKEN":"cipher"}'::jsonb, false)
+      `,
+      [userA.id, userB.id]
+    );
+
+    const visibleConfigs = await queryAsAuthenticated(
+      pool,
+      userA.id,
+      `select name, user_id from public.mcp_server_configs order by name`
+    );
+
+    expect(visibleConfigs.rows).toHaveLength(1);
+    expect(visibleConfigs.rows[0]).toMatchObject({
+      name: "User A tools",
+      user_id: userA.id
+    });
+
+    await expect(
+      queryAsAuthenticated(
+        pool,
+        userA.id,
+        `
+          insert into public.mcp_server_configs (
+            user_id,
+            name,
+            transport,
+            command
+          )
+          values ($1::uuid, 'Broken transport', 'socket', 'npx')
+        `,
+        [userA.id],
+        true
+      )
+    ).rejects.toThrow(/mcp_server_configs_transport_check|invalid input value/i);
   });
 });
 
@@ -286,6 +338,8 @@ function readEnvValue(name: string) {
 
 async function cleanupUserData(pool: Pool, userIds: string[]) {
   await pool.query(`delete from public.agent_tool_calls where user_id = any($1::uuid[])`, [userIds]);
+  await pool.query(`delete from public.mcp_tool_invocations where user_id = any($1::uuid[])`, [userIds]);
+  await pool.query(`delete from public.mcp_server_configs where user_id = any($1::uuid[])`, [userIds]);
   await pool.query(`delete from public.chat_messages where user_id = any($1::uuid[])`, [userIds]);
   await pool.query(`delete from public.chat_sessions where user_id = any($1::uuid[])`, [userIds]);
   await pool.query(`delete from public.document_chunks where user_id = any($1::uuid[])`, [userIds]);

@@ -74,7 +74,7 @@ Example:
 
 ## Database model
 
-Add this in Phase 4, not MVP Phase 1.
+Add this in Phase 10, after the MVP smoke path is stable.
 
 ### `mcp_server_configs`
 
@@ -121,7 +121,7 @@ Fields:
 
 ## Backend architecture
 
-Create a server-only runtime MCP adapter in Phase 4:
+Create a server-only runtime MCP adapter in Phase 10:
 
 ```txt
 src/server/mcp/
@@ -145,7 +145,7 @@ Rules:
 
 ## Frontend UI plan
 
-MCP configuration is not part of MVP Phase 1. Add it in Phase 4 under Settings.
+MCP configuration is not part of MVP Phase 1. Add it in Phase 10 under Settings.
 
 Settings tabs:
 
@@ -164,7 +164,7 @@ MCP Tools page states:
 6. Tool preview panel after connection test.
 7. Danger zone for disabling/deleting server.
 
-## API routes for Phase 4
+## API routes for Phase 10
 
 - `GET /api/mcp/servers`
 - `POST /api/mcp/servers`
@@ -182,7 +182,7 @@ MVP graph:
 user message -> retrieve from Pinecone -> answer with citations -> persist
 ```
 
-Phase 4 graph:
+Phase 10 graph:
 
 ```txt
 user message
@@ -194,7 +194,7 @@ user message
   -> persist messages, tool calls, trace IDs
 ```
 
-## Acceptance criteria for Phase 4
+## Acceptance criteria for Phase 10
 
 - User or admin can configure an HTTP MCP server.
 - Admin can configure a stdio MCP server in trusted deployment mode.

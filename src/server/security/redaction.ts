@@ -60,6 +60,9 @@ function isSensitiveKey(key: string) {
     normalized.includes("apikey") ||
     normalized === "authorization" ||
     normalized.endsWith("authorization") ||
+    normalized === "env_encrypted" ||
+    normalized === "headers_encrypted" ||
+    normalized === "secret_fingerprint" ||
     normalized.includes("secret") ||
     normalized.endsWith("token") ||
     normalized.endsWith("password")

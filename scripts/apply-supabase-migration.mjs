@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -36,13 +36,11 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required to apply the Supabase migration.");
 }
 
-const migrationPath = path.join(
-  process.cwd(),
-  "supabase",
-  "migrations",
-  "0001_core_schema.sql"
-);
-const migrationSql = await readFile(migrationPath, "utf8");
+const migrationsDir = path.join(process.cwd(), "supabase", "migrations");
+const migrationPaths = readdirSync(migrationsDir)
+  .filter((fileName) => fileName.endsWith(".sql"))
+  .sort()
+  .map((fileName) => path.join(migrationsDir, fileName));
 
 const client = new Client({
   connectionString: databaseUrl,
@@ -53,8 +51,11 @@ const client = new Client({
 
 try {
   await client.connect();
-  await client.query(migrationSql);
-  console.log("Applied supabase/migrations/0001_core_schema.sql");
+  for (const migrationPath of migrationPaths) {
+    const migrationSql = await readFile(migrationPath, "utf8");
+    await client.query(migrationSql);
+    console.log(`Applied ${path.relative(process.cwd(), migrationPath)}`);
+  }
 } finally {
   await client.end().catch(() => {});
 }

@@ -31,8 +31,8 @@ cp .env.example .env.local
 | `ANTHROPIC_API_KEY` | Optional | No | Chat provider |
 | `GEMINI_API_KEY` | Optional | No | Chat provider |
 | `HUGGINGFACE_API_KEY` | Optional | No | Model provider |
-| `APP_ENCRYPTION_KEY` | Recommended | No | Encrypt saved user provider credentials at rest |
-| `APP_ENCRYPTION_KEY_VERSION` | Recommended | No | Version tag stored with encrypted provider credentials |
+| `APP_ENCRYPTION_KEY` | Recommended | No | Encrypt saved user provider credentials and runtime MCP secrets at rest |
+| `APP_ENCRYPTION_KEY_VERSION` | Recommended | No | Version tag stored with encrypted provider credentials and runtime MCP secrets |
 | `APP_URL` | Yes | No | Local or deployed app URL |
 
 ## Local development
@@ -113,4 +113,4 @@ MCP_STDIO_ALLOWLIST=
 MCP_HTTP_TIMEOUT_MS=30000
 ```
 
-Do not enable runtime MCP until Phase 4 tasks are implemented and tested.
+Do not enable runtime MCP until Phase 10 tasks are implemented and tested.
