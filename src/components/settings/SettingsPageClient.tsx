@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
+import { Button } from "@/components/ui/Button";
+import { McpToolsSettings } from "./McpToolsSettings";
 import {
   SettingsForm,
   type SettingsFormSavedState,
@@ -31,6 +33,7 @@ const defaultSettings: SettingsResponse = {
 export function SettingsPageClient() {
   const [settings, setSettings] = useState<SettingsResponse>(defaultSettings);
   const [loadError, setLoadError] = useState("");
+  const [activeTab, setActiveTab] = useState<"models" | "mcp-tools">("models");
 
   useEffect(() => {
     let isMounted = true;
@@ -105,26 +108,52 @@ export function SettingsPageClient() {
 
   return (
     <div className="space-y-4">
+      <div
+        aria-label="Settings sections"
+        className="flex flex-wrap gap-3"
+        role="tablist"
+      >
+        <Button
+          aria-selected={activeTab === "models"}
+          onClick={() => setActiveTab("models")}
+          role="tab"
+          variant={activeTab === "models" ? "secondary" : "ghost"}
+        >
+          Models
+        </Button>
+        <Button
+          aria-selected={activeTab === "mcp-tools"}
+          onClick={() => setActiveTab("mcp-tools")}
+          role="tab"
+          variant={activeTab === "mcp-tools" ? "secondary" : "ghost"}
+        >
+          MCP Tools
+        </Button>
+      </div>
       {loadError ? (
         <ErrorAlert
           message={loadError}
           title="Saved settings unavailable"
         />
       ) : null}
-      <SettingsForm
-        initialMaskedSecrets={{
-          chatApiKey: settings.chatApiKeyMasked,
-          embeddingApiKey: settings.embeddingApiKeyMasked
-        }}
-        initialValues={{
-          chatModel: settings.chatModel,
-          chatProvider: settings.chatProvider,
-          embeddingDimensions: settings.embeddingDimensions,
-          embeddingModel: settings.embeddingModel,
-          embeddingProvider: settings.embeddingProvider
-        }}
-        onSubmit={handleSubmit}
-      />
+      {activeTab === "models" ? (
+        <SettingsForm
+          initialMaskedSecrets={{
+            chatApiKey: settings.chatApiKeyMasked,
+            embeddingApiKey: settings.embeddingApiKeyMasked
+          }}
+          initialValues={{
+            chatModel: settings.chatModel,
+            chatProvider: settings.chatProvider,
+            embeddingDimensions: settings.embeddingDimensions,
+            embeddingModel: settings.embeddingModel,
+            embeddingProvider: settings.embeddingProvider
+          }}
+          onSubmit={handleSubmit}
+        />
+      ) : (
+        <McpToolsSettings />
+      )}
     </div>
   );
 }

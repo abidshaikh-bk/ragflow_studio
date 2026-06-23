@@ -418,10 +418,14 @@ Settings is allowed in MVP, but it should initially show default configuration s
 | Search Tools  HTTP        Enabled     4 tools       |
 | Local Tools   stdio       Disabled    Not loaded    |
 |                                                     |
-| Add Server                                          |
+| Add / Edit Server                                   |
 | Transport: ( HTTP v )                               |
 | URL: https://example.com/mcp                        |
 | Headers: Authorization ********                     |
 | [ Test connection ] [ Save ]                        |
 +-----------------------------------------------------+
 ```
+
+Implementation note:
+
+- The runtime UI may use a dialog-style add/edit flow as long as the `MCP Tools` tab preserves this list-plus-editor structure and keeps stored secrets masked.

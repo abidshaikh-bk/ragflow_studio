@@ -2266,3 +2266,54 @@ npm run build
 
 ### Follow-up
 - Keep raw MCP secrets server-only and return only sanitized config shapes to the browser.
+
+---
+
+## TASK-037: Add MCP Tools Settings UI
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-037-add-mcp-tools-settings-ui
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Add a Settings UI for runtime MCP tool configuration with transport-aware forms, test actions, tool previews, and secret-safe editing states.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- src/components/settings/McpToolsSettings.tsx
+- src/components/settings/SettingsPageClient.tsx
+- src/tests/mcp-tools-settings.test.tsx
+
+### Implementation Notes
+- Started the Phase 10 MCP Tools settings UI task on its own branch.
+- Added a tabbed `/settings` experience with the existing model controls under `Models` and the new runtime MCP UI under `MCP Tools`.
+- Added an MCP server list, add/edit dialog, transport-aware fields, and test/preview/delete actions.
+- Kept stored runtime MCP secrets masked in the browser by relying on sanitized API responses and blank replacement inputs.
+
+### Tests Added
+- `src/tests/mcp-tools-settings.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Keep raw stored secrets masked in the UI and defer live agent usage to `TASK-038`.

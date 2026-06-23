@@ -1022,7 +1022,7 @@ Acceptance criteria:
 
 ### TASK-037: Add MCP Tools Settings UI
 
-Status: not_started
+Status: validated
 
 Objective: Add a Settings tab for configurable runtime MCP tools.
 

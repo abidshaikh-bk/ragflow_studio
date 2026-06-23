@@ -209,6 +209,7 @@ Only after Phase 4 begins:
 - Browser-response shaping test proving encrypted MCP secrets are omitted.
 - Backend adapter tests for HTTP client creation, stdio allowlist enforcement, disabled-server filtering, and redacted MCP tool logging.
 - API route tests for MCP config auth, CRUD ownership, test-connection behavior, and secret-safe responses.
+- Settings UI tests for the MCP Tools empty state, transport-specific fields, and save/test actions.
 - HTTP MCP config validation.
 - stdio MCP config validation with allowlist.
 - disabled MCP server is not loaded.

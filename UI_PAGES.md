@@ -178,6 +178,7 @@ TASK-009 implementation note:
 
 - `src/app/(app)/settings/page.tsx`
 - `src/components/settings/SettingsForm.tsx`
+- `src/components/settings/McpToolsSettings.tsx`
 - `src/components/settings/ProviderSelect.tsx`
 - `src/components/settings/SecretInput.tsx`
 - `src/components/settings/SaveBar.tsx`
@@ -186,9 +187,15 @@ TASK-009 implementation note:
 
 - Fetch masked settings from `/api/settings`.
 - Save settings to `/api/settings`.
+- Show a tabbed settings surface with `Models` and `MCP Tools`.
+- Fetch runtime MCP server configs from `/api/mcp/servers`.
+- Save MCP server configs through `/api/mcp/servers` and `/api/mcp/servers/:id`.
+- Test and preview MCP tools through `/api/mcp/servers/:id/test` and `/api/mcp/servers/:id/tools`.
 - Validate provider and model names.
 - Validate that embedding dimensions are present and match the server Pinecone index dimension.
+- Render HTTP-only MCP fields for HTTP configs and stdio-only MCP fields for stdio configs.
 - Never display raw stored API keys.
+- Never display raw stored MCP headers or env secrets.
 - Show save success/error state.
 
 MVP note:
@@ -201,6 +208,9 @@ MVP note:
 - Renders chat and embedding sections.
 - Renders embedding dimension control.
 - Shows masked key placeholder.
+- Renders the MCP Tools empty state.
+- Renders transport-specific MCP fields when switching transport.
+- Calls the MCP save and test APIs from the UI.
 - Save button disabled while submitting.
 - Validation errors render.
 - Raw API key is not rendered after save.
