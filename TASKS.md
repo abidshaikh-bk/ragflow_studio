@@ -880,7 +880,7 @@ Acceptance criteria:
 
 ### TASK-030: Add E2E chat RAG test
 
-Status: validated
+Status: done
 
 Objective: Validate document-grounded chat.
 

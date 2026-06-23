@@ -1889,12 +1889,13 @@ Pass
 
 ## TASK-030: Add E2E chat RAG test
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-030-e2e-chat-rag-test
+Commit Hash: 2a914b0
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Validate document-grounded chat in a real browser flow and confirm messages persist after refresh.
