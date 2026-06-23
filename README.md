@@ -18,6 +18,20 @@ npm run test
 npm run build
 ```
 
+## Production deployment
+
+RAGFlow Studio now builds with Next.js `output: "standalone"` so production environments can run the generated server artifact directly.
+
+Typical deployment flow:
+
+```bash
+npm ci
+npm run build
+PORT=3000 HOSTNAME=0.0.0.0 node .next/standalone/server.js
+```
+
+Set the server-only runtime secrets from `.env.example` in the deployment platform before starting the standalone server.
+
 ## Project docs
 
 This repository also contains the operating documents for Codex/coding agents building the RAGFlow Studio MVP.

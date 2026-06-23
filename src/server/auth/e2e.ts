@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export const E2E_AUTH_COOKIE_NAME = "ragflow_e2e_auth";
+export const E2E_STATE_COOKIE_NAME = "ragflow_e2e_state";
 
 const E2E_AUTH_COOKIE_VALUE = "authenticated";
 
@@ -36,4 +37,14 @@ export async function getE2EAuthenticatedUser() {
 
 export function hasE2EAuthCookie(value?: string) {
   return value === E2E_AUTH_COOKIE_VALUE;
+}
+
+export async function getE2EStateId() {
+  if (!isE2EAuthBypassEnabled()) {
+    return null;
+  }
+
+  const cookieStore = await cookies();
+
+  return cookieStore.get(E2E_STATE_COOKIE_NAME)?.value ?? null;
 }

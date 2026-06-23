@@ -77,6 +77,7 @@ Implementation note:
 
 - `npm run test:e2e` boots its own Next.js dev server through Playwright on `http://127.0.0.1:3100`.
 - The runner enables a test-only auth bypass so the real login form can complete without seeded Supabase credentials.
+- The shared E2E harness isolates per-browser state with a dedicated cookie so parallel Playwright workers do not wipe each other's chat fixtures.
 - The bypass is limited to Playwright runs and should not be enabled for normal local development or production.
 
 ### Document upload flow

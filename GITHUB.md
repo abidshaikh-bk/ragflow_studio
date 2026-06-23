@@ -127,4 +127,11 @@ Suggested GitHub secret names:
 - `ANTHROPIC_API_KEY`
 - `GEMINI_API_KEY`
 - `HUGGINGFACE_API_KEY`
+
+## 7. Production deployment notes
+
+- The app builds with Next.js standalone output, so deployment targets can run `node .next/standalone/server.js`.
+- Run `npm run build` in CI or the deployment platform before promotion.
+- Provide `PORT` and `HOSTNAME=0.0.0.0` when starting the standalone server in a container or VM environment.
+- Keep all server-side secrets in GitHub Environments or the host platform, never in committed config files.
 ```

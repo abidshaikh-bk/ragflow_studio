@@ -2,31 +2,37 @@ import { randomUUID } from "node:crypto";
 import type { ChatSession } from "@/components/chat/types";
 
 type E2EChatState = {
-  sessions: ChatSession[];
+  sessionsByStateId: Record<string, ChatSession[]>;
 };
 
 type E2ERoute = "date" | "vector" | "web";
 
 const state: E2EChatState = {
-  sessions: []
+  sessionsByStateId: {}
 };
 
 const FIXTURE_DOCUMENT = "team-facts.md chunk 1";
 const FIXTURE_WEB_SOURCE = "Latest AI update - https://example.com/latest-ai";
 
-export function resetE2EChatState() {
-  state.sessions = [];
+export function resetE2EChatState(stateId = "default") {
+  state.sessionsByStateId[stateId] = [];
 }
 
-export function listE2EChatSessions() {
-  return state.sessions.map(cloneSession);
+export function listE2EChatSessions(stateId = "default") {
+  return getSessions(stateId).map(cloneSession);
 }
 
-export function createE2EChatReply(input: { message: string; sessionId?: string }) {
+export function createE2EChatReply(input: {
+  message: string;
+  sessionId?: string;
+  stateId?: string;
+}) {
+  const stateId = input.stateId ?? "default";
   const route = classifyE2ERoute(input.message);
+  const sessions = getSessions(stateId);
   const existingSession =
     input.sessionId
-      ? state.sessions.find((session) => session.id === input.sessionId)
+      ? sessions.find((session) => session.id === input.sessionId)
       : undefined;
 
   const session =
@@ -55,15 +61,19 @@ export function createE2EChatReply(input: { message: string; sessionId?: string 
   session.updatedAt = "Just now";
 
   if (!existingSession) {
-    state.sessions = [session, ...state.sessions];
+    state.sessionsByStateId[stateId] = [session, ...sessions];
   } else {
-    state.sessions = [
+    state.sessionsByStateId[stateId] = [
       session,
-      ...state.sessions.filter((candidate) => candidate.id !== session.id)
+      ...sessions.filter((candidate) => candidate.id !== session.id)
     ];
   }
 
   return cloneSession(session);
+}
+
+function getSessions(stateId: string) {
+  return state.sessionsByStateId[stateId] ?? [];
 }
 
 function answerQuestion(message: string, route: E2ERoute) {

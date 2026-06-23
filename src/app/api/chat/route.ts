@@ -6,7 +6,7 @@ import {
   prepareChatTurn
 } from "@/server/chat/persistence";
 import { invokeChatAgent } from "@/server/agent/workflow";
-import { getE2EAuthenticatedUser } from "@/server/auth/e2e";
+import { getE2EAuthenticatedUser, getE2EStateId } from "@/server/auth/e2e";
 import { createE2EChatReply } from "@/server/e2e/chat-store";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { parseJsonBody } from "@/server/http/validation";
@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
       if (await getE2EAuthenticatedUser()) {
         const session = createE2EChatReply({
           message: payload.data.message,
-          sessionId: payload.data.sessionId
+          sessionId: payload.data.sessionId,
+          stateId: (await getE2EStateId()) ?? "default"
         });
 
         return NextResponse.json({

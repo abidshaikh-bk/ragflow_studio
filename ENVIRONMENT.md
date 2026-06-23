@@ -53,6 +53,18 @@ npm run test:db
 npm run build
 ```
 
+## Production runtime
+
+The app is configured with Next.js standalone output for production deployment.
+
+After `npm run build`, start the generated server with:
+
+```bash
+PORT=3000 HOSTNAME=0.0.0.0 node .next/standalone/server.js
+```
+
+Production deployments must provide the same server-side secrets documented above through the hosting platform's secret manager or environment configuration.
+
 ## Notes
 
 - Only variables prefixed with `NEXT_PUBLIC_` are safe for the browser.

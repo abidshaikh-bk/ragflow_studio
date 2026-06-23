@@ -907,7 +907,7 @@ Acceptance criteria:
 
 ### TASK-032: Add production deployment config
 
-Status: not_started
+Status: validated
 
 Objective: Prepare app for deployment.
 

@@ -1,5 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
+const E2E_STATE_COOKIE_NAME = "ragflow_e2e_state";
+const E2E_BASE_URL = "http://127.0.0.1:3100";
+
 export async function mockSettingsApi(page: Page) {
   await page.route("**/api/settings", async (route) => {
     await route.fulfill({
@@ -21,7 +24,17 @@ export async function mockSettingsApi(page: Page) {
 }
 
 export async function resetE2EState(page: Page) {
-  const response = await page.request.post("/api/e2e/reset");
+  const stateId = `state-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+  await page.context().addCookies([
+    {
+      name: E2E_STATE_COOKIE_NAME,
+      url: E2E_BASE_URL,
+      value: stateId
+    }
+  ]);
+
+  const response = await page.request.post(`/api/e2e/reset?stateId=${stateId}`);
 
   expect(response.ok()).toBe(true);
 }

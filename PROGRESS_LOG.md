@@ -1987,3 +1987,58 @@ Pass
 
 ### Follow-up
 - Carry the now-complete E2E auth, upload, chat, and tool-routing coverage into the final Phase 9 smoke-check and deployment tasks.
+
+---
+
+## TASK-032: Add production deployment config
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-032-production-deployment-config
+Started: 2026-06-23
+Completed:
+
+### Objective
+Prepare the app for production deployment and confirm the build path is documented and validated.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- ENVIRONMENT.md
+- GITHUB.md
+- README.md
+- TESTING.md
+- next.config.ts
+- src/app/(app)/chat/page.tsx
+- src/app/api/chat/route.ts
+- src/app/api/e2e/reset/route.ts
+- src/server/auth/e2e.ts
+- src/server/e2e/chat-store.ts
+- src/tests/e2e/helpers.ts
+
+### Implementation Notes
+- Enabled Next.js standalone production output and removed the public `x-powered-by` header so the built app is ready to run as a standalone Node server in production.
+- Documented the production startup command and required deployment env handling in `README.md`, `ENVIRONMENT.md`, and `GITHUB.md`.
+- Hardened the shared Playwright E2E harness with per-browser state isolation so the required deployment validation suite stays stable under parallel workers while `npm run build` remains green.
+
+### Tests Added
+- Reused the existing automated validation stack; no new task-specific test files were required.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Carry the stable standalone build and parallel-safe E2E harness into the final MVP smoke-check task.
