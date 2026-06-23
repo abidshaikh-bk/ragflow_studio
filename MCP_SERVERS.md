@@ -69,6 +69,7 @@ If package names differ in the implementation environment, Codex must verify the
 - TASK-001 to TASK-003: Use Next.js DevTools MCP and Supabase MCP.
 - TASK-006: Use Supabase MCP to validate schema and RLS.
 - TASK-034 to TASK-036: Keep runtime MCP configs in Supabase only; use development MCPs only to validate schema, RLS, and API behavior.
+- TASK-035: Treat runtime MCP adapters as product code only; do not confuse them with the development MCP servers Codex uses to inspect the repo.
 - TASK-010: Use S3-compatible MCP for object upload checks.
 - TASK-014 and TASK-018: Use Pinecone MCP to validate namespaces, vectors, and queries.
 - TASK-020: Use Tavily MCP to validate search responses.

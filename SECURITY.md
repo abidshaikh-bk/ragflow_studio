@@ -197,3 +197,4 @@ Rules:
 9. User-scoped MCP configs must be isolated with RLS.
 10. Disabled MCP servers must not be loaded by the agent.
 11. Global MCP configs, if used later, must only be read through trusted server-side clients and never exposed as raw table rows to authenticated browsers.
+12. Runtime MCP adapters must reject browser execution and enforce the stdio allowlist before spawning any local command.

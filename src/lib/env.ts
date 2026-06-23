@@ -95,3 +95,21 @@ export function getTavilyEnv() {
     apiKey
   };
 }
+
+export function getRuntimeMcpEnv() {
+  const httpTimeoutValue = process.env.MCP_HTTP_TIMEOUT_MS || "30000";
+  const httpTimeoutMs = Number.parseInt(httpTimeoutValue, 10);
+
+  if (!Number.isInteger(httpTimeoutMs) || httpTimeoutMs <= 0) {
+    throw new Error("MCP_HTTP_TIMEOUT_MS must be a positive integer.");
+  }
+
+  return {
+    httpTimeoutMs,
+    runtimeEnabled: process.env.MCP_RUNTIME_ENABLED === "true",
+    stdioAllowlist: (process.env.MCP_STDIO_ALLOWLIST || "")
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  };
+}

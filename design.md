@@ -460,3 +460,4 @@ Phase 10 adds the persistent runtime MCP storage layer:
 - `mcp_server_configs` stores user-scoped or admin-managed server definitions.
 - `mcp_tool_invocations` stores redacted MCP audit logs tied back to chat sessions.
 - Stored HTTP headers and stdio env values must remain encrypted and server-only.
+- A server-only adapter under `src/server/mcp` loads enabled configs, enforces stdio allowlists and timeouts, and converts MCP tool definitions into LangChain-compatible tools.

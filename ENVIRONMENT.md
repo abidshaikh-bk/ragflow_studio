@@ -34,6 +34,9 @@ cp .env.example .env.local
 | `APP_ENCRYPTION_KEY` | Recommended | No | Encrypt saved user provider credentials and runtime MCP secrets at rest |
 | `APP_ENCRYPTION_KEY_VERSION` | Recommended | No | Version tag stored with encrypted provider credentials and runtime MCP secrets |
 | `APP_URL` | Yes | No | Local or deployed app URL |
+| `MCP_RUNTIME_ENABLED` | Later phase | No | Feature flag for runtime MCP loading |
+| `MCP_STDIO_ALLOWLIST` | Later phase | No | Comma-separated stdio commands allowed for runtime MCP spawning |
+| `MCP_HTTP_TIMEOUT_MS` | Later phase | No | Default runtime MCP HTTP timeout when a config does not override it |
 
 ## Local development
 

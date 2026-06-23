@@ -2152,3 +2152,59 @@ npm run build
 
 ### Follow-up
 - Validate secure schema storage, RLS, and browser-safe response shaping before closing the task.
+
+---
+
+## TASK-035: Add runtime MCP backend adapter
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-035-add-runtime-mcp-backend-adapter
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Create a server-only MCP client layer that loads enabled runtime MCP configs and exposes safe tool adapters for later API and agent integration work.
+
+### Files Changed
+- AGENTIC_RAG_MCP.md
+- ENVIRONMENT.md
+- MCP_SERVERS.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/lib/env.ts
+- src/server/mcp/client.ts
+- src/server/mcp/registry.ts
+- src/server/mcp/tools.ts
+- src/tests/mcp-backend-adapter.test.ts
+
+### Implementation Notes
+- Started the Phase 10 runtime MCP backend adapter task on its own branch.
+- Added a server-only runtime MCP client layer with HTTP and stdio transports, request timeouts, and stdio allowlist enforcement.
+- Added a registry that loads enabled MCP configs and normalizes them into runtime transport configs.
+- Added LangChain-compatible runtime MCP tool wrappers that redact input/output logs before writing `mcp_tool_invocations`.
+
+### Tests Added
+- `src/tests/mcp-backend-adapter.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Keep the adapter server-only and defer actual agent wiring to `TASK-038`.

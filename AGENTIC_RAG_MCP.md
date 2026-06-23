@@ -142,6 +142,7 @@ Rules:
 6. Tool invocations must be logged with redacted inputs and output previews.
 7. Each MCP tool call must have a timeout.
 8. stdio commands must use an allowlist in production.
+9. The backend adapter may expose LangChain-compatible tool wrappers, but the live agent should not load them until the later integration task.
 
 ## Frontend UI plan
 
