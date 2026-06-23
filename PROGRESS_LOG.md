@@ -2271,13 +2271,13 @@ npm run build
 
 ## TASK-037: Add MCP Tools Settings UI
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-037-add-mcp-tools-settings-ui
-Commit Hash:
+Commit Hash: 0df7d47
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Add a Settings UI for runtime MCP tool configuration with transport-aware forms, test actions, tool previews, and secret-safe editing states.
