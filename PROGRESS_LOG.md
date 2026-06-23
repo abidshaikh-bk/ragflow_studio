@@ -2208,3 +2208,61 @@ npm run build
 
 ### Follow-up
 - Keep the adapter server-only and defer actual agent wiring to `TASK-038`.
+
+---
+
+## TASK-036: Add MCP configuration APIs
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-036-add-mcp-configuration-apis
+Commit Hash:
+Started: 2026-06-23
+Completed:
+
+### Objective
+Add authenticated server APIs for creating, reading, updating, deleting, testing, and previewing runtime MCP server configs without leaking stored secrets.
+
+### Files Changed
+- MCP_SERVERS.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- design.md
+- src/app/api/mcp/servers/route.ts
+- src/app/api/mcp/servers/[serverId]/route.ts
+- src/app/api/mcp/servers/[serverId]/test/route.ts
+- src/app/api/mcp/servers/[serverId]/tools/route.ts
+- src/lib/validations/mcp.ts
+- src/server/mcp/service.ts
+- src/tests/mcp-routes.test.ts
+- src/tests/mcp-service.test.ts
+
+### Implementation Notes
+- Started the Phase 10 runtime MCP configuration API task on its own branch.
+- Added authenticated MCP server CRUD, test, and tool-preview routes under `/api/mcp/servers`.
+- Added a server-side MCP config service that sanitizes returned rows and encrypts stored secret maps.
+- Reused the runtime MCP adapter to power test-connection and tools-preview responses.
+
+### Tests Added
+- `src/tests/mcp-routes.test.ts`
+- `src/tests/mcp-service.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Keep raw MCP secrets server-only and return only sanitized config shapes to the browser.

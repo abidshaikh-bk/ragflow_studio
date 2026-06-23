@@ -208,6 +208,7 @@ Only after Phase 4 begins:
 - Schema validation test for `stdio` vs `http` transport constraints.
 - Browser-response shaping test proving encrypted MCP secrets are omitted.
 - Backend adapter tests for HTTP client creation, stdio allowlist enforcement, disabled-server filtering, and redacted MCP tool logging.
+- API route tests for MCP config auth, CRUD ownership, test-connection behavior, and secret-safe responses.
 - HTTP MCP config validation.
 - stdio MCP config validation with allowlist.
 - disabled MCP server is not loaded.

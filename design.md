@@ -160,6 +160,13 @@ Typography:
 | POST | `/api/tools/date` | Date/time tool endpoint if exposed internally |
 | POST | `/api/tools/vector-search` | Vector search tool endpoint if exposed internally |
 | POST | `/api/tools/web-search` | Tavily web-search tool endpoint if exposed internally |
+| GET | `/api/mcp/servers` | List the authenticated user's runtime MCP server configs |
+| POST | `/api/mcp/servers` | Create a runtime MCP server config |
+| GET | `/api/mcp/servers/:id` | Load one runtime MCP server config |
+| PATCH | `/api/mcp/servers/:id` | Update one runtime MCP server config |
+| DELETE | `/api/mcp/servers/:id` | Delete one runtime MCP server config |
+| POST | `/api/mcp/servers/:id/test` | Test one runtime MCP server config and preview tools |
+| GET | `/api/mcp/servers/:id/tools` | List available tools for one runtime MCP server config |
 
 ## 6. Data model
 
