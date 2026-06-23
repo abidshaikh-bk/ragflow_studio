@@ -1938,3 +1938,51 @@ Pass
 
 ### Follow-up
 - Reuse the E2E chat store and reset hook for the Phase 9 tool-routing browser task.
+
+---
+
+## TASK-031: Add E2E tool-routing test
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-031-e2e-tool-routing-test
+Started: 2026-06-23
+Completed:
+
+### Objective
+Validate date, vector-search, and Tavily-style web routing in a real browser flow.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- src/server/e2e/chat-store.ts
+- src/tests/e2e-chat-store.test.ts
+- src/tests/e2e/tool-routing.spec.ts
+
+### Implementation Notes
+- Extended the shared E2E chat store so date prompts emit `date.now`, document prompts emit `pinecone.query`, and current web prompts emit `tavily.search`, each with deterministic answers and metadata.
+- Added a Playwright routing spec that starts fresh chats for each route and verifies the correct tool activity appears in the UI.
+- Expanded the chat-store unit test coverage so the deterministic E2E routing stays validated outside browser runs too.
+
+### Tests Added
+- `src/tests/e2e/tool-routing.spec.ts`
+- Expanded `src/tests/e2e-chat-store.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Carry the now-complete E2E auth, upload, chat, and tool-routing coverage into the final Phase 9 smoke-check and deployment tasks.

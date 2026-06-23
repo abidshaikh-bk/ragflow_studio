@@ -5,13 +5,14 @@ type E2EChatState = {
   sessions: ChatSession[];
 };
 
+type E2ERoute = "date" | "vector" | "web";
+
 const state: E2EChatState = {
   sessions: []
 };
 
 const FIXTURE_DOCUMENT = "team-facts.md chunk 1";
-const FIXTURE_TOOL_ACTIVITY =
-  "pinecone.query -> returned 1 document chunk";
+const FIXTURE_WEB_SOURCE = "Latest AI update - https://example.com/latest-ai";
 
 export function resetE2EChatState() {
   state.sessions = [];
@@ -22,6 +23,7 @@ export function listE2EChatSessions() {
 }
 
 export function createE2EChatReply(input: { message: string; sessionId?: string }) {
+  const route = classifyE2ERoute(input.message);
   const existingSession =
     input.sessionId
       ? state.sessions.find((session) => session.id === input.sessionId)
@@ -43,12 +45,9 @@ export function createE2EChatReply(input: { message: string; sessionId?: string 
   });
 
   session.messages.push({
-    content: answerQuestion(input.message),
+    content: answerQuestion(input.message, route),
     id: randomUUID(),
-    metadata: {
-      sources: [FIXTURE_DOCUMENT],
-      toolActivity: [FIXTURE_TOOL_ACTIVITY]
-    },
+    metadata: buildMetadata(route),
     role: "assistant"
   });
 
@@ -67,8 +66,16 @@ export function createE2EChatReply(input: { message: string; sessionId?: string 
   return cloneSession(session);
 }
 
-function answerQuestion(message: string) {
+function answerQuestion(message: string, route: E2ERoute) {
   const normalizedMessage = message.toLowerCase();
+
+  if (route === "date") {
+    return "The current date is June 23, 2026, and the current time is 12:00 PM UTC.";
+  }
+
+  if (route === "web") {
+    return "The latest AI update in this fixture says retrieval systems remain a major focus.";
+  }
 
   if (
     normalizedMessage.includes("launch city") ||
@@ -79,6 +86,48 @@ function answerQuestion(message: string) {
   }
 
   return "According to team-facts.md, the launch city is Pune.";
+}
+
+function buildMetadata(route: E2ERoute) {
+  if (route === "date") {
+    return {
+      toolActivity: ["date.now -> resolved UTC time context"]
+    };
+  }
+
+  if (route === "web") {
+    return {
+      sources: [FIXTURE_WEB_SOURCE],
+      toolActivity: ["tavily.search -> returned 1 web result"]
+    };
+  }
+
+  return {
+    sources: [FIXTURE_DOCUMENT],
+    toolActivity: ["pinecone.query -> returned 1 document chunk"]
+  };
+}
+
+function classifyE2ERoute(message: string): E2ERoute {
+  const normalizedMessage = message.toLowerCase();
+
+  if (
+    /\b(latest|recent|news|current|web|internet|online|search the web|look it up)\b/i.test(
+      normalizedMessage
+    )
+  ) {
+    return "web";
+  }
+
+  if (
+    /\b(date|time|today|timezone|day is it|time is it|current time|current date)\b/i.test(
+      normalizedMessage
+    )
+  ) {
+    return "date";
+  }
+
+  return "vector";
 }
 
 function cloneSession(session: ChatSession): ChatSession {
