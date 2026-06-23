@@ -6,6 +6,8 @@ import {
   prepareChatTurn
 } from "@/server/chat/persistence";
 import { invokeChatAgent } from "@/server/agent/workflow";
+import { getE2EAuthenticatedUser } from "@/server/auth/e2e";
+import { createE2EChatReply } from "@/server/e2e/chat-store";
 import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { parseJsonBody } from "@/server/http/validation";
 import { appEventLogger } from "@/server/logging/events";
@@ -35,6 +37,18 @@ export async function POST(request: NextRequest) {
     });
 
     try {
+      if (await getE2EAuthenticatedUser()) {
+        const session = createE2EChatReply({
+          message: payload.data.message,
+          sessionId: payload.data.sessionId
+        });
+
+        return NextResponse.json({
+          data: session,
+          langsmithRunId: null
+        });
+      }
+
       const existingSession = payload.data.sessionId
         ? await getChatSession(auth.supabase, {
             sessionId: payload.data.sessionId,

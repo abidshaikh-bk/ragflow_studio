@@ -1884,3 +1884,56 @@ Pass
 
 ### Follow-up
 - Reuse the shared E2E helper for the chat RAG and tool-routing browser tasks.
+
+---
+
+## TASK-030: Add E2E chat RAG test
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-030-e2e-chat-rag-test
+Started: 2026-06-23
+Completed:
+
+### Objective
+Validate document-grounded chat in a real browser flow and confirm messages persist after refresh.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- src/app/(app)/chat/page.tsx
+- src/app/api/chat/route.ts
+- src/app/api/e2e/reset/route.ts
+- src/server/auth/api.ts
+- src/server/e2e/chat-store.ts
+- src/tests/e2e-chat-store.test.ts
+- src/tests/e2e/chat-rag.spec.ts
+- src/tests/e2e/helpers.ts
+
+### Implementation Notes
+- Added a tiny server-side E2E chat store plus reset endpoint so Playwright can validate persisted chat sessions through real `/api/chat` requests and a refreshed server-rendered `/chat` page.
+- Extended authenticated API handling to honor the existing Playwright auth bypass for protected route handlers without weakening normal Supabase-backed flows.
+- Added a browser test that asks for the known launch-city fact, verifies the grounded answer and retrieval metadata, then confirms the session survives refresh.
+
+### Tests Added
+- `src/tests/e2e/chat-rag.spec.ts`
+- `src/tests/e2e-chat-store.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+```
+
+### Result
+Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Reuse the E2E chat store and reset hook for the Phase 9 tool-routing browser task.

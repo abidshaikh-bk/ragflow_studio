@@ -20,6 +20,12 @@ export async function mockSettingsApi(page: Page) {
   });
 }
 
+export async function resetE2EState(page: Page) {
+  const response = await page.request.post("/api/e2e/reset");
+
+  expect(response.ok()).toBe(true);
+}
+
 export async function loginThroughUi(page: Page) {
   await page.goto("/login");
 
