@@ -963,7 +963,7 @@ Acceptance criteria:
 
 ### TASK-035: Add runtime MCP backend adapter
 
-Status: validated
+Status: done
 
 Objective: Create a server-only MCP client layer for Agentic RAG tools.
 

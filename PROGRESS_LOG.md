@@ -2157,13 +2157,13 @@ npm run build
 
 ## TASK-035: Add runtime MCP backend adapter
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-035-add-runtime-mcp-backend-adapter
-Commit Hash:
+Commit Hash: 010da8d
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Create a server-only MCP client layer that loads enabled runtime MCP configs and exposes safe tool adapters for later API and agent integration work.
