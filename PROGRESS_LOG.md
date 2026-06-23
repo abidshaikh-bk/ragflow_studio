@@ -2096,13 +2096,13 @@ Pass
 
 ## TASK-034: Add runtime MCP schema
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-034-add-runtime-mcp-schema
-Commit Hash:
+Commit Hash: 423833c
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Add database support for configurable runtime MCP servers with secure per-user storage and audit logging.

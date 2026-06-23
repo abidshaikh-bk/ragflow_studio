@@ -936,7 +936,7 @@ These tasks are later-phase tasks. Do not implement them before the MVP smoke te
 
 ### TASK-034: Add runtime MCP schema
 
-Status: validated
+Status: done
 
 Objective: Add database support for configurable runtime MCP servers.
 
