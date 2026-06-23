@@ -2048,12 +2048,13 @@ Pass
 
 ## TASK-033: Add MVP smoke test checklist
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-033-mvp-smoke-test-checklist
+Commit Hash: 1c6baca
 Started: 2026-06-23
-Completed:
+Completed: 2026-06-23
 
 ### Objective
 Create the final MVP launch checklist and back it with the current validation evidence.

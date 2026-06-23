@@ -920,7 +920,7 @@ Acceptance criteria:
 
 ### TASK-033: Add MVP smoke test checklist
 
-Status: validated
+Status: done
 
 Objective: Create final launch validation checklist.
 
