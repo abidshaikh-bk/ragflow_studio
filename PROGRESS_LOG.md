@@ -2907,3 +2907,77 @@ npm run build
 
 ### Follow-up
 - Continue with `TASK-047` on a fresh task branch after this branch is committed and pushed.
+
+---
+
+## TASK-047: Add global MCP management for admins and merge global plus user MCP loading
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-047-global-mcp-management
+Started: 2026-06-25
+Completed: 2026-06-25
+Commit Hash:
+
+### Objective
+Separate user BYO MCP from admin-managed global MCP and load both safely at runtime.
+
+### Files Changed
+- PROGRESS_LOG.md
+- ENVIRONMENT.md
+- MCP_SERVERS.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/app/api/admin/mcp-servers/route.ts
+- src/app/api/admin/mcp-servers/[serverId]/route.ts
+- src/app/api/admin/mcp-servers/[serverId]/test/route.ts
+- src/app/api/admin/mcp-servers/[serverId]/tools/route.ts
+- src/components/admin/GlobalMcpSettings.tsx
+- src/components/settings/McpToolsSettings.tsx
+- src/server/mcp/registry.ts
+- src/server/mcp/service.ts
+- src/tests/admin-guards.test.tsx
+- src/tests/admin-mcp-routes.test.ts
+- src/tests/admin-page.test.tsx
+- src/tests/e2e/document-upload.spec.ts
+- src/tests/mcp-backend-adapter.test.ts
+- src/tests/mcp-tools-settings.test.tsx
+- src/tests/page-scaffolds.test.tsx
+
+### Implementation Notes
+- Started from the completed `TASK-046` baseline on branch `task/TASK-047-global-mcp-management`.
+- Added admin-only global MCP APIs under `/api/admin/mcp-servers` and backed them with the existing MCP service layer extended for owner-scoped user vs global config access.
+- Replaced the admin page’s global MCP placeholder with a working shared assistant server registry while keeping `/settings` focused on user BYO MCP only.
+- Updated runtime MCP loading to merge enabled user and global configs through a trusted server-side client, and stabilized the document-upload Playwright spec by removing a transient-status assertion that raced fast successful uploads.
+
+### Tests Added
+- `src/tests/admin-mcp-routes.test.ts`
+- Expanded `src/tests/admin-guards.test.tsx`
+- Expanded `src/tests/admin-page.test.tsx`
+- Expanded `src/tests/e2e/document-upload.spec.ts`
+- Expanded `src/tests/mcp-backend-adapter.test.ts`
+- Expanded `src/tests/mcp-tools-settings.test.tsx`
+- Expanded `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Continue with `TASK-048` on a fresh task branch after this branch is committed and pushed.

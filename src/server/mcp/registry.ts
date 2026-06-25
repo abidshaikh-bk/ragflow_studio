@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { decryptSecret } from "@/server/settings/crypto";
 import type { RuntimeMcpResolvedConfig } from "@/server/mcp/client";
+import { createAdminSupabaseClient } from "@/server/supabase/admin";
 
 type McpSecretEnvelope =
   | {
@@ -58,7 +59,8 @@ export async function loadEnabledMcpConfigs(
 }
 
 async function loadRows(params: LoadEnabledMcpConfigsParams) {
-  let query = params.supabase.from("mcp_server_configs").select(MCP_SERVER_CONFIG_SELECT);
+  const supabase = params.includeGlobal ? createAdminSupabaseClient() : params.supabase;
+  let query = supabase.from("mcp_server_configs").select(MCP_SERVER_CONFIG_SELECT);
 
   if (params.includeGlobal) {
     query = query.or(`user_id.eq.${params.userId},user_id.is.null`);

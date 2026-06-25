@@ -186,6 +186,13 @@ Typography:
 | GET | `/api/admin/access` | Verify that the authenticated session has admin-only access |
 | GET | `/api/admin/assistant` | Load the shared assistant system prompt and built-in tool policy |
 | PUT | `/api/admin/assistant` | Update the shared assistant system prompt and built-in tool policy |
+| GET | `/api/admin/mcp-servers` | List admin-managed global MCP server configs |
+| POST | `/api/admin/mcp-servers` | Create an admin-managed global MCP server config |
+| GET | `/api/admin/mcp-servers/:id` | Load one admin-managed global MCP server config |
+| PATCH | `/api/admin/mcp-servers/:id` | Update one admin-managed global MCP server config |
+| DELETE | `/api/admin/mcp-servers/:id` | Delete one admin-managed global MCP server config |
+| POST | `/api/admin/mcp-servers/:id/test` | Test one admin-managed global MCP server config and preview tools |
+| GET | `/api/admin/mcp-servers/:id/tools` | List available tools for one admin-managed global MCP server config |
 
 ## 6. Data model
 
@@ -537,6 +544,12 @@ The shared assistant configuration now persists in `agent_runtime_settings` and 
 - admins can edit the system prompt from `/admin`,
 - admins can disable built-in vector-search, date/time, and web-search tools globally,
 - the runtime continues to avoid exposing user document contents or any raw provider secrets in admin responses.
+
+Global runtime MCP is now split across two management surfaces:
+
+- `/settings` continues to manage user-scoped BYO MCP configs only,
+- `/admin` manages global MCP configs with `user_id = null`,
+- the runtime registry loads enabled user and global MCP configs together through a trusted server-side path before exposing tools to the agent.
 
 ### Chat refinement direction
 

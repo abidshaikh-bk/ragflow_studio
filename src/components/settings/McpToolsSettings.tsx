@@ -78,7 +78,25 @@ const defaultEditorState: EditorState = {
   url: ""
 };
 
-export function McpToolsSettings() {
+type McpToolsSettingsProps = {
+  endpointBase?: string;
+  emptyDescription?: string;
+  emptyTitle?: string;
+  eyebrow?: string;
+  loadErrorTitle?: string;
+  saveErrorTitle?: string;
+  title?: string;
+};
+
+export function McpToolsSettings({
+  endpointBase = "/api/mcp/servers",
+  emptyDescription = "No MCP servers configured. Add an HTTP or stdio runtime MCP server to preview tools without exposing stored secrets.",
+  emptyTitle = "No MCP servers configured.",
+  eyebrow = "Settings",
+  loadErrorTitle = "MCP tools unavailable",
+  saveErrorTitle = "Unable to update MCP tools",
+  title = "MCP Tools"
+}: McpToolsSettingsProps = {}) {
   const [configs, setConfigs] = useState<McpServerConfig[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
@@ -107,7 +125,7 @@ export function McpToolsSettings() {
 
       try {
         setIsLoading(true);
-        const response = await fetch("/api/mcp/servers", {
+        const response = await fetch(endpointBase, {
           cache: "no-store"
         });
         const payload = (await response.json()) as {
@@ -141,7 +159,7 @@ export function McpToolsSettings() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [endpointBase]);
 
   const selectedConfig = useMemo(
     () =>
@@ -260,7 +278,7 @@ export function McpToolsSettings() {
 
     const payload = buildPayload(editor);
     const isEditing = Boolean(editor.id);
-    const endpoint = isEditing ? `/api/mcp/servers/${editor.id}` : "/api/mcp/servers";
+    const endpoint = isEditing ? `${endpointBase}/${editor.id}` : endpointBase;
 
     try {
       const response = await fetch(endpoint, {
@@ -312,7 +330,7 @@ export function McpToolsSettings() {
     setFormError("");
 
     try {
-      const response = await fetch(`/api/mcp/servers/${serverId}/test`, {
+      const response = await fetch(`${endpointBase}/${serverId}/test`, {
         method: "POST"
       });
       const body = (await response.json()) as {
@@ -352,7 +370,7 @@ export function McpToolsSettings() {
     setFormError("");
 
     try {
-      const response = await fetch(`/api/mcp/servers/${serverId}/tools`, {
+      const response = await fetch(`${endpointBase}/${serverId}/tools`, {
         cache: "no-store"
       });
       const body = (await response.json()) as {
@@ -383,7 +401,7 @@ export function McpToolsSettings() {
     setFormError("");
 
     try {
-      const response = await fetch(`/api/mcp/servers/${serverId}`, {
+      const response = await fetch(`${endpointBase}/${serverId}`, {
         method: "DELETE"
       });
       const body = (await response.json()) as {
@@ -420,10 +438,10 @@ export function McpToolsSettings() {
   return (
     <div className="space-y-6">
       {loadError ? (
-        <ErrorAlert message={loadError} title="MCP tools unavailable" />
+        <ErrorAlert message={loadError} title={loadErrorTitle} />
       ) : null}
       {formError ? (
-        <ErrorAlert message={formError} title="Unable to update MCP tools" />
+        <ErrorAlert message={formError} title={saveErrorTitle} />
       ) : null}
       {saveMessage ? (
         <p aria-live="polite" className="text-sm text-emerald" role="status">
@@ -438,8 +456,8 @@ export function McpToolsSettings() {
           </Button>
         }
         description="Configure runtime MCP servers for later-phase tool use. Secret headers and env values stay masked after save."
-        eyebrow="Settings"
-        title="MCP Tools"
+        eyebrow={eyebrow}
+        title={title}
       >
         {isLoading ? (
           <p className="text-sm text-slate-300">Loading MCP servers...</p>
@@ -450,8 +468,8 @@ export function McpToolsSettings() {
                 Add MCP Server
               </Button>
             }
-            description="No MCP servers configured. Add an HTTP or stdio runtime MCP server to preview tools without exposing stored secrets."
-            title="No MCP servers configured."
+            description={emptyDescription}
+            title={emptyTitle}
           />
         ) : (
           <div className="space-y-4">

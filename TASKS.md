@@ -1288,7 +1288,7 @@ Acceptance criteria:
 
 ### TASK-047: Add global MCP management for admins and merge global plus user MCP loading
 
-Status: not_started
+Status: done
 
 Objective: Separate user BYO MCP from admin-managed global MCP and load both safely at runtime.
 

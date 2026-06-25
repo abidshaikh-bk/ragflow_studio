@@ -120,6 +120,15 @@ describe("phase 1a page scaffolds", () => {
           };
         }
 
+        if (input === "/api/admin/mcp-servers") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
         return {
           json: async () => ({
             data: {

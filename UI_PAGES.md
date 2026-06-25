@@ -418,7 +418,7 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 - Gate the route to admins only.
 - Manage one shared assistant system prompt.
 - Manage built-in tool policy.
-- Keep global MCP management visually separate from user BYO MCP settings and allow a guarded placeholder until `TASK-047`.
+- Manage global MCP server definitions separately from user BYO MCP settings.
 - Show operational summaries without exposing user document contents.
 
 ## Test requirements
@@ -426,4 +426,5 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 - Non-admin users are denied access.
 - Admin config loads and saves successfully.
 - Chat workflow respects the saved shared system prompt and built-in tool policy.
+- Global MCP admin APIs and UI remain separate from the user `/settings` MCP surface.
 - Global MCP settings remain secret-safe in the browser.

@@ -224,4 +224,64 @@ describe("MCP tools settings", () => {
     expect(screen.getByText("remote_lookup")).toBeInTheDocument();
     expect(screen.getByText("Search the web")).toBeInTheDocument();
   });
+
+  it("uses the admin endpoint when rendered for global MCP management", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: []
+          }),
+          {
+            status: 200
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              args: [],
+              command: null,
+              created_at: "2026-06-23T00:00:00.000Z",
+              description: "Global search",
+              enabled: true,
+              has_env_secrets: false,
+              has_header_secrets: true,
+              id: "config-1",
+              is_default: false,
+              name: "Global tools",
+              timeout_ms: 30000,
+              transport: "http",
+              updated_at: "2026-06-23T00:00:00.000Z",
+              url: "https://example.com/mcp",
+              user_id: null
+            }
+          }),
+          {
+            status: 200
+          }
+        )
+      );
+
+    render(<McpToolsSettings endpointBase="/api/admin/mcp-servers" />);
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /add mcp server/i })).toBeInTheDocument()
+    );
+    fireEvent.click(screen.getAllByRole("button", { name: /add mcp server/i })[0]);
+    fireEvent.change(screen.getByLabelText("Server name"), {
+      target: { value: "Global tools" }
+    });
+    fireEvent.change(screen.getByLabelText("HTTP URL"), {
+      target: { value: "https://example.com/mcp" }
+    });
+    fireEvent.click(screen.getByLabelText("Enabled"));
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const lastCall = fetchMock.mock.calls.at(-1);
+
+    expect(lastCall?.[0]).toBe("/api/admin/mcp-servers");
+  });
 });

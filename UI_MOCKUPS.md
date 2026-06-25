@@ -546,4 +546,4 @@ A restrained control plane for one shared assistant. Operational and configurati
 
 Implementation note:
 
-- The current admin page ships the shared assistant prompt editor, built-in tool toggles, and an explicit Global MCP placeholder card until `TASK-047` lands.
+- The current admin page ships the shared assistant prompt editor, built-in tool toggles, and a real global MCP registry while keeping BYO MCP under `/settings`.

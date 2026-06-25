@@ -167,6 +167,7 @@ Current recorded status:
 - `src/tests/document-detail-route.test.ts`, `src/tests/document-access-link-route.test.ts`, and `src/tests/document-detail-page.test.tsx` validate authenticated document explorer detail routes, ownership-scoped private access links, and the chunk/vector detail UI.
 - `src/tests/admin-guards.test.tsx` validates profile-backed admin page redirects, successful admin rendering, and `403` responses for non-admin admin-API requests.
 - `src/tests/admin-assistant-route.test.ts`, `src/tests/admin-page.test.tsx`, and `src/tests/agent-workflow.test.ts` validate admin-only shared assistant settings APIs/UI plus runtime enforcement of the shared system prompt and built-in tool policy.
+- `src/tests/admin-mcp-routes.test.ts`, `src/tests/mcp-tools-settings.test.tsx`, and `src/tests/mcp-backend-adapter.test.ts` validate admin-only global MCP APIs, scoped MCP UI endpoints, and safe runtime merging of enabled global plus user MCP configs.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.
@@ -232,6 +233,7 @@ Add the following coverage as the application expands beyond the initial MVP she
 - Logout API and UI tests.
 - Admin navigation visibility tests for admin vs non-admin users.
 - Shared assistant admin tests for prompt-save, tool-toggle, and disabled-tool runtime behavior.
+- Global MCP admin tests for secret-safe CRUD, endpoint scoping, and merged runtime loading.
 
 ### Streaming chat
 

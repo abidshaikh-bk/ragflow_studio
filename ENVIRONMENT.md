@@ -128,4 +128,5 @@ The next UI and admin refinement phase does not require browser-visible secrets.
 - The `/history` page exposes only application-owned run metadata, so it does not introduce any new browser-visible environment variables.
 - Global assistant configuration is planned as database-backed application state, not as frontend environment variables.
 - The shared assistant settings introduced on `/admin` reuse the existing `SUPABASE_SERVICE_ROLE_KEY` for server-only runtime reads; no new browser-visible environment variables are required.
+- Global MCP runtime merging also reuses the existing `SUPABASE_SERVICE_ROLE_KEY` through a server-only client so `user_id = null` configs never need browser-visible credentials.
 - If presigned URL expiration tuning is introduced later, keep it server-only and document it before use.

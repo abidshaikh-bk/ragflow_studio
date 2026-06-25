@@ -45,17 +45,7 @@ export async function listMcpServerConfigs(
   supabase: SupabaseClient,
   userId: string
 ) {
-  const result = await supabase
-    .from("mcp_server_configs")
-    .select(MCP_SERVER_SELECT)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true });
-
-  assertSupabaseSuccess(result.error, "Unable to load MCP server configs.");
-
-  return ((result.data as StoredMcpServerConfigRow[] | null) ?? []).map((row) =>
-    toPublicMcpServerConfig(toPublicRow(row))
-  );
+  return listMcpServerConfigsForOwner(supabase, userId);
 }
 
 export async function createMcpServerConfig(
@@ -63,15 +53,7 @@ export async function createMcpServerConfig(
   userId: string,
   payload: McpServerConfigPayload
 ) {
-  const result = await supabase
-    .from("mcp_server_configs")
-    .insert(toStoredConfigPayload(userId, payload))
-    .select(MCP_SERVER_SELECT)
-    .single();
-
-  assertSupabaseSuccess(result.error, "Unable to create the MCP server config.");
-
-  return toPublicMcpServerConfig(toPublicRow(result.data as StoredMcpServerConfigRow));
+  return createMcpServerConfigForOwner(supabase, userId, payload);
 }
 
 export async function getMcpServerConfig(
@@ -79,9 +61,7 @@ export async function getMcpServerConfig(
   userId: string,
   serverId: string
 ) {
-  const row = await getStoredMcpServerConfig(supabase, userId, serverId);
-
-  return row ? toPublicMcpServerConfig(toPublicRow(row)) : null;
+  return getMcpServerConfigForOwner(supabase, userId, serverId);
 }
 
 export async function updateMcpServerConfig(
@@ -90,24 +70,7 @@ export async function updateMcpServerConfig(
   serverId: string,
   payload: McpServerConfigUpdatePayload
 ) {
-  const existing = await getStoredMcpServerConfig(supabase, userId, serverId);
-
-  if (!existing) {
-    return null;
-  }
-
-  const mergedPayload = mergeConfigPayload(existing, payload);
-  const result = await supabase
-    .from("mcp_server_configs")
-    .update(toStoredConfigPayload(userId, mergedPayload))
-    .eq("id", serverId)
-    .eq("user_id", userId)
-    .select(MCP_SERVER_SELECT)
-    .single();
-
-  assertSupabaseSuccess(result.error, "Unable to update the MCP server config.");
-
-  return toPublicMcpServerConfig(toPublicRow(result.data as StoredMcpServerConfigRow));
+  return updateMcpServerConfigForOwner(supabase, userId, serverId, payload);
 }
 
 export async function deleteMcpServerConfig(
@@ -115,17 +78,7 @@ export async function deleteMcpServerConfig(
   userId: string,
   serverId: string
 ) {
-  const result = await supabase
-    .from("mcp_server_configs")
-    .delete()
-    .eq("id", serverId)
-    .eq("user_id", userId)
-    .select("id")
-    .maybeSingle();
-
-  assertSupabaseSuccess(result.error, "Unable to delete the MCP server config.");
-
-  return Boolean(result.data?.id);
+  return deleteMcpServerConfigForOwner(supabase, userId, serverId);
 }
 
 export async function testMcpServerConfig(
@@ -134,7 +87,161 @@ export async function testMcpServerConfig(
   serverId: string,
   deps?: ServiceDeps
 ) {
-  const config = await getResolvedMcpConfig(supabase, userId, serverId);
+  return testMcpServerConfigForOwner(supabase, userId, serverId, deps);
+}
+
+export async function listMcpServerTools(
+  supabase: SupabaseClient,
+  userId: string,
+  serverId: string,
+  deps?: ServiceDeps
+) {
+  return listMcpServerToolsForOwner(supabase, userId, serverId, deps);
+}
+
+export async function listGlobalMcpServerConfigs(supabase: SupabaseClient) {
+  return listMcpServerConfigsForOwner(supabase, null);
+}
+
+export async function createGlobalMcpServerConfig(
+  supabase: SupabaseClient,
+  payload: McpServerConfigPayload
+) {
+  return createMcpServerConfigForOwner(supabase, null, payload);
+}
+
+export async function getGlobalMcpServerConfig(
+  supabase: SupabaseClient,
+  serverId: string
+) {
+  return getMcpServerConfigForOwner(supabase, null, serverId);
+}
+
+export async function updateGlobalMcpServerConfig(
+  supabase: SupabaseClient,
+  serverId: string,
+  payload: McpServerConfigUpdatePayload
+) {
+  return updateMcpServerConfigForOwner(supabase, null, serverId, payload);
+}
+
+export async function deleteGlobalMcpServerConfig(
+  supabase: SupabaseClient,
+  serverId: string
+) {
+  return deleteMcpServerConfigForOwner(supabase, null, serverId);
+}
+
+export async function testGlobalMcpServerConfig(
+  supabase: SupabaseClient,
+  serverId: string,
+  deps?: ServiceDeps
+) {
+  return testMcpServerConfigForOwner(supabase, null, serverId, deps);
+}
+
+export async function listGlobalMcpServerTools(
+  supabase: SupabaseClient,
+  serverId: string,
+  deps?: ServiceDeps
+) {
+  return listMcpServerToolsForOwner(supabase, null, serverId, deps);
+}
+
+async function listMcpServerConfigsForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null
+) {
+  const result = await applyOwnerFilter(
+    supabase.from("mcp_server_configs").select(MCP_SERVER_SELECT),
+    ownerUserId
+  ).order("created_at", { ascending: true });
+
+  assertSupabaseSuccess(result.error, "Unable to load MCP server configs.");
+
+  return ((result.data as StoredMcpServerConfigRow[] | null) ?? []).map((row) =>
+    toPublicMcpServerConfig(toPublicRow(row))
+  );
+}
+
+async function createMcpServerConfigForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null,
+  payload: McpServerConfigPayload
+) {
+  const result = await supabase
+    .from("mcp_server_configs")
+    .insert(toStoredConfigPayload(ownerUserId, payload))
+    .select(MCP_SERVER_SELECT)
+    .single();
+
+  assertSupabaseSuccess(result.error, "Unable to create the MCP server config.");
+
+  return toPublicMcpServerConfig(toPublicRow(result.data as StoredMcpServerConfigRow));
+}
+
+async function getMcpServerConfigForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null,
+  serverId: string
+) {
+  const row = await getStoredMcpServerConfig(supabase, ownerUserId, serverId);
+
+  return row ? toPublicMcpServerConfig(toPublicRow(row)) : null;
+}
+
+async function updateMcpServerConfigForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null,
+  serverId: string,
+  payload: McpServerConfigUpdatePayload
+) {
+  const existing = await getStoredMcpServerConfig(supabase, ownerUserId, serverId);
+
+  if (!existing) {
+    return null;
+  }
+
+  const mergedPayload = mergeConfigPayload(existing, payload);
+  const result = await applyOwnerFilter(
+    supabase
+      .from("mcp_server_configs")
+      .update(toStoredConfigPayload(ownerUserId, mergedPayload))
+      .eq("id", serverId),
+    ownerUserId
+  )
+    .select(MCP_SERVER_SELECT)
+    .single();
+
+  assertSupabaseSuccess(result.error, "Unable to update the MCP server config.");
+
+  return toPublicMcpServerConfig(toPublicRow(result.data as StoredMcpServerConfigRow));
+}
+
+async function deleteMcpServerConfigForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null,
+  serverId: string
+) {
+  const result = await applyOwnerFilter(
+    supabase.from("mcp_server_configs").delete().eq("id", serverId),
+    ownerUserId
+  )
+    .select("id")
+    .maybeSingle();
+
+  assertSupabaseSuccess(result.error, "Unable to delete the MCP server config.");
+
+  return Boolean(result.data?.id);
+}
+
+async function testMcpServerConfigForOwner(
+  supabase: SupabaseClient,
+  ownerUserId: string | null,
+  serverId: string,
+  deps?: ServiceDeps
+) {
+  const config = await getResolvedMcpConfig(supabase, ownerUserId, serverId);
 
   if (!config) {
     return null;
@@ -149,13 +256,13 @@ export async function testMcpServerConfig(
   };
 }
 
-export async function listMcpServerTools(
+async function listMcpServerToolsForOwner(
   supabase: SupabaseClient,
-  userId: string,
+  ownerUserId: string | null,
   serverId: string,
   deps?: ServiceDeps
 ) {
-  const config = await getResolvedMcpConfig(supabase, userId, serverId);
+  const config = await getResolvedMcpConfig(supabase, ownerUserId, serverId);
 
   if (!config) {
     return null;
@@ -169,15 +276,16 @@ export async function listMcpServerTools(
 
 async function getStoredMcpServerConfig(
   supabase: SupabaseClient,
-  userId: string,
+  ownerUserId: string | null,
   serverId: string
 ) {
-  const result = await supabase
-    .from("mcp_server_configs")
-    .select(MCP_SERVER_SELECT)
-    .eq("id", serverId)
-    .eq("user_id", userId)
-    .maybeSingle();
+  const result = await applyOwnerFilter(
+    supabase
+      .from("mcp_server_configs")
+      .select(MCP_SERVER_SELECT)
+      .eq("id", serverId),
+    ownerUserId
+  ).maybeSingle();
 
   assertSupabaseSuccess(result.error, "Unable to load the MCP server config.");
 
@@ -186,10 +294,10 @@ async function getStoredMcpServerConfig(
 
 async function getResolvedMcpConfig(
   supabase: SupabaseClient,
-  userId: string,
+  ownerUserId: string | null,
   serverId: string
 ) {
-  const stored = await getStoredMcpServerConfig(supabase, userId, serverId);
+  const stored = await getStoredMcpServerConfig(supabase, ownerUserId, serverId);
 
   if (!stored) {
     return null;
@@ -269,7 +377,10 @@ function mergeConfigPayload(
   };
 }
 
-function toStoredConfigPayload(userId: string, payload: McpServerConfigPayload) {
+function toStoredConfigPayload(
+  userId: string | null,
+  payload: McpServerConfigPayload
+) {
   return {
     allowed_tools: payload.allowedTools,
     args: payload.args,
@@ -287,6 +398,14 @@ function toStoredConfigPayload(userId: string, payload: McpServerConfigPayload) 
     url: payload.transport === "http" ? payload.url ?? null : null,
     user_id: userId
   };
+}
+
+function applyOwnerFilter(query: any, ownerUserId: string | null) {
+  if (ownerUserId === null) {
+    return query.is("user_id", null);
+  }
+
+  return query.eq("user_id", ownerUserId);
 }
 
 function encryptSecretRecord(value: Record<string, string>) {

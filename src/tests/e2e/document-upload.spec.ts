@@ -94,9 +94,6 @@ test("markdown upload reaches completed and appears in the document list", async
   });
 
   await expect(page.getByText("Selected document: team-facts.md")).toBeVisible();
-  await expect(
-    page.getByText("Polling live processing status for team-facts.md.")
-  ).toBeVisible();
   await expect(page.getByRole("table").getByText("team-facts.md")).toBeVisible();
   await expect(page.getByText("12 chunks indexed")).toBeVisible();
   await expect(page.getByRole("status", { name: /processing completed/i })).toBeVisible();

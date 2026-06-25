@@ -52,19 +52,30 @@ describe("admin guards", () => {
     fromMock.mockClear();
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({
-          data: {
-            systemPrompt: "",
-            toolPolicy: {
-              enableDateTime: true,
-              enableVectorSearch: true,
-              enableWebSearch: true
-            },
-            updatedAt: "2026-06-25T10:00:00.000Z"
-          }
-        }),
-        ok: true
+      vi.fn().mockImplementation(async (input) => {
+        if (input === "/api/admin/mcp-servers") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
+        return {
+          json: async () => ({
+            data: {
+              systemPrompt: "",
+              toolPolicy: {
+                enableDateTime: true,
+                enableVectorSearch: true,
+                enableWebSearch: true
+              },
+              updatedAt: "2026-06-25T10:00:00.000Z"
+            }
+          }),
+          ok: true
+        };
       })
     );
   });

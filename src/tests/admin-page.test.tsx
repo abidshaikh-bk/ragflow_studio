@@ -25,6 +25,15 @@ describe("AdminPageClient", () => {
           };
         }
 
+        if (input === "/api/admin/mcp-servers" && (!init || init.method === undefined)) {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
         return {
           json: async () => ({
             data: {
@@ -73,11 +82,22 @@ describe("AdminPageClient", () => {
   it("shows a load error when the admin API request fails", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({
-          error: "Forbidden"
-        }),
-        ok: false
+      vi.fn().mockImplementation(async (input) => {
+        if (input === "/api/admin/mcp-servers") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
+        return {
+          json: async () => ({
+            error: "Forbidden"
+          }),
+          ok: false
+        };
       })
     );
 

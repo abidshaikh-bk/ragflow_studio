@@ -119,10 +119,11 @@ describe("runtime MCP backend adapter", () => {
     );
   });
 
-  it("loads only enabled runtime MCP configs", async () => {
+  it("loads enabled user and global runtime MCP configs together", async () => {
     await expect(
       loadEnabledMcpConfigs(
         {
+          includeGlobal: true,
           supabase: supabaseMock,
           userId: "user-123"
         },
@@ -148,6 +149,23 @@ describe("runtime MCP backend adapter", () => {
             {
               allowed_tools: [],
               args: [],
+              command: null,
+              description: "Shared tools",
+              enabled: true,
+              env_encrypted: {},
+              headers_encrypted: {
+                Authorization: "cipher"
+              },
+              id: "config-global",
+              name: "Global tools",
+              timeout_ms: 30000,
+              transport: "http",
+              url: "https://example.com/mcp",
+              user_id: null
+            },
+            {
+              allowed_tools: [],
+              args: [],
               command: "npx",
               description: null,
               enabled: false,
@@ -167,6 +185,10 @@ describe("runtime MCP backend adapter", () => {
       expect.objectContaining({
         id: "config-a",
         name: "Enabled tools"
+      }),
+      expect.objectContaining({
+        id: "config-global",
+        name: "Global tools"
       })
     ]);
   });
