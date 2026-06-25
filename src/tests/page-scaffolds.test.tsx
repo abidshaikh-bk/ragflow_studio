@@ -103,6 +103,23 @@ describe("phase 1a page scaffolds", () => {
           };
         }
 
+        if (input === "/api/admin/assistant") {
+          return {
+            json: async () => ({
+              data: {
+                systemPrompt: "",
+                toolPolicy: {
+                  enableDateTime: true,
+                  enableVectorSearch: true,
+                  enableWebSearch: true
+                },
+                updatedAt: "2026-06-25T10:00:00.000Z"
+              }
+            }),
+            ok: true
+          };
+        }
+
         return {
           json: async () => ({
             data: {

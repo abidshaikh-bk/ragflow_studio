@@ -18,6 +18,20 @@ export function getSupabaseEnv() {
   };
 }
 
+export function getSupabaseServiceRoleEnv() {
+  const { url } = getSupabaseEnv();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    throw new Error("Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  return {
+    serviceRoleKey,
+    url
+  };
+}
+
 export function getS3Env() {
   const region = process.env.AWS_REGION;
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID;

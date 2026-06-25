@@ -1,14 +1,18 @@
-import { ProtectedPagePlaceholder } from "@/components/app-shell/ProtectedPagePlaceholder";
+import { PageHeader } from "@/components/app-shell/PageHeader";
+import { AdminPageClient } from "@/components/admin/AdminPageClient";
 import { requireAdminPageAccess } from "@/server/auth/authorization";
 
 export default async function AdminPage() {
   await requireAdminPageAccess();
 
   return (
-    <ProtectedPagePlaceholder
-      description="Shared assistant controls, built-in tool policy, and global MCP management will live here for admins in the next phase."
-      eyebrow="Admin"
-      title="Shared assistant control plane"
-    />
+    <div className="space-y-6">
+      <PageHeader
+        description="Manage the shared assistant system prompt and built-in tool policy from one guarded control plane without exposing any private user document content."
+        eyebrow="Admin"
+        title="Shared assistant control plane"
+      />
+      <AdminPageClient />
+    </div>
   );
 }

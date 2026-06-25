@@ -184,6 +184,8 @@ Typography:
 | POST | `/api/mcp/servers/:id/test` | Test one runtime MCP server config and preview tools |
 | GET | `/api/mcp/servers/:id/tools` | List available tools for one runtime MCP server config |
 | GET | `/api/admin/access` | Verify that the authenticated session has admin-only access |
+| GET | `/api/admin/assistant` | Load the shared assistant system prompt and built-in tool policy |
+| PUT | `/api/admin/assistant` | Update the shared assistant system prompt and built-in tool policy |
 
 ## 6. Data model
 
@@ -194,6 +196,19 @@ id uuid primary key references auth.users(id)
 email text
 display_name text
 is_admin boolean default false
+created_at timestamptz default now()
+updated_at timestamptz default now()
+```
+
+### `agent_runtime_settings`
+
+```sql
+singleton_key text primary key default 'global' check (singleton_key = 'global')
+system_prompt text default ''
+enable_vector_search boolean default true
+enable_date_time boolean default true
+enable_web_search boolean default true
+updated_by uuid references auth.users(id)
 created_at timestamptz default now()
 updated_at timestamptz default now()
 ```
@@ -516,6 +531,12 @@ The refined application treats the runtime assistant as one shared assistant for
 - one global built-in tool policy,
 - optional global runtime MCP servers,
 - user-scoped BYO MCP settings that remain separate from admin-managed global MCP.
+
+The shared assistant configuration now persists in `agent_runtime_settings` and is merged into every chat invocation server-side:
+
+- admins can edit the system prompt from `/admin`,
+- admins can disable built-in vector-search, date/time, and web-search tools globally,
+- the runtime continues to avoid exposing user document contents or any raw provider secrets in admin responses.
 
 ### Chat refinement direction
 

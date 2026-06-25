@@ -162,6 +162,8 @@ LangSmith traces for this app must use redacted summaries only:
 - The admin role model must live in `profiles.is_admin` with a secure default of `false`.
 - Admin-only pages must enforce admin access server-side before rendering protected content.
 - Admin-only APIs must return `403` for authenticated non-admin users and must never widen user-scoped document or upload access.
+- Shared assistant settings reads and writes must remain admin-only at the route and RLS layers.
+- Chat runtime reads of shared assistant settings must happen server-side only and must not expose the raw system prompt through browser APIs intended for standard users.
 
 ## Security task completion criteria
 
@@ -233,4 +235,5 @@ The next refinement phase adds History, document detail exploration, admin contr
 7. LangSmith enrichment must happen server-side only and must return safe metadata such as run IDs, status, timings, and deep links.
 8. Global assistant configuration must be guarded by explicit admin-only route and API checks.
 9. Global MCP configs with `user_id = null` must be manageable only by admins and loaded server-side only.
+10. Built-in tool policy enforcement must happen in the chat runtime so disabled tools are skipped rather than merely hidden in the admin UI.
 10. Streaming chat responses must preserve the same auth, user scoping, and secret redaction guarantees as the prior one-shot chat flow.

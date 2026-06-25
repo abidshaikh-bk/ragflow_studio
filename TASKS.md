@@ -1263,7 +1263,7 @@ Acceptance criteria:
 
 ### TASK-046: Add shared assistant admin settings for system prompt and tool policy
 
-Status: not_started
+Status: done
 
 Objective: Let admins manage one shared runtime assistant configuration for all chats.
 

@@ -289,6 +289,198 @@ describe("chat agent workflow", () => {
     expect(runtimeMcpTool.invoke).not.toHaveBeenCalled();
   });
 
+  it("injects the shared admin system prompt into the LLM system message", async () => {
+    const llm = {
+      invoke: vi.fn().mockResolvedValue({
+        content: "Grounded answer."
+      })
+    };
+
+    await invokeChatAgent(
+      {
+        history: [],
+        message: "Summarize the uploaded runbook.",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
+        sessionId: "session-admin-prompt",
+        supabase: supabaseMock,
+        thinkingLevel: "medium",
+        userId: "user-123"
+      },
+      {
+        assistantSettingsLoader: vi.fn().mockResolvedValue({
+          systemPrompt: "Always answer in two short paragraphs.",
+          toolPolicy: {
+            enableDateTime: true,
+            enableVectorSearch: true,
+            enableWebSearch: true
+          },
+          updatedAt: null
+        }) as never,
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: vi.fn() as never,
+        llmFactory: () => llm,
+        runtimeMcpToolsLoader: vi.fn().mockResolvedValue([]) as never,
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-admin-prompt"
+        }),
+        vectorSearchTool: vi.fn().mockResolvedValue({
+          matches: []
+        }) as never,
+        webSearchTool: vi.fn().mockResolvedValue({
+          requestId: "tvly-123",
+          responseTime: 100,
+          results: []
+        }) as never
+      }
+    );
+
+    const [systemMessage] = llm.invoke.mock.calls[0][0] as [SystemMessage, HumanMessage];
+
+    expect(systemMessage.content).toContain("Shared admin instructions:");
+    expect(systemMessage.content).toContain("Always answer in two short paragraphs.");
+  });
+
+  it("does not invoke vector search when the admin tool policy disables it", async () => {
+    const vectorSearchTool = vi.fn();
+
+    const result = await invokeChatAgent(
+      {
+        history: [],
+        message: "What does the onboarding runbook say about approval?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
+        sessionId: "session-admin-policy-vector",
+        supabase: supabaseMock,
+        thinkingLevel: "medium",
+        userId: "user-123"
+      },
+      {
+        assistantSettingsLoader: vi.fn().mockResolvedValue({
+          systemPrompt: "",
+          toolPolicy: {
+            enableDateTime: true,
+            enableVectorSearch: false,
+            enableWebSearch: false
+          },
+          updatedAt: null
+        }) as never,
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: vi.fn() as never,
+        llmFactory: () => ({
+          invoke: vi.fn().mockResolvedValue({
+            content: "I do not have enough context to answer from the supplied tools."
+          })
+        }),
+        runtimeMcpToolsLoader: vi.fn().mockResolvedValue([]) as never,
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-admin-policy-vector"
+        }),
+        vectorSearchTool: vectorSearchTool as never,
+        webSearchTool: vi.fn() as never
+      }
+    );
+
+    expect(vectorSearchTool).not.toHaveBeenCalled();
+    expect(result.metadata.toolActivity).toContain(
+      "pinecone.query -> disabled by admin tool policy"
+    );
+  });
+
+  it("does not invoke the date/time tool when the admin tool policy disables it", async () => {
+    const dateTimeTool = vi.fn();
+
+    const result = await invokeChatAgent(
+      {
+        history: [],
+        message: "What date is it today?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
+        sessionId: "session-admin-policy-date",
+        supabase: supabaseMock,
+        thinkingLevel: "medium",
+        userId: "user-123"
+      },
+      {
+        assistantSettingsLoader: vi.fn().mockResolvedValue({
+          systemPrompt: "",
+          toolPolicy: {
+            enableDateTime: false,
+            enableVectorSearch: true,
+            enableWebSearch: true
+          },
+          updatedAt: null
+        }) as never,
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: dateTimeTool as never,
+        llmFactory: () => ({
+          invoke: vi.fn().mockResolvedValue({
+            content: "I do not have enough context to answer from the supplied tools."
+          })
+        }),
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-admin-policy-date"
+        }),
+        vectorSearchTool: vi.fn() as never,
+        webSearchTool: vi.fn() as never
+      }
+    );
+
+    expect(dateTimeTool).not.toHaveBeenCalled();
+    expect(result.metadata.toolActivity).toContain(
+      "date.now -> disabled by admin tool policy"
+    );
+  });
+
+  it("does not invoke web search when the admin tool policy disables it", async () => {
+    const webSearchTool = vi.fn();
+
+    const result = await invokeChatAgent(
+      {
+        history: [],
+        message: "What is the latest AI news today?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
+        sessionId: "session-admin-policy-web",
+        supabase: supabaseMock,
+        thinkingLevel: "medium",
+        userId: "user-123"
+      },
+      {
+        assistantSettingsLoader: vi.fn().mockResolvedValue({
+          systemPrompt: "",
+          toolPolicy: {
+            enableDateTime: true,
+            enableVectorSearch: true,
+            enableWebSearch: false
+          },
+          updatedAt: null
+        }) as never,
+        credentialResolver: credentialResolverMock as never,
+        dateTimeTool: vi.fn() as never,
+        llmFactory: () => ({
+          invoke: vi.fn().mockResolvedValue({
+            content: "I do not have enough context to answer from the supplied tools."
+          })
+        }),
+        traceInvocation: async (_, invoke) => ({
+          result: await invoke(),
+          runId: "trace-admin-policy-web"
+        }),
+        vectorSearchTool: vi.fn() as never,
+        webSearchTool: webSearchTool as never
+      }
+    );
+
+    expect(webSearchTool).not.toHaveBeenCalled();
+    expect(result.metadata.toolActivity).toContain(
+      "tavily.search -> disabled by admin tool policy"
+    );
+  });
+
   it("resolves a saved Gemini chat configuration", async () => {
     credentialResolverMock.mockResolvedValue("saved-gemini-key");
 

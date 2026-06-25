@@ -166,6 +166,7 @@ Current recorded status:
 - `src/tests/history-page.test.tsx` validates `/history` empty, error, populated, and runtime-MCP-visible states plus client-side filtering.
 - `src/tests/document-detail-route.test.ts`, `src/tests/document-access-link-route.test.ts`, and `src/tests/document-detail-page.test.tsx` validate authenticated document explorer detail routes, ownership-scoped private access links, and the chunk/vector detail UI.
 - `src/tests/admin-guards.test.tsx` validates profile-backed admin page redirects, successful admin rendering, and `403` responses for non-admin admin-API requests.
+- `src/tests/admin-assistant-route.test.ts`, `src/tests/admin-page.test.tsx`, and `src/tests/agent-workflow.test.ts` validate admin-only shared assistant settings APIs/UI plus runtime enforcement of the shared system prompt and built-in tool policy.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.
@@ -230,6 +231,7 @@ Add the following coverage as the application expands beyond the initial MVP she
 - Shell layout test for `Chat`, `Documents`, `History`, `Settings`, and `Admin` navigation states.
 - Logout API and UI tests.
 - Admin navigation visibility tests for admin vs non-admin users.
+- Shared assistant admin tests for prompt-save, tool-toggle, and disabled-tool runtime behavior.
 
 ### Streaming chat
 

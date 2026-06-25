@@ -543,3 +543,7 @@ A restrained control plane for one shared assistant. Operational and configurati
 - Empty global MCP state.
 - Save success and error states for system prompt and tool policy.
 - Operational summary with metadata only, never user document content.
+
+Implementation note:
+
+- The current admin page ships the shared assistant prompt editor, built-in tool toggles, and an explicit Global MCP placeholder card until `TASK-047` lands.

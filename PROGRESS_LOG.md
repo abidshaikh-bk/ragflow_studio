@@ -2833,3 +2833,77 @@ npm run build
 
 ### Follow-up
 - Continue on a fresh `TASK-046` branch after confirming this branch is pushed and clean.
+
+---
+
+## TASK-046: Add shared assistant admin settings for system prompt and tool policy
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-046-shared-assistant-settings
+Started: 2026-06-25
+Completed: 2026-06-25
+Commit Hash:
+
+### Objective
+Let admins manage one shared runtime assistant configuration for all chats.
+
+### Files Changed
+- PROGRESS_LOG.md
+- ENVIRONMENT.md
+- MCP_SERVERS.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/app/(app)/admin/page.tsx
+- src/app/api/admin/assistant/route.ts
+- src/components/admin/AdminPageClient.tsx
+- src/components/admin/GlobalMcpSettings.tsx
+- src/components/admin/SystemPromptEditor.tsx
+- src/components/admin/ToolPolicyPanel.tsx
+- src/lib/env.ts
+- src/lib/validations/admin.ts
+- src/server/admin/settings.ts
+- src/server/agent/workflow.ts
+- src/server/supabase/admin.ts
+- src/tests/admin-assistant-route.test.ts
+- src/tests/admin-guards.test.tsx
+- src/tests/admin-page.test.tsx
+- src/tests/agent-workflow.test.ts
+- src/tests/page-scaffolds.test.tsx
+- supabase/migrations/0005_shared_assistant_settings.sql
+
+### Implementation Notes
+- Started from the completed `TASK-045` baseline on branch `task/TASK-046-shared-assistant-settings`.
+- Added a singleton `agent_runtime_settings` store plus admin-only route/API guards for loading and saving a shared system prompt and built-in tool policy.
+- Replaced the `/admin` placeholder with a working shared assistant control plane that edits the global prompt, toggles built-in tools, and keeps global MCP management visually separated until `TASK-047`.
+- Merged the shared assistant settings into the chat workflow so the admin system prompt reaches the LLM and disabled built-in vector, date/time, and web tools are skipped at runtime.
+
+### Tests Added
+- `src/tests/admin-assistant-route.test.ts`
+- `src/tests/admin-page.test.tsx`
+- Expanded `src/tests/admin-guards.test.tsx`
+- Expanded `src/tests/agent-workflow.test.ts`
+- Expanded `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Continue with `TASK-047` on a fresh task branch after this branch is committed and pushed.

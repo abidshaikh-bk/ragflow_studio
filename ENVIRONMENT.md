@@ -127,4 +127,5 @@ The next UI and admin refinement phase does not require browser-visible secrets.
 - LangSmith history enrichment continues to rely on the existing server-side LangSmith environment variables only.
 - The `/history` page exposes only application-owned run metadata, so it does not introduce any new browser-visible environment variables.
 - Global assistant configuration is planned as database-backed application state, not as frontend environment variables.
+- The shared assistant settings introduced on `/admin` reuse the existing `SUPABASE_SERVICE_ROLE_KEY` for server-only runtime reads; no new browser-visible environment variables are required.
 - If presigned URL expiration tuning is introduced later, keep it server-only and document it before use.

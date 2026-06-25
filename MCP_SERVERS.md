@@ -79,3 +79,4 @@ If package names differ in the implementation environment, Codex must verify the
 - TASK-043: Use LangSmith MCP and Supabase MCP to validate history records, trace linking, and user isolation.
 - TASK-044: Use S3-compatible MCP and Supabase MCP to validate private document access, presigned-link behavior, and document detail metadata.
 - TASK-045 to TASK-047: Use Supabase MCP to validate admin role data, global assistant config storage, and global MCP ownership rules.
+- TASK-046: Use Supabase MCP to validate `agent_runtime_settings`, admin-only assistant config reads/writes, and that runtime tool-policy changes do not require any browser-visible secrets.

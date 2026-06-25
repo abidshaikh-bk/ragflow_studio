@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminPage from "@/app/(app)/admin/page";
 import { GET } from "@/app/api/admin/access/route";
 import { requireAdminPageAccess } from "@/server/auth/authorization";
@@ -50,6 +50,27 @@ describe("admin guards", () => {
     eqMock.mockClear();
     selectMock.mockClear();
     fromMock.mockClear();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          data: {
+            systemPrompt: "",
+            toolPolicy: {
+              enableDateTime: true,
+              enableVectorSearch: true,
+              enableWebSearch: true
+            },
+            updatedAt: "2026-06-25T10:00:00.000Z"
+          }
+        }),
+        ok: true
+      })
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("redirects non-admin page requests back to chat", async () => {
@@ -86,6 +107,10 @@ describe("admin guards", () => {
     });
 
     render(await AdminPage());
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
     expect(
       screen.getByRole("heading", { name: /shared assistant control plane/i })
