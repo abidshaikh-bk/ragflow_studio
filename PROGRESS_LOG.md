@@ -2504,10 +2504,11 @@ npm run build
 
 ## TASK-041: Add chat model selection, thinking controls, and saved preference APIs
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-041-chat-model-thinking-controls
+Commit Hash: d1f8e53
 Started: 2026-06-25
 Completed: 2026-06-25
 
