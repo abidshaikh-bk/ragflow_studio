@@ -1085,7 +1085,7 @@ Acceptance criteria:
 
 ### TASK-039: Refine protected shell, navigation, spacing, and overflow handling
 
-Status: validated
+Status: done
 
 Objective: Upgrade the protected application shell to a professional dashboard standard with consistent layout, spacing, responsive overflow handling, and clearer page hierarchy.
 
