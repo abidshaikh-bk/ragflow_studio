@@ -2568,10 +2568,11 @@ npm run build
 
 ## TASK-042: Convert chat transport and UI to streaming responses
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-042-streaming-chat-responses
+Commit Hash: 59ed3b4
 Started: 2026-06-25
 Completed: 2026-06-25
 
