@@ -14,4 +14,11 @@ test("login redirects to chat and unlocks protected settings", async ({ page }) 
 
   await expect(page).toHaveURL("/settings");
   await expect(page.getByText("Model configuration status")).toBeVisible();
+
+  await page.getByRole("button", { name: "Logout" }).click();
+
+  await expect(page).toHaveURL("/login");
+
+  await page.goto("/settings");
+  await expect(page).toHaveURL(/\/login$/);
 });

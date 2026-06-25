@@ -17,7 +17,10 @@ vi.mock("@/server/auth/session", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/chat"
+  usePathname: () => "/chat",
+  useRouter: () => ({
+    push: vi.fn()
+  })
 }));
 
 describe("Supabase auth protection", () => {

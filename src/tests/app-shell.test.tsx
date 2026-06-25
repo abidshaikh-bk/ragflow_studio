@@ -7,7 +7,10 @@ import { TopNav } from "@/components/app-shell/TopNav";
 import { isAdminUser } from "@/server/auth/authorization";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/documents"
+  usePathname: () => "/documents",
+  useRouter: () => ({
+    push: vi.fn()
+  })
 }));
 
 describe("TopNav", () => {

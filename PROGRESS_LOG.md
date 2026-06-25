@@ -2444,3 +2444,57 @@ npm run build
 
 ### Follow-up
 - Implement the protected shell refresh first, then continue through logout, chat modernization, history, documents, and admin tasks in sequence.
+
+---
+
+## TASK-040: Implement working logout flow and authenticated session controls
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-040-logout-session-controls
+Started: 2026-06-25
+Completed: 2026-06-25
+
+### Objective
+Replace the placeholder logout control with a working authenticated sign-out flow across both Supabase sessions and the E2E auth bypass.
+
+### Files Changed
+- TASKS.md
+- PROGRESS_LOG.md
+- src/app/api/auth/logout/route.ts
+- src/components/app-shell/UserMenu.tsx
+- src/tests/app-shell.test.tsx
+- src/tests/e2e/auth.spec.ts
+- src/tests/logout-route.test.ts
+- src/tests/supabase-auth.test.tsx
+- src/tests/user-menu.test.tsx
+
+### Implementation Notes
+- Started the dedicated logout task branch after completing and pushing TASK-039.
+- Added a server-side logout route that signs out Supabase sessions, safely clears the E2E bypass cookie, and returns a browser-safe redirect target.
+- Replaced the shell placeholder button with an authenticated logout flow that calls the new route, clears the browser Supabase session, and redirects users back to `/login`.
+- Extended the auth E2E scenario so the bypass cookie is proven to clear before a second visit to `/settings`.
+
+### Tests Added
+- Logout route coverage in `src/tests/logout-route.test.ts`
+- User menu logout behavior coverage in `src/tests/user-menu.test.tsx`
+- Updated shell and auth regression coverage in `src/tests/app-shell.test.tsx`, `src/tests/supabase-auth.test.tsx`, and `src/tests/e2e/auth.spec.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Add the server logout route first, then wire the shell control and E2E-safe redirect flow.
