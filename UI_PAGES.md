@@ -416,6 +416,7 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 ## Functional requirements
 
 - Gate the route to admins only.
+- Until the shared assistant editors land, a guarded placeholder is acceptable as long as the admin-only route check happens before render.
 - Manage one shared assistant system prompt.
 - Manage built-in tool policy.
 - Manage global MCP server definitions separately from user BYO MCP settings.

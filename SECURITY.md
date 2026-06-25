@@ -157,6 +157,12 @@ LangSmith traces for this app must use redacted summaries only:
 - Chat logs may store message length, session IDs, run IDs, and counts, but not full prompt or answer bodies.
 - Document logs may store file metadata, document IDs, chunk counts, namespaces, vector counts, and sanitized error messages.
 
+## Admin guard rules
+
+- The admin role model must live in `profiles.is_admin` with a secure default of `false`.
+- Admin-only pages must enforce admin access server-side before rendering protected content.
+- Admin-only APIs must return `403` for authenticated non-admin users and must never widen user-scoped document or upload access.
+
 ## Security task completion criteria
 
 Security-related tasks are complete only when tests prove:

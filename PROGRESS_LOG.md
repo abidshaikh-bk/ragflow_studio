@@ -2770,3 +2770,65 @@ npm run build
 
 ### Follow-up
 - Continue on a fresh `TASK-045` branch after confirming this branch is pushed and clean.
+
+---
+
+## TASK-045: Add admin role model and admin-only route/API guards
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-045-admin-guards
+Started: 2026-06-25
+Completed:
+Commit Hash:
+
+### Objective
+Introduce a simple admin role and enforce it consistently across admin pages and admin-only APIs.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- UI_PAGES.md
+- design.md
+- middleware.ts
+- src/app/(app)/admin/page.tsx
+- src/app/(app)/layout.tsx
+- src/app/api/admin/access/route.ts
+- src/server/auth/api.ts
+- src/server/auth/authorization.ts
+- src/tests/admin-guards.test.tsx
+- src/tests/page-scaffolds.test.tsx
+- src/tests/supabase-auth.test.tsx
+- supabase/migrations/0004_admin_profiles.sql
+
+### Implementation Notes
+- Started from the completed `TASK-044` baseline on branch `task/TASK-045-admin-guards`.
+- Added `profiles.is_admin` through a dedicated migration and introduced shared admin access helpers for server-rendered pages and API routes.
+- Protected the `/admin` page before render, added a minimal admin-only API probe at `/api/admin/access`, and updated the protected app layout to read admin state from the shared authorization helper.
+- Extended middleware coverage to include `/admin` and `/history`, while keeping document and upload routes user-scoped so admins still cannot read another user's private document content.
+
+### Tests Added
+- `src/tests/admin-guards.test.tsx`
+- Expanded `src/tests/page-scaffolds.test.tsx`
+- Expanded `src/tests/supabase-auth.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Record the task commit hash after the task-scoped commit is created, then mark the task `done` once the branch is clean.

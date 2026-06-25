@@ -183,6 +183,7 @@ Typography:
 | DELETE | `/api/mcp/servers/:id` | Delete one runtime MCP server config |
 | POST | `/api/mcp/servers/:id/test` | Test one runtime MCP server config and preview tools |
 | GET | `/api/mcp/servers/:id/tools` | List available tools for one runtime MCP server config |
+| GET | `/api/admin/access` | Verify that the authenticated session has admin-only access |
 
 ## 6. Data model
 
@@ -192,6 +193,7 @@ Typography:
 id uuid primary key references auth.users(id)
 email text
 display_name text
+is_admin boolean default false
 created_at timestamptz default now()
 updated_at timestamptz default now()
 ```

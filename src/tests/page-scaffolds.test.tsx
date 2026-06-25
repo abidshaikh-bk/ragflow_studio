@@ -20,6 +20,12 @@ vi.mock("@/server/auth/session", () => ({
   })
 }));
 
+vi.mock("@/server/auth/authorization", () => ({
+  requireAdminPageAccess: async () => ({
+    isAdmin: true
+  })
+}));
+
 vi.mock("@/server/supabase/server", () => ({
   createServerSupabaseClient: async () => ({})
 }));
@@ -166,11 +172,13 @@ describe("phase 1a page scaffolds", () => {
     );
   });
 
-  it("renders the history and admin placeholders inside the protected shell", async () => {
+  it("renders the history page and admin placeholder inside the protected shell", async () => {
+    const adminPage = await AdminPage();
+
     render(
       <div>
         <HistoryPage />
-        <AdminPage />
+        {adminPage}
       </div>
     );
 

@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell/AppShell";
-import { isAdminUser } from "@/server/auth/authorization";
+import { getAdminAccessState } from "@/server/auth/authorization";
 import { requireAuthenticatedUser } from "@/server/auth/session";
+import { createServerSupabaseClient } from "@/server/supabase/server";
 
 export default async function ProtectedLayout({
   children
@@ -8,9 +9,14 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }>) {
   const user = await requireAuthenticatedUser();
+  const supabase = await createServerSupabaseClient();
+  const isAdmin = await getAdminAccessState({
+    supabase,
+    user
+  });
 
   return (
-    <AppShell isAdmin={isAdminUser(user)} userEmail={user.email}>
+    <AppShell isAdmin={isAdmin} userEmail={user.email}>
       {children}
     </AppShell>
   );
