@@ -137,6 +137,13 @@ LangSmith traces for this app must use redacted summaries only:
 - Tavily result logging should store title, URL, snippet, score, and timestamps, but not raw response headers or secrets.
 - `/api/chat` must persist the authenticated user's message and assistant reply under the same user-scoped session, and any stored `langsmith_run_id` must come from the server-side agent only.
 
+## History API shaping
+
+- `/api/history` and `/api/history/:sessionId` must remain user-scoped through the authenticated server session.
+- History responses may include saved prompts, assistant replies, tool names, tool status, redacted output previews, and LangSmith run IDs.
+- History responses must not expose raw LangSmith credentials, runtime MCP secrets, raw request headers, or private file access URLs.
+- Admin-oriented operational filters must not reveal another user's document contents, chunk text, or raw uploaded files.
+
 ## App event logging
 
 - App lifecycle logs must be structured JSON objects with stable event names.

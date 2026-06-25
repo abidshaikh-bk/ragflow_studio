@@ -112,6 +112,18 @@ UI:
 - Embedding API key input, masked after save and stored encrypted server-side
 - Save button
 
+### `/history`
+
+Purpose: review the authenticated user's saved prompts, assistant replies, tool activity, and LangSmith-linked run identifiers from prior chat sessions.
+
+UI:
+
+- Audit-oriented session list with status and tool badges
+- Session detail panel with transcript and tool execution timeline
+- Filters for run status and tool source
+- LangSmith run identifiers presented as safe metadata only
+- Empty, loading, and error states
+
 
 
 ## 4A. UI mockup source of truth

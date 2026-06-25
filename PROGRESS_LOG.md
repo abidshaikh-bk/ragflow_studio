@@ -2614,3 +2614,67 @@ npm run build
 
 ### Follow-up
 - Use the new SSE transport as the baseline for the upcoming history surface so in-flight metadata and final persisted turns stay aligned.
+
+---
+
+## TASK-043: Build LangSmith-aware user history page and history APIs
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-043-history-page
+Started: 2026-06-25
+Completed:
+
+### Objective
+Add a user-facing history surface backed by application audit data and LangSmith-linked run metadata.
+
+### Files Changed
+- ENVIRONMENT.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- UI_PAGES.md
+- design.md
+- src/app/(app)/history/page.tsx
+- src/app/api/history/[sessionId]/route.ts
+- src/app/api/history/route.ts
+- src/components/history/HistoryFilters.tsx
+- src/components/history/HistoryPageClient.tsx
+- src/components/history/RunHistoryDetail.tsx
+- src/components/history/RunHistoryList.tsx
+- src/components/history/types.ts
+- src/server/history/service.ts
+- src/tests/history-page.test.tsx
+- src/tests/history-route.test.ts
+- src/tests/page-scaffolds.test.tsx
+
+### Implementation Notes
+- Started TASK-043 from the current post-streaming chat baseline on branch `task/TASK-043-history-page`.
+- Added a user-scoped history aggregation service over `chat_sessions`, `chat_messages`, `agent_tool_calls`, and `mcp_tool_invocations`, then exposed it through `GET /api/history` and `GET /api/history/:sessionId`.
+- Replaced the `/history` placeholder with a filterable audit workspace that loads list/detail data, surfaces built-in and runtime MCP tool activity, and keeps LangSmith run ids as safe browser-visible metadata only.
+- Updated the product, UI, security, testing, and environment docs to reflect the new history APIs and page behavior.
+
+### Tests Added
+- `src/tests/history-route.test.ts`
+- `src/tests/history-page.test.tsx`
+- Expanded `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Build the history data service and authenticated APIs first, then connect the `/history` page UI to the new server data.

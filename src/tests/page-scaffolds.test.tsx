@@ -88,6 +88,15 @@ describe("phase 1a page scaffolds", () => {
           };
         }
 
+        if (input === "/api/history") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
         return {
           json: async () => ({
             data: {
@@ -157,7 +166,7 @@ describe("phase 1a page scaffolds", () => {
     );
   });
 
-  it("renders the history and admin placeholders inside the protected shell", () => {
+  it("renders the history and admin placeholders inside the protected shell", async () => {
     render(
       <div>
         <HistoryPage />
@@ -165,7 +174,14 @@ describe("phase 1a page scaffolds", () => {
       </div>
     );
 
-    expect(screen.getByRole("heading", { name: /run history/i })).toBeInTheDocument();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: /^run history$/i })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /shared assistant control plane/i })
     ).toBeInTheDocument();

@@ -316,6 +316,8 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 
 - Load only the authenticated user's history.
 - Show chat session, prompt, assistant reply, tool activity, runtime MCP activity, and LangSmith run identifiers.
+- Load session summaries from `GET /api/history` and selected session detail from `GET /api/history/:sessionId`.
+- Keep filtering client-side so users can refine the currently loaded audit list without exposing additional server-side query surfaces yet.
 - Support empty, loading, and error states.
 - Allow safe server-side LangSmith enrichment without exposing LangSmith credentials.
 

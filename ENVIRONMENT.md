@@ -124,5 +124,6 @@ The next UI and admin refinement phase does not require browser-visible secrets.
 
 - Private document access continues to rely on the existing S3 credentials and bucket configuration.
 - LangSmith history enrichment continues to rely on the existing server-side LangSmith environment variables only.
+- The `/history` page exposes only application-owned run metadata, so it does not introduce any new browser-visible environment variables.
 - Global assistant configuration is planned as database-backed application state, not as frontend environment variables.
 - If presigned URL expiration tuning is introduced later, keep it server-only and document it before use.
