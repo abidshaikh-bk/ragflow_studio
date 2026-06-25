@@ -116,6 +116,8 @@ describe("chat layout", () => {
     render(<ChatLayout initialSessions={initialSessions} />);
 
     await screen.findByLabelText("Chat model");
+    expect(screen.getByLabelText("sessions")).toBeInTheDocument();
+    expect(screen.getByLabelText("context")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /new chat/i })[0]);
 
     expect(screen.getByText(/ask your knowledge base/i)).toBeInTheDocument();
@@ -228,6 +230,9 @@ describe("chat layout", () => {
     render(<ChatLayout initialSessions={initialSessions} />);
 
     await screen.findByLabelText("Chat model");
+    fireEvent.click(screen.getByRole("button", { name: /open context drawer/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     fireEvent.click(screen.getAllByRole("button", { name: /new chat/i })[0]);
     fireEvent.change(screen.getByLabelText("Thinking level"), {
       target: { value: "high" }

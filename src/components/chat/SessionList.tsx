@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { WorkspaceIcon } from "@/components/workspace/icons";
 
 type Session = {
   id: string;
@@ -28,11 +29,17 @@ export function SessionList({
       title="Recent chats"
       action={
         <Button onClick={onNewChat} size="sm" type="button">
+          <WorkspaceIcon name="plus" />
           New chat
         </Button>
       }
     >
       <div className="space-y-3">
+        {sessions.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-slate-300">
+            Start a new chat to build your first retrieval-backed conversation.
+          </div>
+        ) : null}
         {sessions.map((session) => (
           <button
             className={`w-full rounded-2xl border px-4 py-4 text-left transition ${

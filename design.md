@@ -37,6 +37,10 @@
 
 ## 4. Pages
 
+Phase 15 refinement note:
+
+- `/chat` and `/documents` now share a split-workspace foundation with collapsible left and right rails, mobile drawer access, and a scroll-safe center panel while keeping the global top navigation intact.
+
 ### `/login`
 
 Purpose: authenticate existing users.
@@ -68,13 +72,12 @@ Purpose: chat with Agentic RAG assistant.
 
 UI:
 
-- Chat session list or lightweight session selector
-- Message list
+- Left session rail with recent chats and new-chat action
+- Scroll-safe center conversation panel
 - Chat input
 - Send button
 - Streaming/loading indicator
-- Tool activity indicator
-- Source/citation metadata panel when available
+- Right context rail for tool activity and source metadata
 
 ### `/documents`
 
@@ -82,6 +85,7 @@ Purpose: upload and process documents.
 
 UI:
 
+- Left workspace rail with status snapshot
 - File upload dropzone
 - Supported type hint: PDF, TXT, DOCX, Markdown
 - Upload progress
@@ -94,6 +98,7 @@ UI:
   - completed
   - failed
 - Document list
+- Right pipeline rail for active processing state
 - Load the existing authenticated user's documents on page load
 - Error state with retry option if feasible
 

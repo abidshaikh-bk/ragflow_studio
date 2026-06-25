@@ -71,6 +71,9 @@ describe("documents page explorer", () => {
 
     render(<DocumentsPage />);
 
+    expect(screen.getByLabelText("documents")).toBeInTheDocument();
+    expect(screen.getByLabelText("pipeline")).toBeInTheDocument();
+
     expect(await screen.findByRole("link", { name: /already-uploaded-handbook/i })).toHaveAttribute(
       "href",
       "/documents/doc-123"
@@ -139,6 +142,10 @@ describe("documents page explorer", () => {
     });
 
     render(<DocumentsPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /open pipeline drawer/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
 
     fireEvent.change(screen.getByLabelText(/upload document/i), {
       target: {

@@ -135,6 +135,7 @@ All protected pages share a dark dashboard shell with a fixed/compact sidebar or
 - Unauthenticated users are redirected to `/login`.
 - Logout is available from user menu or button.
 - Shell must be keyboard accessible.
+- Chat and Documents use shared collapsible inner rails instead of a full-width hero card at the top of each page.
 
 ---
 
@@ -188,6 +189,7 @@ A split-pane agent chat UI. Left side has sessions and context status. Main area
 - Retrieval sources visible.
 - Chat error state.
 - No indexed documents warning.
+- Left and right rails can collapse on desktop and open as drawers on mobile.
 
 ## Components
 
@@ -211,6 +213,7 @@ Refinement note:
 
 - The index view now includes summary counters, a file-name filter, a status filter, and row-level `View` / `Download` actions for private files.
 - Each document row links into a dedicated explorer page that shows metadata, chunk previews, and vector details.
+- The workspace now uses the shared split layout with a left status rail, a center working area, and a right pipeline rail instead of a top hero card.
 
 ## Wireframe
 

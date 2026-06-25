@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
+import { WorkspaceIcon } from "@/components/workspace/icons";
 
 const supportedExtensions = [".pdf", ".txt", ".docx", ".md"];
 
@@ -54,6 +55,9 @@ export function DocumentDropzone({
       description="TXT and Markdown are the first MVP priority, with PDF and DOCX scaffolded into the interface."
     >
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-aqua/40 bg-aqua/5 px-6 py-14 text-center transition hover:border-aqua/70">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-aqua/30 bg-aqua/10 text-aqua">
+          <WorkspaceIcon className="h-6 w-6" name="upload" />
+        </span>
         <span className="font-heading text-xl text-ice-white">Upload documents</span>
         <span className="mt-2 max-w-sm text-sm leading-7 text-slate-300">
           Drag a file here or choose one from disk. Supported types: {supportedText}.

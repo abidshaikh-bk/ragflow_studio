@@ -108,12 +108,15 @@ Phase 1A scaffold note:
 - `src/components/chat/ChatComposer.tsx`
 - `src/components/chat/ToolActivityPanel.tsx`
 - `src/components/chat/SourcePanel.tsx`
+- `src/components/workspace/WorkspaceLayout.tsx`
+- `src/components/workspace/icons.tsx`
 
 ## Functional requirements
 
 - Load user's chat sessions.
 - Create a new session when needed.
 - Submit message to `/api/chat`.
+- Render the page inside the shared split-workspace primitive without a standalone hero header card.
 - Render user and assistant messages.
 - Show tool activity returned in metadata.
 - Show source metadata returned in metadata.
@@ -130,6 +133,7 @@ Phase 1A scaffold note:
 - Empty message submit is blocked.
 - Assistant message renders.
 - Tool activity panel renders when metadata exists.
+- Desktop rail collapse and mobile drawer controls remain accessible through the shared workspace layout.
 
 ---
 
@@ -143,6 +147,8 @@ Phase 1A scaffold note:
 - `src/components/documents/DocumentTable.tsx`
 - `src/components/documents/DocumentStatusBadge.tsx`
 - `src/components/documents/UploadProgressCard.tsx`
+- `src/components/workspace/WorkspaceLayout.tsx`
+- `src/components/workspace/icons.tsx`
 
 ## Functional requirements
 
@@ -153,6 +159,7 @@ Phase 1A scaffold note:
 - Poll `/api/documents/:id/status` every 1–2 seconds while processing.
 - Stop polling on `completed` or `failed`.
 - Show total and processed chunk counts.
+- Render the page inside the shared split-workspace primitive without a standalone hero header card.
 
 Phase 1A scaffold note:
 
@@ -169,6 +176,7 @@ TASK-009 implementation note:
 - Processing timeline renders all stages.
 - Polling stops on terminal states.
 - Failed state displays error.
+- Desktop rail collapse and mobile drawer controls remain accessible through the shared workspace layout.
 
 ---
 

@@ -154,8 +154,13 @@ describe("phase 1a page scaffolds", () => {
   it("renders the chat workspace shell", async () => {
     render(await ChatPage());
 
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
     expect(
-      screen.getByRole("heading", { name: /agentic rag workspace/i })
+      screen.getByRole("heading", { name: /private knowledge chat/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/recent chats/i)).toBeInTheDocument();
     expect(
@@ -174,7 +179,7 @@ describe("phase 1a page scaffolds", () => {
     });
 
     expect(
-      screen.getByRole("heading", { name: /document ingestion workspace/i })
+      screen.getByRole("heading", { name: /document library/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/upload document/i)).toBeInTheDocument();
     expect(screen.getByText(/processing timeline/i)).toBeInTheDocument();

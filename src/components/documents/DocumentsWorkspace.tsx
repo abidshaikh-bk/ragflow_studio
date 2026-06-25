@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { Input } from "@/components/ui/Input";
+import { WorkspaceIcon } from "@/components/workspace/icons";
+import { WorkspaceLayout } from "@/components/workspace/WorkspaceLayout";
 import { DocumentDropzone } from "./DocumentDropzone";
 import { DocumentTable } from "./DocumentTable";
 import { ProcessingTimeline } from "./ProcessingTimeline";
@@ -486,101 +488,159 @@ export function DocumentsWorkspace() {
   ).length;
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Completed" value={completedCount} />
-        <MetricCard label="Processing" value={inFlightCount} />
-        <MetricCard label="Needs review" value={failedCount} />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <DocumentDropzone
-          activeFileName={activeDocument?.name}
-          isUploading={isUploading}
-          onFileAccepted={handleFileAccepted}
-          onPreviewFailure={handlePreviewFailure}
-          statusMessage={uploadMessage}
-        />
-        <UploadProgressCard activeDocument={activeDocument} />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-        <Card
-          eyebrow="Stages"
-          title="Processing timeline"
-          description="Track the current backend stage while uploads move toward a completed, retrievable document."
-        >
-          <ProcessingTimeline
-            currentStatus={activeDocument?.status ?? "uploaded"}
-            failedStage={activeUpload?.failedStage}
-          />
-        </Card>
-
-        <Card
-          eyebrow="Explorer"
-          title="Uploaded document index"
-          description="Filter completed and in-flight uploads, then open a structured detail view for chunk and vector metadata."
-        >
-          <div className="mb-5 grid gap-3 md:grid-cols-[1fr_220px]">
-            <Input
-              aria-label="Search documents"
-              label="Search documents"
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Filter by file name"
-              value={searchValue}
+    <WorkspaceLayout
+      center={
+        <div className="space-y-6">
+          <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <DocumentDropzone
+              activeFileName={activeDocument?.name}
+              isUploading={isUploading}
+              onFileAccepted={handleFileAccepted}
+              onPreviewFailure={handlePreviewFailure}
+              statusMessage={uploadMessage}
             />
-            <label className="flex flex-col gap-2 text-sm text-slate-300">
-              <span>Status filter</span>
-              <select
-                aria-label="Status filter"
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-ice-white outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/30"
-                onChange={(event) =>
-                  setStatusFilter(event.target.value as "all" | DocumentStatus)
-                }
-                value={statusFilter}
-              >
-                <option value="all">All statuses</option>
-                <option value="uploaded">Uploaded</option>
-                <option value="parsing">Parsing</option>
-                <option value="chunking">Chunking</option>
-                <option value="embedding">Embedding</option>
-                <option value="indexing">Indexing</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-              </select>
-            </label>
+            <UploadProgressCard activeDocument={activeDocument} />
           </div>
 
-          {listError ? <ErrorAlert message={listError} title="Load error" /> : null}
-          {uploadError ? <ErrorAlert message={uploadError} title="Upload error" /> : null}
-          {accessError ? <ErrorAlert message={accessError} title="Access error" /> : null}
+          <Card
+            eyebrow="Library"
+            title="Uploaded document index"
+            description="Filter completed and in-flight uploads, then open a structured detail view for chunk and vector metadata."
+          >
+            <div className="mb-5 grid gap-3 md:grid-cols-[1fr_220px]">
+              <Input
+                aria-label="Search documents"
+                label="Search documents"
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder="Filter by file name"
+                value={searchValue}
+              />
+              <label className="flex flex-col gap-2 text-sm text-slate-300">
+                <span>Status filter</span>
+                <select
+                  aria-label="Status filter"
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-ice-white outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/30"
+                  onChange={(event) =>
+                    setStatusFilter(event.target.value as "all" | DocumentStatus)
+                  }
+                  value={statusFilter}
+                >
+                  <option value="all">All statuses</option>
+                  <option value="uploaded">Uploaded</option>
+                  <option value="parsing">Parsing</option>
+                  <option value="chunking">Chunking</option>
+                  <option value="embedding">Embedding</option>
+                  <option value="indexing">Indexing</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </label>
+            </div>
 
-          {isLoadingDocuments ? (
-            <p className="text-sm text-slate-400">Loading your uploaded documents...</p>
-          ) : visibleDocuments.length === 0 ? (
-            <EmptyState
-              description="Upload a file, or adjust the current filters to reveal more document records."
-              title="No matching documents"
+            {listError ? <ErrorAlert message={listError} title="Load error" /> : null}
+            {uploadError ? <ErrorAlert message={uploadError} title="Upload error" /> : null}
+            {accessError ? <ErrorAlert message={accessError} title="Access error" /> : null}
+
+            {isLoadingDocuments ? (
+              <p className="text-sm text-slate-400">Loading your uploaded documents...</p>
+            ) : visibleDocuments.length === 0 ? (
+              <EmptyState
+                description="Upload a file, or adjust the current filters to reveal more document records."
+                title="No matching documents"
+              />
+            ) : (
+              <DocumentTable
+                documents={visibleDocuments}
+                onRequestAccessLink={handleRequestAccessLink}
+                requestingAccessForId={requestingAccessForId}
+              />
+            )}
+          </Card>
+        </div>
+      }
+      centerTitle="Document library"
+      leftCollapsedSummary={
+        <>
+          <CollapsedRailBadge icon="documents" label="Documents" />
+          <span className="font-mono text-xs text-slate-400">{documents.length}</span>
+        </>
+      }
+      leftContent={
+        <div className="space-y-4">
+          <Card
+            eyebrow="Workspace"
+            title="Library snapshot"
+            description="Track how many documents are ready, in flight, or need another pass."
+          >
+            <div className="space-y-3">
+              <MetricCard label="Completed" value={completedCount} />
+              <MetricCard label="Processing" value={inFlightCount} />
+              <MetricCard label="Needs review" value={failedCount} />
+            </div>
+          </Card>
+          <Card
+            eyebrow="Support"
+            title="Parser baseline"
+            description="The truthful MVP upload path remains TXT and Markdown first, with PDF and DOCX kept visible as scaffolded formats."
+          >
+            <div className="space-y-2 text-sm text-slate-300">
+              <p>Primary support: TXT, Markdown</p>
+              <p>Scaffolded UI formats: PDF, DOCX</p>
+            </div>
+          </Card>
+        </div>
+      }
+      leftLabel="documents"
+      rightCollapsedSummary={
+        <>
+          <CollapsedRailBadge icon="sparkles" label="Pipeline" />
+          <span className="font-mono text-xs text-slate-400">
+            {activeDocument ? activeDocument.processedChunks : 0}
+          </span>
+        </>
+      }
+      rightContent={
+        <div className="space-y-4">
+          <Card
+            eyebrow="Stages"
+            title="Processing timeline"
+            description="Track the current backend stage while uploads move toward a completed, retrievable document."
+          >
+            <ProcessingTimeline
+              currentStatus={activeDocument?.status ?? "uploaded"}
+              failedStage={activeUpload?.failedStage}
             />
-          ) : (
-            <DocumentTable
-              documents={visibleDocuments}
-              onRequestAccessLink={handleRequestAccessLink}
-              requestingAccessForId={requestingAccessForId}
-            />
-          )}
-        </Card>
-      </div>
-    </div>
+          </Card>
+        </div>
+      }
+      rightLabel="pipeline"
+    />
   );
 }
 
 function MetricCard(input: { label: string; value: number }) {
   return (
-    <Card className="p-5">
+    <div className="rounded-[1.25rem] border border-white/10 bg-black/20 p-4">
       <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{input.label}</p>
-      <p className="mt-3 font-heading text-3xl text-ice-white">{input.value}</p>
-    </Card>
+      <p className="mt-3 font-heading text-2xl text-ice-white">{input.value}</p>
+    </div>
+  );
+}
+
+function CollapsedRailBadge({
+  icon,
+  label
+}: {
+  icon: "documents" | "sparkles";
+  label: string;
+}) {
+  return (
+    <div
+      aria-label={label}
+      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-aqua"
+    >
+      <WorkspaceIcon name={icon} className="h-5 w-5" />
+    </div>
   );
 }
 

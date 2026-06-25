@@ -7,8 +7,9 @@ import { SessionList } from "./SessionList";
 import { SourcePanel } from "./SourcePanel";
 import { ToolActivityPanel } from "./ToolActivityPanel";
 import type { ChatModelOption, ChatSession, ThinkingLevel } from "./types";
-import { Card } from "@/components/ui/Card";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
+import { WorkspaceIcon } from "@/components/workspace/icons";
+import { WorkspaceLayout } from "@/components/workspace/WorkspaceLayout";
 
 type ChatApiResponse = {
   data?: ChatSession;
@@ -379,25 +380,9 @@ export function ChatLayout({
     null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
-      <SessionList
-        activeSessionId={activeSessionId}
-        onNewChat={handleNewChat}
-        onSelect={handleSessionSelect}
-        sessions={sessions.map((session) => ({
-          id: session.id,
-          title: session.title,
-          updatedAt: session.updatedAt
-        }))}
-      />
-
-      <Card
-        className="overflow-hidden"
-        eyebrow="Conversation"
-        title="Private document chat"
-        description="Ask questions about your indexed documents while keeping retrieval and tool activity visible alongside the active thread."
-      >
-        <div className="space-y-6">
+    <WorkspaceLayout
+      center={
+        <div className="flex min-h-full flex-col gap-6">
           <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm text-slate-300">
               <span className="block font-mono text-[11px] uppercase tracking-[0.28em] text-aqua">
@@ -469,18 +454,67 @@ export function ChatLayout({
           ) : null}
 
           <MessageList loading={false} messages={activeMessages} />
-          <ChatComposer
-            disabled={!hasCompletedDocuments}
-            isLoading={loading}
-            onSubmit={handleSubmit}
-          />
+          <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+            <ChatComposer
+              disabled={!hasCompletedDocuments}
+              isLoading={loading}
+              onSubmit={handleSubmit}
+            />
+          </div>
         </div>
-      </Card>
+      }
+      centerTitle="Private knowledge chat"
+      leftCollapsedSummary={
+        <>
+          <CollapsedRailBadge icon="messages" label="Chats" />
+          <span className="font-mono text-xs text-slate-400">{sessions.length}</span>
+        </>
+      }
+      leftContent={
+        <SessionList
+          activeSessionId={activeSessionId}
+          onNewChat={handleNewChat}
+          onSelect={handleSessionSelect}
+          sessions={sessions.map((session) => ({
+            id: session.id,
+            title: session.title,
+            updatedAt: session.updatedAt
+          }))}
+        />
+      }
+      leftLabel="sessions"
+      rightCollapsedSummary={
+        <>
+          <CollapsedRailBadge icon="sparkles" label="Context" />
+          <span className="font-mono text-xs text-slate-400">
+            {activeMetadata.sources.length + activeMetadata.toolActivity.length}
+          </span>
+        </>
+      }
+      rightContent={
+        <div className="space-y-4">
+          <SourcePanel sources={activeMetadata.sources as SourceSummary[]} />
+          <ToolActivityPanel items={activeMetadata.toolActivity} loading={loading} />
+        </div>
+      }
+      rightLabel="context"
+    />
+  );
+}
 
-      <div className="space-y-6">
-        <SourcePanel sources={activeMetadata.sources as SourceSummary[]} />
-        <ToolActivityPanel items={activeMetadata.toolActivity} loading={loading} />
-      </div>
+function CollapsedRailBadge({
+  icon,
+  label
+}: {
+  icon: "messages" | "sparkles";
+  label: string;
+}) {
+  return (
+    <div
+      aria-label={label}
+      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-aqua"
+    >
+      <WorkspaceIcon name={icon} className="h-5 w-5" />
     </div>
   );
 }

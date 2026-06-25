@@ -1341,7 +1341,7 @@ Acceptance criteria:
 
 ### TASK-049: Add shared workspace split-layout primitives and icon system
 
-Status: not_started
+Status: done
 
 Objective: Introduce reusable page-level left/right collapsible rails, mobile drawer behavior, scroll-safe center panels, and one standard icon library for icon-first controls.
 

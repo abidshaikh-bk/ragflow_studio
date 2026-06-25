@@ -3032,3 +3032,70 @@ npm run build
 
 ### Follow-up
 - No follow-up required for the current pending task list.
+
+---
+
+## TASK-049: Add shared workspace split-layout primitives and icon system
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-049-workspace-split-layout
+Started: 2026-06-25
+Completed: 2026-06-25
+Commit Hash:
+
+### Objective
+Introduce reusable workspace split-layout primitives, collapsible rails, and a shared icon system for the refreshed chat and documents shells.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/app/(app)/chat/page.tsx
+- src/app/(app)/documents/page.tsx
+- src/components/chat/ChatLayout.tsx
+- src/components/chat/SessionList.tsx
+- src/components/documents/DocumentDropzone.tsx
+- src/components/documents/DocumentsWorkspace.tsx
+- src/components/workspace/WorkspaceLayout.tsx
+- src/components/workspace/icons.tsx
+- src/tests/chat-layout.test.tsx
+- src/tests/documents-page.test.tsx
+- src/tests/e2e/auth.spec.ts
+- src/tests/page-scaffolds.test.tsx
+- src/tests/workspace-layout.test.tsx
+
+### Implementation Notes
+- Started from the completed `TASK-048` baseline on branch `task/TASK-049-workspace-split-layout`.
+- Added a reusable split-workspace shell with collapsible desktop rails, mobile drawer toggles, and a scroll-safe center panel so `/chat` and `/documents` share the same product-grade structure.
+- Introduced a small shared workspace icon set and used it in rail toggles, new-chat controls, and the document upload surface to reduce repeated text-heavy controls.
+- Removed the standalone hero headers from the chat and documents routes and moved those pages onto the shared workspace foundation without touching the global top navigation.
+
+### Tests Added
+- `src/tests/workspace-layout.test.tsx`
+- Expanded `src/tests/chat-layout.test.tsx`
+- Expanded `src/tests/documents-page.test.tsx`
+- Updated `src/tests/page-scaffolds.test.tsx`
+- Updated `src/tests/e2e/auth.spec.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Move on to `TASK-050` to upgrade chat citations and reasoning events so the new right rail can evolve beyond string-only metadata.

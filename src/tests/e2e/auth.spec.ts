@@ -8,7 +8,7 @@ test("login redirects to chat and unlocks protected settings", async ({ page }) 
 
   await expect(page).toHaveURL(/\/login$/);
   await loginThroughUi(page);
-  await expect(page.getByText("Agentic RAG workspace")).toBeVisible();
+  await expect(page.getByText("Private knowledge chat")).toBeVisible();
 
   await page.goto("/settings");
 
