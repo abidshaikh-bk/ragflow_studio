@@ -1186,7 +1186,7 @@ Acceptance criteria:
 
 ### TASK-043: Build LangSmith-aware user history page and history APIs
 
-Status: validated
+Status: done
 
 Objective: Add a user-facing history surface backed by application audit data and LangSmith-linked run metadata.
 

@@ -2619,12 +2619,13 @@ npm run build
 
 ## TASK-043: Build LangSmith-aware user history page and history APIs
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-043-history-page
+Commit Hash: eb441d0
 Started: 2026-06-25
-Completed:
+Completed: 2026-06-25
 
 ### Objective
 Add a user-facing history surface backed by application audit data and LangSmith-linked run metadata.
@@ -2655,6 +2656,7 @@ Add a user-facing history surface backed by application audit data and LangSmith
 - Added a user-scoped history aggregation service over `chat_sessions`, `chat_messages`, `agent_tool_calls`, and `mcp_tool_invocations`, then exposed it through `GET /api/history` and `GET /api/history/:sessionId`.
 - Replaced the `/history` placeholder with a filterable audit workspace that loads list/detail data, surfaces built-in and runtime MCP tool activity, and keeps LangSmith run ids as safe browser-visible metadata only.
 - Updated the product, UI, security, testing, and environment docs to reflect the new history APIs and page behavior.
+- Task commit created: `eb441d0`
 
 ### Tests Added
 - `src/tests/history-route.test.ts`
