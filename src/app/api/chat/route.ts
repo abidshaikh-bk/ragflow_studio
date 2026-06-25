@@ -1,4 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import type {
+  ChatCitation,
+  ChatReasoningStep
+} from "@/components/chat/types";
 import { chatMessagePayloadSchema } from "@/lib/validations/chat";
 import { resolveChatModelSelection } from "@/server/chat/models";
 import {
@@ -16,10 +20,15 @@ import { appEventLogger } from "@/server/logging/events";
 type ChatStreamMetadata = {
   langsmithRunId: string | null;
   metadata: {
-    sources?: string[];
+    citations?: ChatCitation[];
+    reasoning?: ChatReasoningStep[];
     toolActivity?: string[];
   };
   sessionId: string;
+};
+
+type ChatStreamReasoning = {
+  step: ChatReasoningStep;
 };
 
 type ChatStreamComplete = {
@@ -75,6 +84,16 @@ function createStreamingChatResponse(input: {
   return new Response(
     new ReadableStream({
       async start(controller) {
+        for (const step of input.agentResult.metadata.reasoning ?? []) {
+          controller.enqueue(
+            encoder.encode(
+              createSseEvent("reasoning", {
+                step
+              } satisfies ChatStreamReasoning)
+            )
+          );
+        }
+
         controller.enqueue(
           encoder.encode(
             createSseEvent("metadata", {
@@ -247,7 +266,8 @@ export async function POST(request: NextRequest) {
           event: "chat.request.completed",
           langsmithRunId: agentResult.langsmithRunId,
           metadata: {
-            sourceCount: agentResult.metadata.sources?.length ?? 0,
+            reasoningCount: agentResult.metadata.reasoning?.length ?? 0,
+            sourceCount: agentResult.metadata.citations?.length ?? 0,
             toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
           },
           sessionId: preparedTurn.sessionId,

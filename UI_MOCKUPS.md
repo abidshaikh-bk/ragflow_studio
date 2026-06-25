@@ -187,6 +187,7 @@ A split-pane agent chat UI. Left side has sessions and context status. Main area
 - Assistant loading/streaming.
 - Tool activity visible.
 - Retrieval sources visible.
+- Reasoning updates visible as a normalized timeline.
 - Chat error state.
 - No indexed documents warning.
 - Left and right rails can collapse on desktop and open as drawers on mobile.
@@ -197,6 +198,7 @@ A split-pane agent chat UI. Left side has sessions and context status. Main area
 - `SessionList`
 - `MessageBubble`
 - `ChatComposer`
+- `ReasoningPanel`
 - `ToolActivityPanel`
 - `SourcePanel`
 - `EmptyChatState`
@@ -214,6 +216,7 @@ Refinement note:
 - The index view now includes summary counters, a file-name filter, a status filter, and row-level `View` / `Download` actions for private files.
 - Each document row links into a dedicated explorer page that shows metadata, chunk previews, and vector details.
 - The workspace now uses the shared split layout with a left status rail, a center working area, and a right pipeline rail instead of a top hero card.
+- Chunk preview rows expose stable `#chunk-{n}` anchors so chat citations can deep-link into the related document evidence.
 
 ## Wireframe
 

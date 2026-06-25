@@ -3,10 +3,17 @@
 import { startTransition, useEffect, useState } from "react";
 import { ChatComposer } from "./ChatComposer";
 import { MessageList } from "./MessageList";
+import { ReasoningPanel } from "./ReasoningPanel";
 import { SessionList } from "./SessionList";
 import { SourcePanel } from "./SourcePanel";
 import { ToolActivityPanel } from "./ToolActivityPanel";
-import type { ChatModelOption, ChatSession, ThinkingLevel } from "./types";
+import type {
+  ChatCitation,
+  ChatModelOption,
+  ChatReasoningStep,
+  ChatSession,
+  ThinkingLevel
+} from "./types";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { WorkspaceIcon } from "@/components/workspace/icons";
 import { WorkspaceLayout } from "@/components/workspace/WorkspaceLayout";
@@ -26,11 +33,6 @@ type ChatModelsApiResponse = {
   error?: string;
 };
 
-type SourceSummary = {
-  detail: string;
-  title: string;
-};
-
 const fallbackThinkingLevel: ThinkingLevel = "medium";
 
 function getAssistantMessageMetadata(messages: ChatSession["messages"]) {
@@ -39,15 +41,9 @@ function getAssistantMessageMetadata(messages: ChatSession["messages"]) {
     .find((message) => message.role === "assistant");
 
   return {
+    citations: latestAssistantMessage?.metadata?.citations ?? [],
     langsmithRunId: latestAssistantMessage?.metadata?.langsmithRunId ?? null,
-    sources:
-      latestAssistantMessage?.metadata?.sources?.map((source, index) => ({
-        detail:
-          index === 0
-            ? "Latest retrieval source shown for this answer."
-            : "Additional supporting source returned with the assistant response.",
-        title: source
-      })) ?? [],
+    reasoning: latestAssistantMessage?.metadata?.reasoning ?? [],
     toolActivity: latestAssistantMessage?.metadata?.toolActivity ?? []
   };
 }
@@ -167,7 +163,8 @@ export function ChatLayout({
                 content: "",
                 id: optimisticAssistantId,
                 metadata: {
-                  sources: [],
+                  citations: [],
+                  reasoning: [],
                   toolActivity: []
                 },
                 modelConfigId: selectedModelConfigId,
@@ -194,7 +191,8 @@ export function ChatLayout({
                 content: "",
                 id: optimisticAssistantId,
                 metadata: {
-                  sources: [],
+                  citations: [],
+                  reasoning: [],
                   toolActivity: []
                 },
                 modelConfigId: selectedModelConfigId,
@@ -258,7 +256,8 @@ export function ChatLayout({
             const payload = entry.data as {
               langsmithRunId: string | null;
               metadata: {
-                sources?: string[];
+                citations?: ChatCitation[];
+                reasoning?: ChatReasoningStep[];
                 toolActivity?: string[];
               };
             };
@@ -277,6 +276,32 @@ export function ChatLayout({
                               langsmithRunId: payload.langsmithRunId
                             }
                           : {})
+                      }
+                    }
+                  : currentMessage
+              )
+            }));
+          }
+
+          if (entry.event === "reasoning") {
+            const payload = entry.data as {
+              step: ChatReasoningStep;
+            };
+
+            updateSession(optimisticSessionId, (session) => ({
+              ...session,
+              messages: session.messages.map((currentMessage) =>
+                currentMessage.id === optimisticAssistantId
+                  ? {
+                      ...currentMessage,
+                      metadata: {
+                        ...(currentMessage.metadata ?? {}),
+                        reasoning: [
+                          ...((currentMessage.metadata?.reasoning ?? []).filter(
+                            (step) => step.id !== payload.step.id
+                          )),
+                          payload.step
+                        ]
                       }
                     }
                   : currentMessage
@@ -429,6 +454,7 @@ export function ChatLayout({
               Model: {selectedModel ? `${selectedModel.label}` : "Loading options"}
             </span>
             <span>Thinking: {selectedThinkingLevel}</span>
+            <span>Citations: {activeMetadata.citations.length}</span>
             {activeMetadata.langsmithRunId ? (
               <span>Trace: {activeMetadata.langsmithRunId}</span>
             ) : null}
@@ -487,13 +513,16 @@ export function ChatLayout({
         <>
           <CollapsedRailBadge icon="sparkles" label="Context" />
           <span className="font-mono text-xs text-slate-400">
-            {activeMetadata.sources.length + activeMetadata.toolActivity.length}
+            {activeMetadata.citations.length +
+              activeMetadata.reasoning.length +
+              activeMetadata.toolActivity.length}
           </span>
         </>
       }
       rightContent={
         <div className="space-y-4">
-          <SourcePanel sources={activeMetadata.sources as SourceSummary[]} />
+          <ReasoningPanel reasoning={activeMetadata.reasoning} />
+          <SourcePanel citations={activeMetadata.citations} />
           <ToolActivityPanel items={activeMetadata.toolActivity} loading={loading} />
         </div>
       }

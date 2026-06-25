@@ -1,6 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { buildDocumentChunkHref } from "@/components/chat/types";
 import { HistoryPageClient } from "@/components/history/HistoryPageClient";
 
 describe("history page", () => {
@@ -98,7 +99,18 @@ describe("history page", () => {
                   id: "message-2",
                   langsmithRunId: "trace-123",
                   metadata: {
-                    sources: ["employee-handbook.md chunk 4"]
+                    citations: [
+                      {
+                        chunkIndex: 3,
+                        contentPreview: "Refunds require manager approval.",
+                        documentId: "doc-1",
+                        fileName: "employee-handbook.md",
+                        linkTarget: buildDocumentChunkHref("doc-1", 3),
+                        retrievalScore: 0.9,
+                        sourceType: "document",
+                        title: "Chunk 4"
+                      }
+                    ]
                   },
                   role: "assistant"
                 }

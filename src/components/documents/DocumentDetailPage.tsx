@@ -41,9 +41,31 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const [document, setDocument] = useState<DocumentDetailRecord | null>(null);
   const [chunks, setChunks] = useState<DocumentChunkRecord[]>([]);
   const [embeddings, setEmbeddings] = useState<DocumentEmbeddingsRecord | null>(null);
+  const [highlightedChunkIndex, setHighlightedChunkIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [requestingAction, setRequestingAction] = useState<"download" | "view" | null>(null);
+
+  useEffect(() => {
+    function syncHighlightedChunkFromHash() {
+      const match = window.location.hash.match(/^#chunk-(\d+)$/i);
+
+      if (!match) {
+        setHighlightedChunkIndex(null);
+        return;
+      }
+
+      const chunkNumber = Number.parseInt(match[1] ?? "", 10);
+      setHighlightedChunkIndex(Number.isNaN(chunkNumber) ? null : chunkNumber - 1);
+    }
+
+    syncHighlightedChunkFromHash();
+    window.addEventListener("hashchange", syncHighlightedChunkFromHash);
+
+    return () => {
+      window.removeEventListener("hashchange", syncHighlightedChunkFromHash);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,7 +257,10 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
             title="No chunk previews yet"
           />
         ) : (
-          <DocumentChunksTable chunks={chunks} />
+          <DocumentChunksTable
+            chunks={chunks}
+            highlightedChunkIndex={highlightedChunkIndex}
+          />
         )}
       </Card>
     </div>

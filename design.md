@@ -78,6 +78,8 @@ UI:
 - Send button
 - Streaming/loading indicator
 - Right context rail for tool activity and source metadata
+- Structured citations that can open specific document chunks
+- Safe reasoning timeline events derived from routing, tool use, and answer composition
 
 ### `/documents`
 
@@ -306,6 +308,10 @@ metadata jsonb
 langsmith_run_id text
 created_at timestamptz default now()
 ```
+
+Implementation note:
+
+- Assistant metadata now stores structured `citations`, normalized `reasoning`, and `toolActivity` summaries instead of string-only source lists.
 
 Allowed roles:
 

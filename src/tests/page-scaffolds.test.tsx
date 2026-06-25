@@ -7,6 +7,7 @@ import DocumentsPage from "@/app/(app)/documents/page";
 import SettingsPage from "@/app/(app)/settings/page";
 import AdminPage from "@/app/(app)/admin/page";
 import { ChatComposer } from "@/components/chat/ChatComposer";
+import { buildDocumentChunkHref } from "@/components/chat/types";
 
 const defaultModelId = "11111111-1111-4111-8111-111111111111";
 
@@ -45,7 +46,18 @@ vi.mock("@/server/chat/persistence", () => ({
             "The onboarding policy requires manager approval before workspace access is granted.",
           id: "message-2",
           metadata: {
-            sources: ["employee-handbook.md chunk 4"],
+            citations: [
+              {
+                chunkIndex: 3,
+                contentPreview: "Manager approval is required before workspace access.",
+                documentId: "doc-1",
+                fileName: "employee-handbook.md",
+                linkTarget: buildDocumentChunkHref("doc-1", 3),
+                retrievalScore: 0.91,
+                sourceType: "document",
+                title: "Chunk 4"
+              }
+            ],
             toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
           },
           role: "assistant"

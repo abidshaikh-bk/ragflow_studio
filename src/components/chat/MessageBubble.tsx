@@ -1,15 +1,16 @@
 import { Badge } from "@/components/ui/Badge";
+import type { ChatCitation } from "./types";
 
 type MessageBubbleProps = {
   role: "user" | "assistant" | "system" | "tool";
   content: string;
-  sources?: string[];
+  citations?: ChatCitation[];
 };
 
 export function MessageBubble({
+  citations,
   content,
-  role,
-  sources
+  role
 }: MessageBubbleProps) {
   const isUser = role === "user";
 
@@ -25,10 +26,14 @@ export function MessageBubble({
         <Badge tone={isUser ? "info" : "default"}>{role}</Badge>
       </div>
       <p className="mt-3 text-sm leading-7 text-slate-100">{content}</p>
-      {sources?.length ? (
+      {citations?.length ? (
         <div className="mt-4 flex flex-wrap gap-2">
-          {sources.map((source) => (
-            <Badge key={source}>{source}</Badge>
+          {citations.map((citation, index) => (
+            <Badge key={`${citation.fileName}-${citation.chunkIndex ?? index}`}>
+              {citation.sourceType === "document" && citation.chunkIndex != null
+                ? `${citation.fileName} · chunk ${citation.chunkIndex + 1}`
+                : citation.fileName}
+            </Badge>
           ))}
         </div>
       ) : null}

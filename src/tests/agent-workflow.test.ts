@@ -75,8 +75,14 @@ describe("chat agent workflow", () => {
     );
     expect(dateTimeTool).not.toHaveBeenCalled();
     expect(webSearchTool).not.toHaveBeenCalled();
-    expect(result.metadata.sources).toEqual([
-      "runbook.md chunk 2: The onboarding runbook requires manager approval."
+    expect(result.metadata.citations).toEqual([
+      expect.objectContaining({
+        chunkIndex: 2,
+        documentId: "doc-1",
+        fileName: "runbook.md",
+        linkTarget: "/documents/doc-1#chunk-3",
+        sourceType: "document"
+      })
     ]);
     expect(result.langsmithRunId).toBe("trace-123");
   });
@@ -123,8 +129,12 @@ describe("chat agent workflow", () => {
         userId: "user-123"
       })
     );
-    expect(result.metadata.sources).toEqual([
-      "Current date/time (UTC) - 2026-06-21T12:34:56.000Z"
+    expect(result.metadata.citations).toEqual([
+      expect.objectContaining({
+        fileName: "Current date/time (UTC)",
+        sourceType: "date_time",
+        title: "2026-06-21T12:34:56.000Z"
+      })
     ]);
   });
 
@@ -179,8 +189,12 @@ describe("chat agent workflow", () => {
         userId: "user-123"
       })
     );
-    expect(result.metadata.sources).toEqual([
-      "Latest AI update - https://example.com/latest-ai"
+    expect(result.metadata.citations).toEqual([
+      expect.objectContaining({
+        fileName: "Latest AI update",
+        linkTarget: "https://example.com/latest-ai",
+        sourceType: "web"
+      })
     ]);
     expect(result.metadata.toolActivity).toEqual([
       "tavily.search -> returned 1 web result"
@@ -231,8 +245,12 @@ describe("chat agent workflow", () => {
     expect(runtimeMcpTool.invoke).toHaveBeenCalledWith({
       query: "What is the weather in Pune?"
     });
-    expect(result.metadata.sources).toEqual([
-      "Runtime MCP (weather_lookup) - Weather is 31C with light rain."
+    expect(result.metadata.citations).toEqual([
+      expect.objectContaining({
+        fileName: "weather_lookup",
+        sourceType: "runtime_mcp",
+        title: "Runtime MCP"
+      })
     ]);
     expect(result.metadata.toolActivity).toContain(
       "weather_lookup -> returned runtime MCP output"

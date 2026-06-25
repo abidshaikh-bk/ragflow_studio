@@ -14,6 +14,8 @@ describe("DocumentDetailPage", () => {
   });
 
   it("renders completed document metadata, chunk previews, and embedding details", async () => {
+    window.history.replaceState({}, "", "#chunk-1");
+
     vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
       if (input === "/api/documents/doc-123") {
         return jsonResponse({
@@ -102,6 +104,7 @@ describe("DocumentDetailPage", () => {
     expect(screen.getAllByText(/user:user-123/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/refunds need approval/i)).toBeInTheDocument();
     expect(screen.getByText(/text-embedding-3-small/i)).toBeInTheDocument();
+    expect(document.getElementById("chunk-1")).toHaveClass("bg-aqua/10");
 
     fireEvent.click(screen.getByRole("button", { name: /view file/i }));
 

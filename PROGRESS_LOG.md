@@ -3043,7 +3043,7 @@ Owner Agent: Codex
 Git Branch: task/TASK-049-workspace-split-layout
 Started: 2026-06-25
 Completed: 2026-06-25
-Commit Hash:
+Commit Hash: e4538cf
 
 ### Objective
 Introduce reusable workspace split-layout primitives, collapsible rails, and a shared icon system for the refreshed chat and documents shells.
@@ -3099,3 +3099,88 @@ npm run build
 
 ### Follow-up
 - Move on to `TASK-050` to upgrade chat citations and reasoning events so the new right rail can evolve beyond string-only metadata.
+
+---
+
+## TASK-050: Extend chat citations and reasoning stream contracts
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-050-chat-citations-reasoning
+Started: 2026-06-25
+Completed: 2026-06-25
+Commit Hash:
+
+### Objective
+Upgrade chat metadata, streaming, and document chunk linking so answers expose structured citations and safe reasoning events.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/app/api/chat/route.ts
+- src/components/chat/ChatLayout.tsx
+- src/components/chat/MessageBubble.tsx
+- src/components/chat/MessageList.tsx
+- src/components/chat/ReasoningPanel.tsx
+- src/components/chat/SourcePanel.tsx
+- src/components/chat/types.ts
+- src/components/documents/DocumentChunksTable.tsx
+- src/components/documents/DocumentDetailPage.tsx
+- src/components/history/RunHistoryDetail.tsx
+- src/server/agent/workflow.ts
+- src/server/chat/persistence.ts
+- src/server/e2e/chat-store.ts
+- src/server/history/service.ts
+- src/server/tools/vector-search.ts
+- src/tests/agent-workflow.test.ts
+- src/tests/chat-layout.test.tsx
+- src/tests/chat-route.test.ts
+- src/tests/chat-stream-route.test.ts
+- src/tests/document-detail-page.test.tsx
+- src/tests/e2e-chat-store.test.ts
+- src/tests/e2e/chat-rag.spec.ts
+- src/tests/e2e/tool-routing.spec.ts
+- src/tests/history-page.test.tsx
+- src/tests/page-scaffolds.test.tsx
+
+### Implementation Notes
+- Started from the completed `TASK-049` baseline on branch `task/TASK-050-chat-citations-reasoning`.
+- Replaced string-only assistant sources with structured citation objects that carry document ids, chunk indexes, previews, retrieval scores, and deep links into `/documents/:id#chunk-{n}`.
+- Extended `/api/chat` SSE output with normalized `reasoning` events and kept persisted assistant metadata limited to safe summaries rather than raw provider chain-of-thought.
+- Updated the document detail explorer to expose stable chunk anchors and highlight a targeted chunk when a citation link opens the page with a hash.
+
+### Tests Added
+- Added `src/components/chat/ReasoningPanel.tsx`
+- Expanded `src/tests/agent-workflow.test.ts`
+- Expanded `src/tests/chat-layout.test.tsx`
+- Expanded `src/tests/chat-route.test.ts`
+- Expanded `src/tests/chat-stream-route.test.ts`
+- Expanded `src/tests/document-detail-page.test.tsx`
+- Expanded `src/tests/e2e-chat-store.test.ts`
+- Updated `src/tests/e2e/chat-rag.spec.ts`
+- Updated `src/tests/e2e/tool-routing.spec.ts`
+- Updated `src/tests/history-page.test.tsx`
+- Updated `src/tests/page-scaffolds.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Move on to `TASK-051` to rebuild the chat workspace around the new citations and reasoning timeline without changing the validated backend contracts again.

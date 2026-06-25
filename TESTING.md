@@ -171,6 +171,7 @@ Current recorded status:
 - `src/tests/admin-mcp-routes.test.ts`, `src/tests/mcp-tools-settings.test.tsx`, and `src/tests/mcp-backend-adapter.test.ts` validate admin-only global MCP APIs, scoped MCP UI endpoints, and safe runtime merging of enabled global plus user MCP configs.
 - `src/tests/logout-route.test.ts`, `src/tests/user-menu.test.tsx`, `src/tests/chat-stream-route.test.ts`, `src/tests/history-page.test.tsx`, and `src/tests/document-detail-page.test.tsx` provide the refined IA smoke evidence later summarized in `SMOKE_CHECKLIST.md`.
 - `src/tests/workspace-layout.test.tsx`, `src/tests/chat-layout.test.tsx`, `src/tests/documents-page.test.tsx`, and `src/tests/page-scaffolds.test.tsx` validate the shared split-workspace rails, mobile drawers, and the updated chat/documents shells.
+- `src/tests/chat-stream-route.test.ts`, `src/tests/chat-layout.test.tsx`, `src/tests/agent-workflow.test.ts`, `src/tests/document-detail-page.test.tsx`, and the Playwright chat specs validate streamed reasoning events, structured citations, and chunk-anchor navigation.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.

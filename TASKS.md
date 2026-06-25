@@ -1370,7 +1370,7 @@ Acceptance criteria:
 
 ### TASK-050: Extend chat citations and reasoning stream contracts
 
-Status: not_started
+Status: done
 
 Objective: Make chat answers carry deep-linkable source metadata and a hybrid reasoning stream.
 

@@ -6,6 +6,7 @@ import type {
   ChatSession,
   ThinkingLevel
 } from "@/components/chat/types";
+import { normalizeChatMessageMetadata } from "@/components/chat/types";
 import { parseChatSessionParams } from "@/lib/validations/chat";
 
 type ChatSessionRow = {
@@ -195,7 +196,7 @@ export async function persistAssistantReply({
     .insert({
       content: assistant.content,
       langsmith_run_id: assistant.langsmithRunId ?? null,
-      metadata: assistant.metadata ?? {},
+      metadata: normalizePersistedAssistantMetadata(assistant.metadata),
       model_config_id: modelConfigId,
       model_snapshot: modelSnapshot,
       role: "assistant",
@@ -305,7 +306,7 @@ function mapSessionsWithMessages(
 
   for (const message of messages) {
     const list = messagesBySessionId.get(message.session_id) ?? [];
-    const metadata = message.metadata ?? {};
+    const metadata = normalizeChatMessageMetadata(message.metadata ?? undefined);
 
     list.push({
       content: message.content,
@@ -320,8 +321,9 @@ function mapSessionsWithMessages(
             modelSnapshot: message.model_snapshot
           }
         : {}),
-      ...((metadata.sources?.length ||
-        metadata.toolActivity?.length ||
+      ...((metadata?.citations?.length ||
+        metadata?.reasoning?.length ||
+        metadata?.toolActivity?.length ||
         message.langsmith_run_id) && {
         metadata: {
           ...metadata,
@@ -350,6 +352,12 @@ function mapSessionsWithMessages(
     title: session.title,
     updatedAt: formatSessionTimestamp(session.updated_at)
   }));
+}
+
+export function normalizePersistedAssistantMetadata(
+  metadata?: ChatMessageMetadata
+): ChatMessageMetadata {
+  return normalizeChatMessageMetadata(metadata) ?? {};
 }
 
 function formatSessionTimestamp(value: string) {

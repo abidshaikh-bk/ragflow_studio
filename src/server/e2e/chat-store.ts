@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import type { ChatSession } from "@/components/chat/types";
+import {
+  buildDocumentChunkHref,
+  type ChatMessageMetadata,
+  type ChatSession
+} from "@/components/chat/types";
 
 type E2EChatState = {
   sessionsByStateId: Record<string, ChatSession[]>;
@@ -11,8 +15,26 @@ const state: E2EChatState = {
   sessionsByStateId: {}
 };
 
-const FIXTURE_DOCUMENT = "team-facts.md chunk 1";
-const FIXTURE_WEB_SOURCE = "Latest AI update - https://example.com/latest-ai";
+const FIXTURE_DOCUMENT = {
+  chunkIndex: 0,
+  contentPreview: "The launch city is Pune.",
+  documentId: "fixture-doc-1",
+  fileName: "team-facts.md",
+  linkTarget: buildDocumentChunkHref("fixture-doc-1", 0),
+  retrievalScore: 0.92,
+  sourceType: "document" as const,
+  title: "Chunk 1"
+};
+const FIXTURE_WEB_SOURCE = {
+  chunkIndex: null,
+  contentPreview: "The latest AI update says retrieval systems remain a major focus.",
+  documentId: null,
+  fileName: "Latest AI update",
+  linkTarget: "https://example.com/latest-ai",
+  retrievalScore: 0.88,
+  sourceType: "web" as const,
+  title: "Result 1"
+};
 
 export function resetE2EChatState(stateId = "default") {
   state.sessionsByStateId[stateId] = [];
@@ -108,22 +130,58 @@ function answerQuestion(message: string, route: E2ERoute) {
   return "According to team-facts.md, the launch city is Pune.";
 }
 
-function buildMetadata(route: E2ERoute) {
+function buildMetadata(route: E2ERoute): ChatMessageMetadata {
   if (route === "date") {
     return {
+      citations: [
+        {
+          chunkIndex: null,
+          contentPreview: "June 23, 2026 at 12:00 PM UTC",
+          documentId: null,
+          fileName: "Current date/time (UTC)",
+          linkTarget: null,
+          retrievalScore: null,
+          sourceType: "date_time",
+          title: "2026-06-23T12:00:00.000Z"
+        }
+      ],
+      reasoning: [
+        {
+          detail: "Resolved the current UTC time context for the answer.",
+          id: "date-time",
+          label: "Resolve time",
+          status: "completed"
+        }
+      ],
       toolActivity: ["date.now -> resolved UTC time context"]
     };
   }
 
   if (route === "web") {
     return {
-      sources: [FIXTURE_WEB_SOURCE],
+      citations: [FIXTURE_WEB_SOURCE],
+      reasoning: [
+        {
+          detail: "Collected one web result for the answer.",
+          id: "web-search",
+          label: "Search web",
+          status: "completed"
+        }
+      ],
       toolActivity: ["tavily.search -> returned 1 web result"]
     };
   }
 
   return {
-    sources: [FIXTURE_DOCUMENT],
+    citations: [FIXTURE_DOCUMENT],
+    reasoning: [
+      {
+        detail: "Retrieved one document chunk from the authenticated user's namespace.",
+        id: "vector-search",
+        label: "Retrieve",
+        status: "completed"
+      }
+    ],
     toolActivity: ["pinecone.query -> returned 1 document chunk"]
   };
 }
@@ -159,8 +217,11 @@ function cloneSession(session: ChatSession): ChatSession {
         ? {
             metadata: {
               ...message.metadata,
-              ...(message.metadata.sources
-                ? { sources: [...message.metadata.sources] }
+              ...(message.metadata.citations
+                ? { citations: [...message.metadata.citations] }
+                : {}),
+              ...(message.metadata.reasoning
+                ? { reasoning: [...message.metadata.reasoning] }
                 : {}),
               ...(message.metadata.toolActivity
                 ? { toolActivity: [...message.metadata.toolActivity] }

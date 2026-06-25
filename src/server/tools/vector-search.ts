@@ -18,6 +18,7 @@ export type VectorSearchMatch = {
   documentId: string;
   fileName: string;
   id: string;
+  pageNumber?: number | null;
   score: number | null;
 };
 

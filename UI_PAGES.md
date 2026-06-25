@@ -119,7 +119,8 @@ Phase 1A scaffold note:
 - Render the page inside the shared split-workspace primitive without a standalone hero header card.
 - Render user and assistant messages.
 - Show tool activity returned in metadata.
-- Show source metadata returned in metadata.
+- Show structured citation metadata returned in assistant metadata.
+- Stream normalized `reasoning` events alongside metadata and content events.
 - Persist messages after refresh.
 
 Phase 1A scaffold note:
@@ -134,6 +135,8 @@ Phase 1A scaffold note:
 - Assistant message renders.
 - Tool activity panel renders when metadata exists.
 - Desktop rail collapse and mobile drawer controls remain accessible through the shared workspace layout.
+- Structured citations render as chunk-aware links.
+- Reasoning events accumulate safely in the right rail timeline.
 
 ---
 
@@ -177,6 +180,7 @@ TASK-009 implementation note:
 - Polling stops on terminal states.
 - Failed state displays error.
 - Desktop rail collapse and mobile drawer controls remain accessible through the shared workspace layout.
+- Document detail chunk rows expose stable anchors and highlight the requested chunk when a `#chunk-{n}` hash is present.
 
 ---
 

@@ -4,7 +4,13 @@ import type { StructuredToolInterface } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ChatMessageMetadata, ThinkingLevel } from "@/components/chat/types";
+import {
+  buildDocumentChunkHref,
+  type ChatCitation,
+  type ChatMessageMetadata,
+  type ChatReasoningStep,
+  type ThinkingLevel
+} from "@/components/chat/types";
 import type { SharedAssistantSettings } from "@/server/admin/settings";
 import {
   DEFAULT_SHARED_ASSISTANT_SETTINGS,
@@ -89,16 +95,20 @@ const SUPPORTED_CHAT_PROVIDERS = new Set(["openai", "gemini"]);
 
 const AgentState = Annotation.Root({
   answer: Annotation<string>,
+  citations: Annotation<ChatCitation[]>({
+    default: () => [],
+    reducer: (_, right) => right
+  }),
   history: Annotation<AgentHistoryMessage[]>({
     default: () => [],
     reducer: (_, right) => right
   }),
   message: Annotation<string>,
-  route: Annotation<AgentRoute>,
-  sources: Annotation<string[]>({
+  reasoning: Annotation<ChatReasoningStep[]>({
     default: () => [],
-    reducer: (_, right) => right
+    reducer: (left, right) => [...left, ...right]
   }),
+  route: Annotation<AgentRoute>,
   timeContext: Annotation<{
     friendlyDateTime: string;
     isoDateTime: string;
@@ -150,9 +160,14 @@ export async function invokeChatAgent(
     content: traced.result.answer,
     langsmithRunId: traced.runId,
     metadata: {
-      ...(traced.result.sources.length
+      ...(traced.result.citations.length
         ? {
-            sources: traced.result.sources
+            citations: traced.result.citations
+          }
+        : {}),
+      ...(traced.result.reasoning.length
+        ? {
+            reasoning: traced.result.reasoning
           }
         : {}),
       ...(traced.result.toolActivity.length
@@ -181,12 +196,33 @@ function createChatAgentGraph(
   };
 
   return new StateGraph(AgentState)
-    .addNode("routeQuestion", async (state) => ({
-      route: classifyRoute(state.message)
-    }))
+    .addNode("routeQuestion", async (state) => {
+      const route = classifyRoute(state.message);
+
+      return {
+        reasoning: [
+          {
+            detail: `Selected the ${route} route for this request.`,
+            id: `route-${route}`,
+            label: "Route",
+            status: "completed"
+          }
+        ],
+        route
+      };
+    })
     .addNode("runVectorSearch", async (state) => {
       if (!assistantSettings.toolPolicy.enableVectorSearch) {
         return {
+          citations: [],
+          reasoning: [
+            {
+              detail: "Skipped vector retrieval because the admin tool policy disabled it.",
+              id: "vector-disabled",
+              label: "Retrieve",
+              status: "completed"
+            }
+          ],
           toolActivity: ["pinecone.query -> disabled by admin tool policy"],
           vectorMatches: []
         };
@@ -224,6 +260,27 @@ function createChatAgentGraph(
       ).result;
 
       return {
+        citations: result.matches.map((match) => ({
+          chunkIndex: match.chunkIndex,
+          contentPreview: match.contentPreview,
+          documentId: match.documentId,
+          fileName: match.fileName,
+          linkTarget: buildDocumentChunkHref(match.documentId, match.chunkIndex),
+          pageNumber: match.pageNumber ?? null,
+          retrievalScore: match.score,
+          sourceType: "document",
+          title: `Chunk ${match.chunkIndex + 1}`
+        })),
+        reasoning: [
+          {
+            detail: `Retrieved ${result.matches.length} document chunk${
+              result.matches.length === 1 ? "" : "s"
+            } from the authenticated user's namespace.`,
+            id: "vector-search",
+            label: "Retrieve",
+            status: "completed"
+          }
+        ],
         toolActivity: [
           `pinecone.query -> returned ${result.matches.length} document chunk${
             result.matches.length === 1 ? "" : "s"
@@ -235,6 +292,15 @@ function createChatAgentGraph(
     .addNode("runDateTime", async () => {
       if (!assistantSettings.toolPolicy.enableDateTime) {
         return {
+          citations: [],
+          reasoning: [
+            {
+              detail: "Skipped the date/time helper because the admin tool policy disabled it.",
+              id: "date-disabled",
+              label: "Resolve time",
+              status: "completed"
+            }
+          ],
           timeContext: null,
           toolActivity: ["date.now -> disabled by admin tool policy"]
         };
@@ -267,6 +333,26 @@ function createChatAgentGraph(
       ).result;
 
       return {
+        citations: [
+          {
+            chunkIndex: null,
+            contentPreview: result.friendlyDateTime,
+            documentId: null,
+            fileName: `Current date/time (${result.timeZone})`,
+            linkTarget: null,
+            retrievalScore: null,
+            sourceType: "date_time",
+            title: result.isoDateTime
+          }
+        ],
+        reasoning: [
+          {
+            detail: `Resolved the current ${result.timeZone} time context for the answer.`,
+            id: "date-time",
+            label: "Resolve time",
+            status: "completed"
+          }
+        ],
         timeContext: result,
         toolActivity: [`date.now -> resolved ${result.timeZone} time context`]
       };
@@ -274,6 +360,15 @@ function createChatAgentGraph(
     .addNode("runWebSearch", async (state) => {
       if (!assistantSettings.toolPolicy.enableWebSearch) {
         return {
+          citations: [],
+          reasoning: [
+            {
+              detail: "Skipped web search because the admin tool policy disabled it.",
+              id: "web-disabled",
+              label: "Search web",
+              status: "completed"
+            }
+          ],
           toolActivity: ["tavily.search -> disabled by admin tool policy"],
           webResults: []
         };
@@ -310,6 +405,27 @@ function createChatAgentGraph(
       ).result;
 
       return {
+        citations: result.results.map((item, index) => ({
+          chunkIndex: null,
+          contentPreview: item.snippet,
+          documentId: null,
+          fileName: item.title,
+          linkTarget: item.url,
+          pageNumber: null,
+          retrievalScore: item.score,
+          sourceType: "web",
+          title: `Result ${index + 1}`
+        })),
+        reasoning: [
+          {
+            detail: `Collected ${result.results.length} current web result${
+              result.results.length === 1 ? "" : "s"
+            } for the answer.`,
+            id: "web-search",
+            label: "Search web",
+            status: "completed"
+          }
+        ],
         toolActivity: [
           `tavily.search -> returned ${result.results.length} web result${
             result.results.length === 1 ? "" : "s"
@@ -328,6 +444,15 @@ function createChatAgentGraph(
 
       if (!selectedTool) {
         return {
+          citations: [],
+          reasoning: [
+            {
+              detail: "No enabled runtime MCP tool matched the request, so the graph continued without MCP context.",
+              id: "runtime-mcp-empty",
+              label: "Runtime MCP",
+              status: "completed"
+            }
+          ],
           runtimeMcpResults: [],
           toolActivity: ["runtime.mcp -> no enabled MCP tools available"]
         };
@@ -340,6 +465,26 @@ function createChatAgentGraph(
         typeof result === "string" ? result : JSON.stringify(result);
 
       return {
+        citations: [
+          {
+            chunkIndex: null,
+            contentPreview: createTracePreview(output, 180),
+            documentId: null,
+            fileName: selectedTool.name,
+            linkTarget: null,
+            retrievalScore: null,
+            sourceType: "runtime_mcp",
+            title: "Runtime MCP"
+          }
+        ],
+        reasoning: [
+          {
+            detail: `Used the runtime MCP tool ${selectedTool.name} to gather additional context.`,
+            id: "runtime-mcp",
+            label: "Runtime MCP",
+            status: "completed"
+          }
+        ],
         runtimeMcpResults: [
           {
             output,
@@ -361,7 +506,6 @@ function createChatAgentGraph(
               userId: params.userId
             });
             const llm = resolvedDeps.llmFactory(chatConfig);
-            const sources = buildSources(state);
             const response = await llm.invoke([
               new SystemMessage(
                 buildSystemPrompt(params.thinkingLevel, assistantSettings.systemPrompt)
@@ -371,7 +515,15 @@ function createChatAgentGraph(
 
             return {
               answer: normalizeLlmContent(response.content),
-              sources
+              citations: state.citations,
+              reasoning: [
+                {
+                  detail: "Composed the final answer from the normalized retrieval context without storing raw provider reasoning.",
+                  id: "compose-answer",
+                  label: "Compose answer",
+                  status: "completed"
+                }
+              ]
             };
           },
           metadata: {
@@ -383,7 +535,7 @@ function createChatAgentGraph(
           runType: "tool",
           serializeResult: (result) => ({
             answerPreview: createTracePreview(result.answer, 120),
-            sourceCount: result.sources.length
+            sourceCount: result.citations.length
           }),
           tags: ["chat", "tool", "answer-composition", "ragflow-studio"],
           traceInput: {
@@ -521,35 +673,6 @@ function buildUserPrompt(state: typeof AgentState.State) {
     `Date/time context:\n${timeContext}`,
     "Write a concise helpful answer grounded in the provided context."
   ].join("\n\n");
-}
-
-function buildSources(state: typeof AgentState.State) {
-  if (state.vectorMatches.length) {
-    return state.vectorMatches.map(
-      (match) => `${match.fileName} chunk ${match.chunkIndex}: ${match.contentPreview}`
-    );
-  }
-
-  if (state.webResults.length) {
-    return state.webResults.map(
-      (result) => `${result.title} - ${result.url}`
-    );
-  }
-
-  if (state.runtimeMcpResults.length) {
-    return state.runtimeMcpResults.map(
-      (result) =>
-        `Runtime MCP (${result.toolName}) - ${createTracePreview(result.output, 160)}`
-    );
-  }
-
-  if (state.timeContext) {
-    return [
-      `Current date/time (${state.timeContext.timeZone}) - ${state.timeContext.isoDateTime}`
-    ];
-  }
-
-  return [];
 }
 
 function selectRuntimeMcpTool(

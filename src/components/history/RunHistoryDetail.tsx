@@ -104,9 +104,17 @@ export function RunHistoryDetail({
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-200">
                     {message.content}
                   </p>
-                  {message.metadata?.sources?.length ? (
+                  {message.metadata?.citations?.length ? (
                     <p className="mt-3 text-xs text-slate-400">
-                      Sources: {message.metadata.sources.join(", ")}
+                      Sources:{" "}
+                      {message.metadata.citations
+                        .map((citation) =>
+                          citation.sourceType === "document" &&
+                          citation.chunkIndex != null
+                            ? `${citation.fileName} chunk ${citation.chunkIndex + 1}`
+                            : citation.fileName
+                        )
+                        .join(", ")}
                     </p>
                   ) : null}
                 </article>

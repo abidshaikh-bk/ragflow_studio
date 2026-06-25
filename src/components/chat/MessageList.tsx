@@ -22,9 +22,9 @@ export function MessageList({ loading = false, messages }: MessageListProps) {
       {messages.map((message) => (
         <MessageBubble
           content={message.content}
+          citations={message.metadata?.citations}
           key={message.id}
           role={message.role}
-          sources={message.metadata?.sources}
         />
       ))}
       {loading ? (

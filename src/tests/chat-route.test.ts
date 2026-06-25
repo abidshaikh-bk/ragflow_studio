@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/route";
+import { buildDocumentChunkHref } from "@/components/chat/types";
 
 const defaultModelId = "11111111-1111-4111-8111-111111111111";
 
@@ -147,7 +148,18 @@ describe("/api/chat route", () => {
       content: "Saved assistant reply",
       langsmithRunId: "trace-123",
       metadata: {
-        sources: ["handbook.md chunk 1"],
+        citations: [
+          {
+            chunkIndex: 0,
+            contentPreview: "Handbook guidance",
+            documentId: "doc-1",
+            fileName: "handbook.md",
+            linkTarget: buildDocumentChunkHref("doc-1", 0),
+            retrievalScore: 0.91,
+            sourceType: "document",
+            title: "Chunk 1"
+          }
+        ],
         toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
       }
     });
@@ -164,7 +176,18 @@ describe("/api/chat route", () => {
           id: "message-2",
           metadata: {
             langsmithRunId: "trace-123",
-            sources: ["handbook.md chunk 1"],
+            citations: [
+              {
+                chunkIndex: 0,
+                contentPreview: "Handbook guidance",
+                documentId: "doc-1",
+                fileName: "handbook.md",
+                linkTarget: buildDocumentChunkHref("doc-1", 0),
+                retrievalScore: 0.91,
+                sourceType: "document",
+                title: "Chunk 1"
+              }
+            ],
             toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
           },
           role: "assistant"
@@ -223,7 +246,18 @@ describe("/api/chat route", () => {
         content: "Saved assistant reply",
         langsmithRunId: "trace-123",
         metadata: {
-          sources: ["handbook.md chunk 1"],
+          citations: [
+            {
+              chunkIndex: 0,
+              contentPreview: "Handbook guidance",
+              documentId: "doc-1",
+              fileName: "handbook.md",
+              linkTarget: buildDocumentChunkHref("doc-1", 0),
+              retrievalScore: 0.91,
+              sourceType: "document",
+              title: "Chunk 1"
+            }
+          ],
           toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
         }
       },
@@ -273,7 +307,8 @@ describe("/api/chat route", () => {
       content: "Saved assistant reply",
       langsmithRunId: null,
       metadata: {
-        sources: [],
+        citations: [],
+        reasoning: [],
         toolActivity: []
       }
     });
@@ -322,7 +357,8 @@ describe("/api/chat route", () => {
         content: "Saved assistant reply",
         langsmithRunId: null,
         metadata: {
-          sources: [],
+          citations: [],
+          reasoning: [],
           toolActivity: []
         }
       },

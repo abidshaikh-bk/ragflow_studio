@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatLayout } from "@/components/chat/ChatLayout";
+import { buildDocumentChunkHref } from "@/components/chat/types";
 import type { ChatSession } from "@/components/chat/types";
 
 const defaultModelId = "11111111-1111-4111-8111-111111111111";
@@ -37,7 +38,18 @@ const initialSessions: ChatSession[] = [
           "The onboarding policy requires manager approval before workspace access is granted.",
         id: "message-2",
         metadata: {
-          sources: ["employee-handbook.md chunk 4"],
+          citations: [
+            {
+              chunkIndex: 3,
+              contentPreview: "Manager approval is required before workspace access.",
+              documentId: "doc-1",
+              fileName: "employee-handbook.md",
+              linkTarget: buildDocumentChunkHref("doc-1", 3),
+              retrievalScore: 0.91,
+              sourceType: "document",
+              title: "Chunk 4"
+            }
+          ],
           toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
         },
         role: "assistant"
@@ -59,7 +71,18 @@ const initialSessions: ChatSession[] = [
           "The current notes emphasize launch readiness, customer FAQ updates, and a short approval checklist for content changes.",
         id: "message-4",
         metadata: {
-          sources: ["product-notes.md chunk 2"],
+          citations: [
+            {
+              chunkIndex: 1,
+              contentPreview: "Launch readiness and FAQ updates remain the main themes.",
+              documentId: "doc-2",
+              fileName: "product-notes.md",
+              linkTarget: buildDocumentChunkHref("doc-2", 1),
+              retrievalScore: 0.89,
+              sourceType: "document",
+              title: "Chunk 2"
+            }
+          ],
           toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
         },
         role: "assistant"
@@ -169,10 +192,47 @@ describe("chat layout", () => {
       if (input === "/api/chat") {
         return createStreamResponse(
           [
+            `event: reasoning\ndata: ${JSON.stringify({
+              step: {
+                detail: "Retrieved two matching document chunks.",
+                id: "vector-search",
+                label: "Retrieve",
+                status: "completed"
+              }
+            })}\n`,
             `event: metadata\ndata: ${JSON.stringify({
               langsmithRunId: "trace-123",
               metadata: {
-                sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
+                citations: [
+                  {
+                    chunkIndex: 0,
+                    contentPreview: "Handbook guidance",
+                    documentId: "doc-3",
+                    fileName: "handbook.md",
+                    linkTarget: buildDocumentChunkHref("doc-3", 0),
+                    retrievalScore: 0.9,
+                    sourceType: "document",
+                    title: "Chunk 1"
+                  },
+                  {
+                    chunkIndex: 0,
+                    contentPreview: "Policy guidance",
+                    documentId: "doc-4",
+                    fileName: "policy.txt",
+                    linkTarget: buildDocumentChunkHref("doc-4", 0),
+                    retrievalScore: 0.86,
+                    sourceType: "document",
+                    title: "Chunk 1"
+                  }
+                ],
+                reasoning: [
+                  {
+                    detail: "Retrieved two matching document chunks.",
+                    id: "vector-search",
+                    label: "Retrieve",
+                    status: "completed"
+                  }
+                ],
                 toolActivity: [
                   "pinecone.query -> searched the authenticated user's namespace"
                 ]
@@ -204,7 +264,36 @@ describe("chat layout", () => {
                     id: "message-6",
                     metadata: {
                       langsmithRunId: "trace-123",
-                      sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
+                      citations: [
+                        {
+                          chunkIndex: 0,
+                          contentPreview: "Handbook guidance",
+                          documentId: "doc-3",
+                          fileName: "handbook.md",
+                          linkTarget: buildDocumentChunkHref("doc-3", 0),
+                          retrievalScore: 0.9,
+                          sourceType: "document",
+                          title: "Chunk 1"
+                        },
+                        {
+                          chunkIndex: 0,
+                          contentPreview: "Policy guidance",
+                          documentId: "doc-4",
+                          fileName: "policy.txt",
+                          linkTarget: buildDocumentChunkHref("doc-4", 0),
+                          retrievalScore: 0.86,
+                          sourceType: "document",
+                          title: "Chunk 1"
+                        }
+                      ],
+                      reasoning: [
+                        {
+                          detail: "Retrieved two matching document chunks.",
+                          id: "vector-search",
+                          label: "Retrieve",
+                          status: "completed"
+                        }
+                      ],
                       toolActivity: [
                         "pinecone.query -> searched the authenticated user's namespace"
                       ]
@@ -248,6 +337,7 @@ describe("chat layout", () => {
     fireEvent.click(screen.getByRole("button", { name: /send/i }));
 
     expect(screen.getAllByText("Summarize my documents").length).toBeGreaterThan(0);
+    await screen.findByText(/retrieved two matching document chunks/i);
 
     await waitFor(() =>
       expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -271,7 +361,7 @@ describe("chat layout", () => {
         screen.getByText(/here is the short version from your indexed notes/i)
       ).toBeInTheDocument()
     );
-    expect(screen.getAllByText(/handbook\.md chunk 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/handbook\.md · chunk 1/i).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/pinecone\.query -> searched the authenticated user's namespace/i)
     ).toBeInTheDocument();

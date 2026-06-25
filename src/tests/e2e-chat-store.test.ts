@@ -17,7 +17,13 @@ describe("E2E chat store", () => {
 
     expect(session.messages).toHaveLength(2);
     expect(session.messages[1]?.content).toBe("The launch city is Pune.");
-    expect(session.messages[1]?.metadata?.sources).toEqual(["team-facts.md chunk 1"]);
+    expect(session.messages[1]?.metadata?.citations).toEqual([
+      expect.objectContaining({
+        fileName: "team-facts.md",
+        linkTarget: "/documents/fixture-doc-1#chunk-1",
+        sourceType: "document"
+      })
+    ]);
 
     const hydratedSessions = listE2EChatSessions();
 
@@ -40,8 +46,12 @@ describe("E2E chat store", () => {
     expect(webSession.messages[1]?.metadata?.toolActivity).toEqual([
       "tavily.search -> returned 1 web result"
     ]);
-    expect(webSession.messages[1]?.metadata?.sources).toEqual([
-      "Latest AI update - https://example.com/latest-ai"
+    expect(webSession.messages[1]?.metadata?.citations).toEqual([
+      expect.objectContaining({
+        fileName: "Latest AI update",
+        linkTarget: "https://example.com/latest-ai",
+        sourceType: "web"
+      })
     ]);
   });
 });

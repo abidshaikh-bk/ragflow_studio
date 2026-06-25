@@ -7,7 +7,10 @@ import type {
   HistoryToolActivity,
   HistoryTrace
 } from "@/components/history/types";
-import type { ChatMessageMetadata } from "@/components/chat/types";
+import {
+  normalizeChatMessageMetadata,
+  type ChatMessageMetadata
+} from "@/components/chat/types";
 import { parseChatSessionParams } from "@/lib/validations/chat";
 
 type ChatSessionRow = {
@@ -197,7 +200,7 @@ function buildHistoryRunDetail(
     createdAt: message.created_at,
     id: message.id,
     langsmithRunId: message.langsmith_run_id,
-    metadata: message.metadata,
+    metadata: normalizeChatMessageMetadata(message.metadata),
     role: message.role
   }));
   const toolActivity = [

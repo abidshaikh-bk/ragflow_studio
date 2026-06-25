@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/route";
+import { buildDocumentChunkHref } from "@/components/chat/types";
 
 const defaultModelId = "11111111-1111-4111-8111-111111111111";
 const getUserMock = vi.fn();
@@ -88,7 +89,26 @@ describe("/api/chat streaming route", () => {
       content: "Streamed assistant answer for the chat UI.",
       langsmithRunId: "trace-stream-123",
       metadata: {
-        sources: ["handbook.md chunk 1"],
+        citations: [
+          {
+            chunkIndex: 0,
+            contentPreview: "Handbook guidance",
+            documentId: "doc-1",
+            fileName: "handbook.md",
+            linkTarget: buildDocumentChunkHref("doc-1", 0),
+            retrievalScore: 0.91,
+            sourceType: "document",
+            title: "Chunk 1"
+          }
+        ],
+        reasoning: [
+          {
+            detail: "Retrieved one document chunk.",
+            id: "vector-search",
+            label: "Retrieve",
+            status: "completed"
+          }
+        ],
         toolActivity: ["pinecone.query -> returned 1 document chunk"]
       }
     });
@@ -122,6 +142,7 @@ describe("/api/chat streaming route", () => {
 
     const body = await response.text();
 
+    expect(body).toContain("event: reasoning");
     expect(body).toContain("event: metadata");
     expect(body).toContain("event: delta");
     expect(body).toContain("event: complete");
