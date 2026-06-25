@@ -1316,7 +1316,7 @@ Acceptance criteria:
 
 ### TASK-048: Refresh docs, tests, smoke coverage, and visual QA for the new IA
 
-Status: not_started
+Status: done
 
 Objective: Bring project documentation and validation coverage in line with the refined application information architecture.
 
@@ -1334,3 +1334,188 @@ Tests:
 Acceptance criteria:
 
 - The refined application is documented and validated end-to-end.
+
+---
+
+## Phase 15 — Workspace Experience Refresh
+
+### TASK-049: Add shared workspace split-layout primitives and icon system
+
+Status: not_started
+
+Objective: Introduce reusable page-level left/right collapsible rails, mobile drawer behavior, scroll-safe center panels, and one standard icon library for icon-first controls.
+
+Implementation:
+
+- Add a shared workspace layout primitive used by Chat and Documents.
+- Keep the global top navigation.
+- Remove the need for top-of-page hero cards inside Chat and Documents.
+- Add reusable collapsible left and right rails with mobile drawer behavior.
+- Improve scroll-safe center panel behavior for long conversations and document lists.
+- Replace verbose repeated labels with icon-supported controls where clarity is preserved.
+
+Tests:
+
+- Shared workspace layout renders with left, center, and right regions.
+- Collapse and expand behavior works for desktop and mobile states.
+- Keyboard access works for rail toggles and drawer controls.
+- Updated Chat and Documents route shells render without navigation regressions.
+
+Acceptance criteria:
+
+- Chat and Documents share a reusable split-layout foundation.
+- The application supports a more product-grade workspace feel without replacing the global top nav.
+
+---
+
+### TASK-050: Extend chat citations and reasoning stream contracts
+
+Status: not_started
+
+Objective: Make chat answers carry deep-linkable source metadata and a hybrid reasoning stream.
+
+Implementation:
+
+- Change chat source metadata from plain strings to structured citation objects.
+- Include citation fields for document id, file name, chunk index, content preview, link target, optional page number, and optional retrieval score.
+- Return structured vector-search matches from the runtime and map them into chat citations.
+- Extend `/api/chat` streaming to emit `reasoning` events alongside existing metadata and content events.
+- Persist normalized reasoning metadata as a compact timeline or summary shape rather than raw internal provider reasoning.
+- Add chunk anchor targeting support so citations can open `/documents/:documentId#chunk-{index}`.
+
+Tests:
+
+- Chat streaming route returns `reasoning` events.
+- Structured citations are included in assistant metadata.
+- Persisted assistant metadata stores normalized reasoning safely.
+- Document detail route and UI support chunk anchor navigation and highlighting.
+
+Acceptance criteria:
+
+- Assistant responses expose source links that can open the related document chunk.
+- The chat stack supports a right-rail reasoning experience without depending on raw chain-of-thought storage.
+
+---
+
+### TASK-051: Rebuild the chat workspace into a three-pane conversational UI
+
+Status: not_started
+
+Objective: Deliver a left collapsible session rail, center chat thread, fixed bottom composer, and right collapsible sources/reasoning rail.
+
+Implementation:
+
+- Remove the `Agentic RAG workspace` header card from the chat page.
+- Rebuild the chat page around a three-pane conversational layout.
+- Add a left collapsible session rail for recent chats and new-chat controls.
+- Keep the chat thread centered and optimized for long-form scrolling.
+- Move model and thinking controls into the chat composer area.
+- Keep the composer fixed at the bottom so users do not need to scroll to send messages.
+- Add a right collapsible rail for sources and reasoning details.
+- Render source citations as hyperlinks to specific document chunks.
+- Show live reasoning and source updates while streaming.
+
+Tests:
+
+- Chat composer remains visible without page-bottom scrolling.
+- Session switching works in the rebuilt layout.
+- Source citations render as links.
+- Reasoning rail updates during streaming.
+- Empty, loading, error, and mobile-collapsed states render correctly.
+
+Acceptance criteria:
+
+- Chat feels like a modern conversational workspace with persistent access to sessions, input controls, sources, and reasoning context.
+
+---
+
+### TASK-052: Rebuild the documents workspace around staged upload, library, and history sections
+
+Status: not_started
+
+Objective: Decouple upload, document library, and upload-history experiences while keeping live processing visible.
+
+Implementation:
+
+- Remove the `Document ingestion workspace` header card from the documents page.
+- Add a left local section rail for Upload, Library, and History.
+- Rebuild upload UX around a multi-file staging queue with review and confirmation before upload starts.
+- Submit confirmed files sequentially through the existing single-file upload route.
+- Support drag-and-drop of multiple files at once.
+- Keep live processing visible in a right collapsible inspector for the active document.
+- Separate uploaded documents into a clean library section.
+- Treat upload history as a filtered view of document records and terminal outcomes such as completed and failed.
+- Align supported-type copy with the real parser baseline so TXT and Markdown remain the truthful MVP support level.
+
+Tests:
+
+- Multiple files can be staged before upload.
+- Users can remove files or confirm before upload begins.
+- Sequential upload behavior uses the existing single-file API safely.
+- Status polling continues to work for active uploads.
+- Library and history sections filter and render correctly.
+- Unsupported file types show clear validation messages.
+
+Acceptance criteria:
+
+- Documents becomes a cleaner workspace with distinct upload, library, and history experiences.
+- Users can review files before upload and monitor live processing without visual clutter.
+
+---
+
+## Phase 16 — Public Entry Refresh
+
+### TASK-053: Refine login and registration into a centered branded auth experience
+
+Status: not_started
+
+Objective: Make auth pages feel polished, centered, and consistent with the product brand.
+
+Implementation:
+
+- Center the logo and product name in the auth card layout.
+- Remove dev-centric footer copy from login and registration.
+- Keep only one clear heading and description pair per page.
+- Center the secondary auth links such as `New here? Create account` and `Already have an account? Sign in`.
+- Change the login email placeholder to `Enter your email`.
+- Apply the same visual refinement and copy cleanup to the registration page.
+
+Tests:
+
+- Login and registration pages render the updated copy.
+- Email placeholder text is updated consistently.
+- Secondary auth links render in the centered footer area.
+- Existing validation, loading, and error states remain covered.
+
+Acceptance criteria:
+
+- Login and registration feel professional, concise, and brand-forward.
+
+---
+
+### TASK-054: Rebuild the landing page as a user-centric marketing surface with real product snapshots
+
+Status: not_started
+
+Objective: Explain what the product does, what problem it solves, why it is worth using, and show believable application previews.
+
+Implementation:
+
+- Replace developer-task language with clear user-centric marketing copy.
+- Add a hero section explaining the product outcome and value.
+- Add sections for problem, solution, benefits, and how the product works.
+- Use icon-led feature cards and reduce text density where possible.
+- Add privacy and trust messaging appropriate for document intelligence.
+- Include real product screenshots captured from the refined application experience.
+- Add a professional footer with product, navigation, and authentication links.
+
+Tests:
+
+- Landing page renders the new marketing sections and CTAs.
+- Footer links render correctly.
+- Snapshot images include useful alt text.
+- Layout remains responsive across common viewport sizes.
+
+Acceptance criteria:
+
+- The landing page clearly communicates the product to end users and supports conversion into login or registration.

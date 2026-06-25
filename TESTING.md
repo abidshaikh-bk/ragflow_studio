@@ -147,6 +147,7 @@ These commands require a working `DATABASE_URL`. They should apply the SQL migra
 Current recorded status:
 
 - See `SMOKE_CHECKLIST.md` for the dated MVP smoke run and command evidence.
+- The refined IA follow-up smoke and visual QA notes are recorded in the `Refined IA Smoke Checklist — 2026-06-25` section of `SMOKE_CHECKLIST.md`.
 
 ## Current tool coverage
 
@@ -168,6 +169,7 @@ Current recorded status:
 - `src/tests/admin-guards.test.tsx` validates profile-backed admin page redirects, successful admin rendering, and `403` responses for non-admin admin-API requests.
 - `src/tests/admin-assistant-route.test.ts`, `src/tests/admin-page.test.tsx`, and `src/tests/agent-workflow.test.ts` validate admin-only shared assistant settings APIs/UI plus runtime enforcement of the shared system prompt and built-in tool policy.
 - `src/tests/admin-mcp-routes.test.ts`, `src/tests/mcp-tools-settings.test.tsx`, and `src/tests/mcp-backend-adapter.test.ts` validate admin-only global MCP APIs, scoped MCP UI endpoints, and safe runtime merging of enabled global plus user MCP configs.
+- `src/tests/logout-route.test.ts`, `src/tests/user-menu.test.tsx`, `src/tests/chat-stream-route.test.ts`, `src/tests/history-page.test.tsx`, and `src/tests/document-detail-page.test.tsx` provide the refined IA smoke evidence later summarized in `SMOKE_CHECKLIST.md`.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.

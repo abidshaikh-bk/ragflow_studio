@@ -428,3 +428,7 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 - Chat workflow respects the saved shared system prompt and built-in tool policy.
 - Global MCP admin APIs and UI remain separate from the user `/settings` MCP surface.
 - Global MCP settings remain secret-safe in the browser.
+
+Visual QA note:
+
+- Record route-level verification for the refined `/chat`, `/documents`, `/history`, `/settings`, and `/admin` surfaces in `SMOKE_CHECKLIST.md` when the final IA hardening task runs.

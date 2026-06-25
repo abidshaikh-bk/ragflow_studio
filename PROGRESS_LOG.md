@@ -2981,3 +2981,54 @@ npm run build
 
 ### Follow-up
 - Continue with `TASK-048` on a fresh task branch after this branch is committed and pushed.
+
+---
+
+## TASK-048: Refresh docs, tests, smoke coverage, and visual QA for the new IA
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-048-docs-qa-refresh
+Started: 2026-06-25
+Completed: 2026-06-25
+Commit Hash:
+
+### Objective
+Bring project documentation and validation coverage in line with the refined application information architecture.
+
+### Files Changed
+- PROGRESS_LOG.md
+- SMOKE_CHECKLIST.md
+- TASKS.md
+- TESTING.md
+- UI_PAGES.md
+- design.md
+
+### Implementation Notes
+- Started from the completed `TASK-047` baseline on branch `task/TASK-048-docs-qa-refresh`.
+- Refreshed the smoke checklist so the refined IA explicitly records evidence for logout, streaming chat, history, document explorer access, user MCP, admin controls, and production build health.
+- Added a visual QA note trail that honestly records the verification basis for the refreshed `/chat`, `/documents`, `/history`, `/settings`, and `/admin` surfaces without inventing screenshot artifacts.
+- Re-ran the full validation suite from the docs-only branch to keep the task audit trail complete and current.
+
+### Tests Added
+- No new automated tests were added in this task.
+- Revalidated the existing unit, component, API, build, and Playwright coverage that now spans shell, history, documents, streaming chat, settings, and admin surfaces.
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- No follow-up required for the current pending task list.

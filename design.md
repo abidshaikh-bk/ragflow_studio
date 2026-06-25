@@ -134,6 +134,7 @@ The implementation source of truth for screens is split across:
 - `UI_PAGES.md` for route-level implementation details and component breakdown.
 
 Any UI implementation that changes layout, state behavior, visual hierarchy, or component structure must update these files in the same Git commit.
+The final cross-surface visual verification notes live in `SMOKE_CHECKLIST.md`.
 
 ## 4B. Design system tokens
 
