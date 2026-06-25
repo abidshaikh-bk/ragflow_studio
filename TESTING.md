@@ -164,6 +164,7 @@ Current recorded status:
 - `src/tests/documents-route.test.ts` validates `/api/documents` auth and authenticated document listing.
 - `src/tests/history-route.test.ts` validates `/api/history` auth, session ownership, invalid-id rejection, and missing-session handling.
 - `src/tests/history-page.test.tsx` validates `/history` empty, error, populated, and runtime-MCP-visible states plus client-side filtering.
+- `src/tests/document-detail-route.test.ts`, `src/tests/document-access-link-route.test.ts`, and `src/tests/document-detail-page.test.tsx` validate authenticated document explorer detail routes, ownership-scoped private access links, and the chunk/vector detail UI.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.
 - `src/tests/agent-workflow.test.ts` validates LangGraph routing, saved Gemini chat configuration resolution, and default-provider fallback for unsupported chat providers.

@@ -47,6 +47,12 @@ describe("/api/documents route", () => {
       {
         documentId: "doc-123",
         fileName: "handbook.md",
+        fileSize: 4096,
+        fileType: "text/markdown",
+        indexingState: {
+          provider: "openai",
+          vectorCount: 24
+        },
         processedChunks: 24,
         status: "completed",
         totalChunks: 24,
@@ -64,6 +70,12 @@ describe("/api/documents route", () => {
         {
           documentId: "doc-123",
           fileName: "handbook.md",
+          fileSize: 4096,
+          fileType: "text/markdown",
+          indexingState: {
+            provider: "openai",
+            vectorCount: 24
+          },
           processedChunks: 24,
           status: "completed",
           totalChunks: 24,

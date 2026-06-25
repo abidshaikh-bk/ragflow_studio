@@ -166,6 +166,10 @@ Typography:
 | POST | `/api/documents/upload` | Upload raw document to S3 and create record |
 | POST | `/api/documents/:id/process` | Process uploaded document |
 | GET | `/api/documents/:id/status` | Poll processing status |
+| GET | `/api/documents/:id` | Load one user-owned document detail |
+| GET | `/api/documents/:id/chunks` | Load one user-owned document's chunk previews |
+| GET | `/api/documents/:id/embeddings` | Load one user-owned document's embedding/index summary |
+| POST | `/api/documents/:id/access-link` | Create a short-lived private S3 access link for the owning user |
 | GET | `/api/chat/sessions` | List chat sessions |
 | GET | `/api/chat/sessions/:id` | Get chat messages |
 | POST | `/api/chat` | Invoke agent |
@@ -523,3 +527,4 @@ The documents experience grows from an ingestion dashboard into a two-level expl
 
 - `/documents` for the uploaded document index and status overview,
 - `/documents/:documentId` for metadata, chunk list, chunking strategy, embedding details, and private object access actions.
+- The document index now includes status filtering, detail navigation, and per-row private `View` and `Download` actions backed by short-lived server-generated S3 links.

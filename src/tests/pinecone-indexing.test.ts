@@ -95,6 +95,11 @@ describe("pinecone indexing", () => {
       ])
     });
     expect(updateMock).toHaveBeenLastCalledWith({
+      indexing_snapshot: {
+        indexedAt: expect.any(String),
+        namespace: "user:user-123",
+        vectorCount: 2
+      },
       processed_chunks: 2,
       status: "completed",
       total_chunks: 2

@@ -85,6 +85,11 @@ export async function chunkDocument({
     }
 
     await updateDocumentProgress(supabase, {
+      chunkingStrategy: {
+        chunkSize,
+        method: "whitespace-window",
+        overlap
+      },
       documentId,
       processedChunks: chunks.length,
       totalChunks: chunks.length,
@@ -200,6 +205,11 @@ async function updateDocumentStatus(
 async function updateDocumentProgress(
   supabase: SupabaseClient,
   input: {
+    chunkingStrategy: {
+      chunkSize: number;
+      method: string;
+      overlap: number;
+    };
     documentId: string;
     processedChunks: number;
     totalChunks: number;
@@ -209,6 +219,7 @@ async function updateDocumentProgress(
   const result = await supabase
     .from("documents")
     .update({
+      chunking_strategy_snapshot: input.chunkingStrategy,
       processed_chunks: input.processedChunks,
       total_chunks: input.totalChunks
     })

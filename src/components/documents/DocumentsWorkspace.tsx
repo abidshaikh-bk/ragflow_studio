@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
+import { Input } from "@/components/ui/Input";
 import { DocumentDropzone } from "./DocumentDropzone";
 import { DocumentTable } from "./DocumentTable";
 import { ProcessingTimeline } from "./ProcessingTimeline";
@@ -23,21 +25,19 @@ type UploadSnapshot = {
   uploadProgress: number;
 };
 
-type LiveActiveUpload = {
-  documentId: string;
-  failedStage?: TimelineStage;
-  mode: "live";
-};
-
-type PreviewActiveUpload = {
-  documentId: string;
-  failedStage?: TimelineStage;
-  mode: "preview";
-  snapshotIndex: number;
-  snapshots: UploadSnapshot[];
-};
-
-type ActiveUpload = LiveActiveUpload | PreviewActiveUpload;
+type ActiveUpload =
+  | {
+      documentId: string;
+      failedStage?: TimelineStage;
+      mode: "live";
+    }
+  | {
+      documentId: string;
+      failedStage?: TimelineStage;
+      mode: "preview";
+      snapshotIndex: number;
+      snapshots: UploadSnapshot[];
+    };
 
 type UploadApiResponse = {
   data?: {
@@ -64,11 +64,26 @@ type DocumentListApiResponse = {
     documentId: string;
     errorMessage?: string;
     fileName: string;
+    fileSize: number;
+    fileType: string;
+    indexingState?: {
+      provider?: string;
+      vectorCount: number;
+    };
     processedChunks: number;
     status: DocumentStatus;
     totalChunks: number;
     updatedAt: string;
   }>;
+  error?: string;
+};
+
+type AccessLinkApiResponse = {
+  data?: {
+    expiresAt: string;
+    expiresInSeconds: number;
+    url: string;
+  };
   error?: string;
 };
 
@@ -131,7 +146,7 @@ function createSnapshots(shouldFail: boolean): UploadSnapshot[] {
   ];
 }
 
-function formatUpdatedAt(status: DocumentStatus): string {
+function formatUpdatedAt(status: DocumentStatus) {
   switch (status) {
     case "uploaded":
       return "Uploaded just now";
@@ -156,16 +171,31 @@ export function DocumentsWorkspace() {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [activeUpload, setActiveUpload] = useState<ActiveUpload | null>(null);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [listError, setListError] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [accessError, setAccessError] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | DocumentStatus>("all");
+  const [searchValue, setSearchValue] = useState("");
+  const [requestingAccessForId, setRequestingAccessForId] = useState<string | null>(null);
   const [uploadMessage, setUploadMessage] = useState(
-    "Upload a document to send it to private S3 storage before the backend pipeline reports each processing stage."
+    "Upload a document to send it to private S3 storage, then inspect chunks and vector metadata from the explorer."
   );
 
   const activeDocument = activeUpload
     ? documents.find((document) => document.id === activeUpload.documentId) ?? null
     : null;
-  const activeUploadDocumentId = activeUpload?.documentId;
-  const activeUploadMode = activeUpload?.mode;
+
+  const visibleDocuments = useMemo(() => {
+    return documents.filter((document) => {
+      const matchesStatus = statusFilter === "all" || document.status === statusFilter;
+      const matchesSearch =
+        searchValue.trim().length === 0 ||
+        document.name.toLowerCase().includes(searchValue.trim().toLowerCase());
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [documents, searchValue, statusFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,13 +233,11 @@ export function DocumentsWorkspace() {
           );
         }
       } catch (error) {
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setListError(
+            error instanceof Error ? error.message : "Unable to load your documents."
+          );
         }
-
-        const message =
-          error instanceof Error ? error.message : "Unable to load your documents.";
-        setUploadError(message);
       } finally {
         if (!cancelled) {
           setIsLoadingDocuments(false);
@@ -265,147 +293,95 @@ export function DocumentsWorkspace() {
 
         return {
           ...currentActiveUpload,
+          failedStage:
+            nextSnapshot.status === "failed"
+              ? "embedding"
+              : (nextSnapshot.status as TimelineStage),
           snapshotIndex: nextIndex
         };
       });
     }, 700);
 
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [activeUpload]);
 
   useEffect(() => {
-    if (!activeUploadDocumentId || activeUploadMode !== "live") {
+    if (!activeUpload || activeUpload.mode !== "live") {
+      return;
+    }
+
+    if (!activeDocument || isTerminalDocumentStatus(activeDocument.status)) {
       return;
     }
 
     let cancelled = false;
-    let pollIntervalId = 0;
 
-    async function pollDocumentStatus() {
+    const timeoutId = window.setTimeout(async () => {
       try {
-        const response = await fetch(`/api/documents/${activeUploadDocumentId}/status`, {
+        const response = await fetch(`/api/documents/${activeUpload.documentId}/status`, {
           method: "GET"
         });
         const payload = (await response.json()) as DocumentStatusApiResponse;
 
         if (!response.ok || !payload.data) {
-          throw new Error(payload.error || "Unable to refresh the document status.");
+          throw new Error(payload.error || "Unable to poll document status.");
         }
 
         if (cancelled) {
           return;
         }
 
-        setUploadError("");
-        setUploadMessage(
-          isTerminalDocumentStatus(payload.data.status)
-            ? `${payload.data.fileName} finished processing.`
-            : `Polling live processing status for ${payload.data.fileName}.`
-        );
         setDocuments((currentDocuments) =>
           currentDocuments.map((document) =>
-            document.id === payload.data?.documentId
+            document.id === activeUpload.documentId
               ? {
                   ...document,
-                  ...(payload.data.errorMessage
-                    ? { errorMessage: payload.data.errorMessage }
-                    : { errorMessage: undefined }),
-                  name: payload.data.fileName,
-                  processedChunks: payload.data.processedChunks,
-                  status: payload.data.status,
-                  totalChunks: payload.data.totalChunks,
-                  updatedAt: formatUpdatedAt(payload.data.status),
+                  errorMessage: payload.data?.errorMessage,
+                  name: payload.data?.fileName ?? document.name,
+                  processedChunks: payload.data?.processedChunks ?? document.processedChunks,
+                  status: payload.data?.status ?? document.status,
+                  totalChunks: payload.data?.totalChunks ?? document.totalChunks,
+                  updatedAt: formatUpdatedAt(payload.data?.status ?? document.status),
                   uploadProgress: 100
                 }
               : document
           )
         );
 
-        setActiveUpload((currentActiveUpload) => {
-          if (
-            !currentActiveUpload ||
-            currentActiveUpload.documentId !== payload.data?.documentId ||
-            currentActiveUpload.mode !== "live"
-          ) {
-            return currentActiveUpload;
-          }
-
-          if (
-            payload.data.status !== "completed" &&
-            payload.data.status !== "failed"
-          ) {
-            return {
-              ...currentActiveUpload,
-              failedStage: payload.data.status
-            };
-          }
-
-          if (payload.data.status === "failed") {
-            return {
-              ...currentActiveUpload,
-              failedStage: currentActiveUpload.failedStage ?? "uploaded"
-            };
-          }
-
-          return currentActiveUpload;
-        });
-
         if (isTerminalDocumentStatus(payload.data.status)) {
-          window.clearInterval(pollIntervalId);
+          setUploadMessage(
+            payload.data.status === "completed"
+              ? `${payload.data.fileName} is ready for chat retrieval and document inspection.`
+              : `${payload.data.fileName} failed during processing.`
+          );
         }
       } catch (error) {
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setUploadError(
+            error instanceof Error ? error.message : "Unable to poll document status."
+          );
         }
-
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Unable to refresh the document status.";
-
-        window.clearInterval(pollIntervalId);
-        setUploadError(message);
-        setUploadMessage("Status polling paused because the backend status check failed.");
       }
-    }
-
-    void pollDocumentStatus();
-    pollIntervalId = window.setInterval(() => {
-      void pollDocumentStatus();
     }, STATUS_POLL_INTERVAL_MS);
 
     return () => {
       cancelled = true;
-      window.clearInterval(pollIntervalId);
+      window.clearTimeout(timeoutId);
     };
-  }, [activeUploadDocumentId, activeUploadMode]);
-
-  function startPreviewUpload(name: string, shouldFail: boolean) {
-    const snapshots = createSnapshots(shouldFail);
-    const document = createDocumentRecord({
-      documentId: `${name}-${Date.now()}`,
-      name,
-      snapshot: snapshots[0]
-    });
-
-    setDocuments((currentDocuments) => [document, ...currentDocuments]);
-    setActiveUpload({
-      documentId: document.id,
-      failedStage: shouldFail ? "embedding" : undefined,
-      mode: "preview",
-      snapshotIndex: 0,
-      snapshots
-    });
-  }
+  }, [activeDocument, activeUpload]);
 
   async function handleFileAccepted(file: File) {
+    setAccessError("");
     setUploadError("");
-    setUploadMessage(`Uploading ${file.name} to private S3 storage.`);
-
-    const formData = new FormData();
-    formData.append("file", file);
+    setIsUploading(true);
+    setUploadMessage(`Uploading ${file.name} and waiting for pipeline status...`);
 
     try {
+      const formData = new FormData();
+      formData.append("file", file);
+
       const response = await fetch("/api/documents/upload", {
         body: formData,
         method: "POST"
@@ -413,132 +389,247 @@ export function DocumentsWorkspace() {
       const payload = (await response.json()) as UploadApiResponse;
 
       if (!response.ok || !payload.data) {
-        throw new Error(payload.error || "Unable to upload your document right now.");
+        throw new Error(payload.error || "Unable to upload the document.");
       }
 
-      const document = createDocumentRecord({
-        documentId: payload.data.documentId,
+      const nextDocument: DocumentRecord = {
+        id: payload.data.documentId,
         name: file.name,
-        snapshot: {
-          processedChunks: 0,
-          status: payload.data.status,
-          totalChunks: 0,
-          uploadProgress: 100
-        }
-      });
+        fileSize: file.size,
+        fileType: file.type || inferFileType(file.name),
+        processedChunks: 0,
+        status: payload.data.status,
+        totalChunks: 0,
+        updatedAt: "Uploaded just now",
+        uploadProgress: 100
+      };
 
-      setDocuments((currentDocuments) => [document, ...currentDocuments]);
-      setUploadMessage(
-        `${file.name} reached private S3 storage. Polling live processing status now.`
-      );
+      setDocuments((currentDocuments) => [nextDocument, ...currentDocuments]);
       setActiveUpload({
         documentId: payload.data.documentId,
         failedStage: "uploaded",
         mode: "live"
       });
+      setUploadMessage(`Polling live processing status for ${file.name}.`);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to upload your document right now.";
-
-      setUploadError(message);
-      setUploadMessage("Fix the upload issue, then try again.");
+      setUploadError(error instanceof Error ? error.message : "Unable to upload the document.");
+    } finally {
+      setIsUploading(false);
     }
   }
 
   function handlePreviewFailure() {
-    startPreviewUpload("contracts-import-failure.md", true);
+    const previewDocumentId = "preview-document";
+    const snapshots = createSnapshots(true);
+
+    setUploadError("");
+    setAccessError("");
+    setDocuments((currentDocuments) => {
+      const previewRecord: DocumentRecord = {
+        errorMessage: undefined,
+        id: previewDocumentId,
+        name: "preview-handbook.md",
+        processedChunks: 0,
+        status: "uploaded",
+        totalChunks: PREVIEW_TOTAL_CHUNKS,
+        updatedAt: "Uploaded just now",
+        uploadProgress: 100
+      };
+
+      return [previewRecord, ...currentDocuments.filter((document) => document.id !== previewDocumentId)];
+    });
+    setActiveUpload({
+      documentId: previewDocumentId,
+      failedStage: "uploaded",
+      mode: "preview",
+      snapshotIndex: 0,
+      snapshots
+    });
+    setUploadMessage("Previewing a failure path for the document pipeline.");
   }
 
+  async function handleRequestAccessLink(
+    documentId: string,
+    action: "download" | "view"
+  ) {
+    setAccessError("");
+    setRequestingAccessForId(documentId);
+
+    try {
+      const response = await fetch(`/api/documents/${documentId}/access-link`, {
+        body: JSON.stringify({ action }),
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST"
+      });
+      const payload = (await response.json()) as AccessLinkApiResponse;
+
+      if (!response.ok || !payload.data) {
+        throw new Error(payload.error || "Unable to create a private access link.");
+      }
+
+      window.open(payload.data.url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setAccessError(
+        error instanceof Error ? error.message : "Unable to create a private access link."
+      );
+    } finally {
+      setRequestingAccessForId(null);
+    }
+  }
+
+  const completedCount = documents.filter((document) => document.status === "completed").length;
+  const failedCount = documents.filter((document) => document.status === "failed").length;
+  const inFlightCount = documents.filter(
+    (document) => !isTerminalDocumentStatus(document.status)
+  ).length;
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-      <div className="space-y-6">
-        {uploadError ? (
-          <ErrorAlert
-            message={uploadError}
-            title="Document upload failed"
-          />
-        ) : null}
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Completed" value={completedCount} />
+        <MetricCard label="Processing" value={inFlightCount} />
+        <MetricCard label="Needs review" value={failedCount} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <DocumentDropzone
           activeFileName={activeDocument?.name}
-          isUploading={Boolean(activeDocument && !isTerminalDocumentStatus(activeDocument.status))}
+          isUploading={isUploading}
           onFileAccepted={handleFileAccepted}
           onPreviewFailure={handlePreviewFailure}
           statusMessage={uploadMessage}
         />
-        <Card
-          eyebrow="History"
-          title="Indexed document list"
-          description="Successful uploads now write to S3 and then poll the live backend ingestion status until processing completes."
-        >
-          <DocumentTable documents={documents} />
-          {isLoadingDocuments ? (
-            <p className="mt-4 text-sm text-slate-400">Loading your uploaded documents...</p>
-          ) : null}
-        </Card>
-      </div>
-      <div className="space-y-6">
         <UploadProgressCard activeDocument={activeDocument} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card
           eyebrow="Stages"
           title="Processing timeline"
-          description="This list follows the live ingestion status model and highlights the active backend-reported stage."
+          description="Track the current backend stage while uploads move toward a completed, retrievable document."
         >
           <ProcessingTimeline
             currentStatus={activeDocument?.status ?? "uploaded"}
             failedStage={activeUpload?.failedStage}
           />
         </Card>
+
+        <Card
+          eyebrow="Explorer"
+          title="Uploaded document index"
+          description="Filter completed and in-flight uploads, then open a structured detail view for chunk and vector metadata."
+        >
+          <div className="mb-5 grid gap-3 md:grid-cols-[1fr_220px]">
+            <Input
+              aria-label="Search documents"
+              label="Search documents"
+              onChange={(event) => setSearchValue(event.target.value)}
+              placeholder="Filter by file name"
+              value={searchValue}
+            />
+            <label className="flex flex-col gap-2 text-sm text-slate-300">
+              <span>Status filter</span>
+              <select
+                aria-label="Status filter"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-ice-white outline-none transition focus:border-aqua focus:ring-2 focus:ring-aqua/30"
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as "all" | DocumentStatus)
+                }
+                value={statusFilter}
+              >
+                <option value="all">All statuses</option>
+                <option value="uploaded">Uploaded</option>
+                <option value="parsing">Parsing</option>
+                <option value="chunking">Chunking</option>
+                <option value="embedding">Embedding</option>
+                <option value="indexing">Indexing</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
+          </div>
+
+          {listError ? <ErrorAlert message={listError} title="Load error" /> : null}
+          {uploadError ? <ErrorAlert message={uploadError} title="Upload error" /> : null}
+          {accessError ? <ErrorAlert message={accessError} title="Access error" /> : null}
+
+          {isLoadingDocuments ? (
+            <p className="text-sm text-slate-400">Loading your uploaded documents...</p>
+          ) : visibleDocuments.length === 0 ? (
+            <EmptyState
+              description="Upload a file, or adjust the current filters to reveal more document records."
+              title="No matching documents"
+            />
+          ) : (
+            <DocumentTable
+              documents={visibleDocuments}
+              onRequestAccessLink={handleRequestAccessLink}
+              requestingAccessForId={requestingAccessForId}
+            />
+          )}
+        </Card>
       </div>
     </div>
   );
 }
 
-function createDocumentRecord(input: {
-  documentId: string;
-  name: string;
-  snapshot: UploadSnapshot;
-}): DocumentRecord {
-  return {
-    id: input.documentId,
-    ...(input.snapshot.errorMessage ? { errorMessage: input.snapshot.errorMessage } : {}),
-    name: input.name,
-    processedChunks: input.snapshot.processedChunks,
-    status: input.snapshot.status,
-    totalChunks: input.snapshot.totalChunks,
-    updatedAt: "Queued just now",
-    uploadProgress: input.snapshot.uploadProgress
-  };
+function MetricCard(input: { label: string; value: number }) {
+  return (
+    <Card className="p-5">
+      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{input.label}</p>
+      <p className="mt-3 font-heading text-3xl text-ice-white">{input.value}</p>
+    </Card>
+  );
+}
+
+function inferFileType(fileName: string) {
+  if (fileName.endsWith(".md")) {
+    return "text/markdown";
+  }
+
+  if (fileName.endsWith(".txt")) {
+    return "text/plain";
+  }
+
+  if (fileName.endsWith(".pdf")) {
+    return "application/pdf";
+  }
+
+  if (fileName.endsWith(".docx")) {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+
+  return "application/octet-stream";
 }
 
 function mapListedDocumentToRecord(document: {
   documentId: string;
   errorMessage?: string;
   fileName: string;
+  fileSize: number;
+  fileType: string;
+  indexingState?: {
+    provider?: string;
+    vectorCount: number;
+  };
   processedChunks: number;
   status: DocumentStatus;
   totalChunks: number;
   updatedAt: string;
 }): DocumentRecord {
   return {
-    id: document.documentId,
     ...(document.errorMessage ? { errorMessage: document.errorMessage } : {}),
+    fileSize: document.fileSize,
+    fileType: document.fileType,
+    id: document.documentId,
+    indexingState: document.indexingState,
     name: document.fileName,
     processedChunks: document.processedChunks,
     status: document.status,
     totalChunks: document.totalChunks,
-    updatedAt: formatTimestamp(document.updatedAt),
+    updatedAt: document.updatedAt,
     uploadProgress: 100
   };
-}
-
-function formatTimestamp(value: string) {
-  const timestamp = new Date(value);
-
-  if (Number.isNaN(timestamp.getTime())) {
-    return "Updated recently";
-  }
-
-  return timestamp.toLocaleString();
 }

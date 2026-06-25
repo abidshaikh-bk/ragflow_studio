@@ -139,6 +139,11 @@ describe("document chunking", () => {
       ])
     );
     expect(updateMock).toHaveBeenLastCalledWith({
+      chunking_strategy_snapshot: {
+        chunkSize: 70,
+        method: "whitespace-window",
+        overlap: 10
+      },
       processed_chunks: result.chunks.length,
       total_chunks: result.chunks.length
     });

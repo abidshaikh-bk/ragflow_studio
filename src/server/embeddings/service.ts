@@ -69,6 +69,12 @@ export async function generateDocumentEmbeddings(
   try {
     const config = await resolveEmbeddingConfig(supabase, userId);
     const vectors: EmbeddingVector[] = [];
+    await persistEmbeddingSnapshot(supabase, {
+      batchSize,
+      config,
+      documentId,
+      userId
+    });
     const runtimeEmbedder =
       embedder === embedTexts
         ? (input: { model: string; provider: string; texts: string[] }) =>
@@ -132,6 +138,33 @@ export async function generateDocumentEmbeddings(
     });
 
     throw new Error(message);
+  }
+}
+
+async function persistEmbeddingSnapshot(
+  supabase: SupabaseClient,
+  input: {
+    batchSize: number;
+    config: EmbeddingConfig;
+    documentId: string;
+    userId: string;
+  }
+) {
+  const result = await supabase
+    .from("documents")
+    .update({
+      embedding_model_snapshot: {
+        batchSize: input.batchSize,
+        dimensions: input.config.dimensions,
+        model: input.config.model,
+        provider: input.config.provider
+      }
+    })
+    .eq("id", input.documentId)
+    .eq("user_id", input.userId);
+
+  if (result.error) {
+    throw new Error("Unable to store the embedding model snapshot.");
   }
 }
 

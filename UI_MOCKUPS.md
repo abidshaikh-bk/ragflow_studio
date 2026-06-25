@@ -207,6 +207,11 @@ A split-pane agent chat UI. Left side has sessions and context status. Main area
 
 A document ingestion dashboard with upload dropzone, live progress, and document history.
 
+Refinement note:
+
+- The index view now includes summary counters, a file-name filter, a status filter, and row-level `View` / `Download` actions for private files.
+- Each document row links into a dedicated explorer page that shows metadata, chunk previews, and vector details.
+
 ## Wireframe
 
 ```txt

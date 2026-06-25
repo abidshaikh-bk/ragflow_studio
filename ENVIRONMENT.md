@@ -123,6 +123,7 @@ Do not enable runtime MCP until Phase 10 tasks are implemented and tested.
 The next UI and admin refinement phase does not require browser-visible secrets. Keep all new configuration server-side.
 
 - Private document access continues to rely on the existing S3 credentials and bucket configuration.
+- The document explorer's `View` and `Download` actions use short-lived server-generated S3 links, so no new browser-visible environment variables are required.
 - LangSmith history enrichment continues to rely on the existing server-side LangSmith environment variables only.
 - The `/history` page exposes only application-owned run metadata, so it does not introduce any new browser-visible environment variables.
 - Global assistant configuration is planned as database-backed application state, not as frontend environment variables.

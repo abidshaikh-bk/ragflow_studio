@@ -124,9 +124,17 @@ describe("document embeddings", () => {
 
     expect(embedder).toHaveBeenCalledTimes(2);
     expect(updateMock).toHaveBeenNthCalledWith(2, {
-      processed_chunks: 2
+      embedding_model_snapshot: {
+        batchSize: 2,
+        dimensions: 2,
+        model: "text-embedding-3-small",
+        provider: "openai"
+      }
     });
     expect(updateMock).toHaveBeenNthCalledWith(3, {
+      processed_chunks: 2
+    });
+    expect(updateMock).toHaveBeenNthCalledWith(4, {
       processed_chunks: 3
     });
   });
@@ -240,6 +248,14 @@ describe("document embeddings", () => {
       status: "embedding"
     });
     expect(updateMock).toHaveBeenNthCalledWith(2, {
+      embedding_model_snapshot: {
+        batchSize: 20,
+        dimensions: 2,
+        model: "text-embedding-3-small",
+        provider: "openai"
+      }
+    });
+    expect(updateMock).toHaveBeenNthCalledWith(3, {
       error_message: "Embedding provider timed out.",
       status: "failed"
     });

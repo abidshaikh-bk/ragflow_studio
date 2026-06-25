@@ -144,6 +144,13 @@ LangSmith traces for this app must use redacted summaries only:
 - History responses must not expose raw LangSmith credentials, runtime MCP secrets, raw request headers, or private file access URLs.
 - Admin-oriented operational filters must not reveal another user's document contents, chunk text, or raw uploaded files.
 
+## Document explorer response shaping
+
+- `/api/documents/:documentId`, `/api/documents/:documentId/chunks`, and `/api/documents/:documentId/embeddings` must remain user-scoped through the authenticated server session.
+- Document explorer responses may include file metadata, chunk previews, vector IDs, provider/model snapshots, namespaces, counts, and timestamps.
+- Document explorer responses must not expose raw chunk bodies beyond short previews, reusable S3 URLs, decrypted credentials, or Pinecone secrets.
+- `/api/documents/:documentId/access-link` must return only short-lived server-generated links for the owning user.
+
 ## App event logging
 
 - App lifecycle logs must be structured JSON objects with stable event names.

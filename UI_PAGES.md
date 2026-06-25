@@ -378,6 +378,7 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 - Link each row to `/documents/:documentId`.
 - Show private `View` and `Download` actions backed by server-generated presigned links.
 - Surface document-level embedding/index state in the list where available.
+- Keep the existing upload dropzone and live pipeline cards visible so ingestion and exploration happen in the same workspace.
 
 ## Additional test requirements
 

@@ -2680,3 +2680,92 @@ npm run build
 
 ### Follow-up
 - Build the history data service and authenticated APIs first, then connect the `/history` page UI to the new server data.
+
+---
+
+## TASK-044: Rebuild documents list and add document detail explorer with presigned access links
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-044-document-explorer
+Started: 2026-06-25
+Completed:
+Commit Hash:
+
+### Objective
+Turn the documents area into a clearer two-level explorer for uploaded files, chunks, embeddings, and private access actions.
+
+### Files Changed
+- ENVIRONMENT.md
+- PROGRESS_LOG.md
+- SECURITY.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- package-lock.json
+- package.json
+- src/app/(app)/documents/[documentId]/page.tsx
+- src/app/api/documents/[documentId]/access-link/route.ts
+- src/app/api/documents/[documentId]/chunks/route.ts
+- src/app/api/documents/[documentId]/embeddings/route.ts
+- src/app/api/documents/[documentId]/route.ts
+- src/components/documents/DocumentChunksTable.tsx
+- src/components/documents/DocumentDetailPage.tsx
+- src/components/documents/DocumentEmbeddingPanel.tsx
+- src/components/documents/DocumentTable.tsx
+- src/components/documents/DocumentsWorkspace.tsx
+- src/components/documents/types.ts
+- src/lib/validations/documents.ts
+- src/server/documents/chunking.ts
+- src/server/documents/detail.ts
+- src/server/documents/list.ts
+- src/server/embeddings/service.ts
+- src/server/pinecone/indexing.ts
+- src/server/s3/client.ts
+- src/tests/document-access-link-route.test.ts
+- src/tests/document-chunking.test.ts
+- src/tests/document-detail-page.test.tsx
+- src/tests/document-detail-route.test.ts
+- src/tests/document-embeddings.test.ts
+- src/tests/documents-page.test.tsx
+- src/tests/documents-route.test.ts
+- src/tests/pinecone-indexing.test.ts
+- supabase/migrations/0003_document_explorer_metadata.sql
+
+### Implementation Notes
+- Started from the post-history baseline on branch `task/TASK-044-document-explorer`.
+- Rebuilt the `/documents` workspace into an upload-plus-explorer surface with summary counters, filters, row-level private access actions, and links into a dedicated `/documents/:documentId` detail page.
+- Added authenticated document explorer APIs for detail, chunk previews, embedding/index summaries, and ownership-scoped short-lived S3 access links.
+- Extended document persistence with chunking and indexing snapshots while reusing the existing embedding snapshot field for richer detail-page metadata.
+- Added `@aws-sdk/s3-request-presigner` and hardened `npm run build` to clear stale `.next` artifacts before building after validation exposed intermittent Next.js artifact conflicts.
+
+### Tests Added
+- `src/tests/document-access-link-route.test.ts`
+- `src/tests/document-detail-page.test.tsx`
+- `src/tests/document-detail-route.test.ts`
+- Expanded `src/tests/document-chunking.test.ts`
+- Expanded `src/tests/document-embeddings.test.ts`
+- Expanded `src/tests/documents-page.test.tsx`
+- Expanded `src/tests/documents-route.test.ts`
+- Expanded `src/tests/pinecone-indexing.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Record the task commit hash after the task-scoped commit is created, then mark the task `done` once the working tree is clean.

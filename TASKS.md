@@ -1211,7 +1211,7 @@ Acceptance criteria:
 
 ### TASK-044: Rebuild documents list and add document detail explorer with presigned access links
 
-Status: not_started
+Status: validated
 
 Objective: Turn the documents area into a clearer two-level explorer for uploaded files, chunks, and embeddings.
 

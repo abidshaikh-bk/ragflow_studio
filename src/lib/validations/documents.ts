@@ -51,6 +51,10 @@ const documentStatusParamsSchema = z.object({
   documentId: z.string().uuid("Invalid document id.")
 });
 
+const documentAccessLinkRequestSchema = z.object({
+  action: z.enum(["view", "download"]).default("view")
+});
+
 const uploadDocumentRequestSchema = z.object({
   file: z.instanceof(File, {
     message: "A document file is required."
@@ -102,6 +106,26 @@ export function parseDocumentStatusParams(input: {
 
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid document id.");
+  }
+
+  return parsed.data;
+}
+
+export function parseDocumentDetailParams(input: {
+  documentId?: string;
+}) {
+  return parseDocumentStatusParams(input);
+}
+
+export type DocumentAccessAction = z.infer<typeof documentAccessLinkRequestSchema>["action"];
+
+export function parseDocumentAccessLinkRequest(input: unknown) {
+  const parsed = documentAccessLinkRequestSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new Error(
+      parsed.error.issues[0]?.message ?? "Invalid document access request."
+    );
   }
 
   return parsed.data;

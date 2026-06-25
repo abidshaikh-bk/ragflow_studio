@@ -98,6 +98,7 @@ export async function indexDocumentEmbeddings(
 
     await updateDocumentCompletion(supabase, {
       documentId,
+      namespace,
       processedChunks: pineconeVectors.length,
       totalChunks: pineconeVectors.length,
       userId
@@ -181,6 +182,7 @@ async function updateDocumentCompletion(
   supabase: SupabaseClient,
   input: {
     documentId: string;
+    namespace?: string;
     processedChunks: number;
     totalChunks: number;
     userId: string;
@@ -189,6 +191,11 @@ async function updateDocumentCompletion(
   const result = await supabase
     .from("documents")
     .update({
+      indexing_snapshot: {
+        indexedAt: new Date().toISOString(),
+        namespace: input.namespace,
+        vectorCount: input.totalChunks
+      },
       processed_chunks: input.processedChunks,
       status: "completed",
       total_chunks: input.totalChunks
