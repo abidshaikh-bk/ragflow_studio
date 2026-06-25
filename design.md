@@ -469,3 +469,45 @@ Phase 10 adds the persistent runtime MCP storage layer:
 - Stored HTTP headers and stdio env values must remain encrypted and server-only.
 - A server-only adapter under `src/server/mcp` loads enabled configs, enforces stdio allowlists and timeouts, and converts MCP tool definitions into LangChain-compatible tools.
 - The chat agent keeps Pinecone retrieval as the first grounding step and only falls back to enabled runtime MCP tools when document retrieval is weak.
+
+## Professional application refresh plan
+
+The next refinement pass upgrades the MVP shell into a professional multi-surface application while preserving strict user privacy.
+
+### New protected routes
+
+- `/chat`
+- `/documents`
+- `/documents/:documentId`
+- `/history`
+- `/settings`
+- `/admin`
+
+### Product rules for the refinement pass
+
+- Users can view only their own chat history, documents, document chunks, embeddings, and private object access links.
+- Admins can manage one shared assistant, tool policy, and global MCP servers, but they must not be able to inspect user document contents or raw uploaded files.
+- Uploaded files remain private in S3. User-facing access must use short-lived presigned links generated server-side for the owning user only.
+- LangSmith remains server-side. Browser clients receive application-owned history data plus optional safe LangSmith-derived metadata such as run IDs, status, and deep links.
+
+### Shared assistant administration
+
+The refined application treats the runtime assistant as one shared assistant for now:
+
+- one global system prompt,
+- one global built-in tool policy,
+- optional global runtime MCP servers,
+- user-scoped BYO MCP settings that remain separate from admin-managed global MCP.
+
+### Chat refinement direction
+
+- Chat must support streaming assistant responses.
+- Chat must expose saved model configuration selection and thinking-level selection.
+- Thinking-level and model selections must persist with sessions and messages.
+
+### Document explorer direction
+
+The documents experience grows from an ingestion dashboard into a two-level explorer:
+
+- `/documents` for the uploaded document index and status overview,
+- `/documents/:documentId` for metadata, chunk list, chunking strategy, embedding details, and private object access actions.

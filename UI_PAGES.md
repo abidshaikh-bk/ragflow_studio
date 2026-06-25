@@ -299,3 +299,127 @@ The MCP Tools tab belongs to Phase 4 and must include:
 - delete/disable controls.
 
 Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
+
+---
+
+# `/history`
+
+## Route files
+
+- `src/app/(app)/history/page.tsx`
+- `src/components/history/HistoryPageClient.tsx`
+- `src/components/history/HistoryFilters.tsx`
+- `src/components/history/RunHistoryList.tsx`
+- `src/components/history/RunHistoryDetail.tsx`
+
+## Functional requirements
+
+- Load only the authenticated user's history.
+- Show chat session, prompt, assistant reply, tool activity, runtime MCP activity, and LangSmith run identifiers.
+- Support empty, loading, and error states.
+- Allow safe server-side LangSmith enrichment without exposing LangSmith credentials.
+
+## Test requirements
+
+- History page renders empty and populated states.
+- User cannot load another user's history.
+- MCP and built-in tool activity are rendered when present.
+
+---
+
+# `/documents/:documentId`
+
+## Route files
+
+- `src/app/(app)/documents/[documentId]/page.tsx`
+- `src/components/documents/DocumentDetailPage.tsx`
+- `src/components/documents/DocumentChunksTable.tsx`
+- `src/components/documents/DocumentEmbeddingPanel.tsx`
+
+## Functional requirements
+
+- Load only the authenticated user's document.
+- Show document metadata, processing status, chunk count, chunking strategy, embedding model snapshot, and vector/index metadata.
+- List chunk previews, token counts, and vector IDs.
+- Provide user-owned private access actions through server-generated presigned links.
+
+## Test requirements
+
+- Detail page renders loading, not-found, failed, and completed states.
+- Chunk and embedding details render for completed documents.
+- Presigned access endpoint is ownership-scoped.
+
+---
+
+# `/chat` refinement requirements
+
+## Additional functional requirements
+
+- Load available user chat model configs from `GET /api/chat/models`.
+- Allow the user to select thinking level before sending a message.
+- Stream assistant responses from `POST /api/chat`.
+- Persist selected thinking level and model metadata with the session/message state.
+
+## Additional test requirements
+
+- Chat model and thinking controls render correctly.
+- Streaming assistant content renders progressively.
+- Tool activity remains visible during and after stream completion.
+
+---
+
+# `/documents` refinement requirements
+
+## Additional functional requirements
+
+- Present a cleaner uploaded-document index with filters and action affordances.
+- Link each row to `/documents/:documentId`.
+- Show private `View` and `Download` actions backed by server-generated presigned links.
+- Surface document-level embedding/index state in the list where available.
+
+## Additional test requirements
+
+- Document index renders filters and actions.
+- List rows navigate to the document detail page.
+- Private access actions do not appear for unauthorized users.
+
+---
+
+# `/settings` refinement requirements
+
+## Additional functional requirements
+
+- Reframe runtime MCP as user BYO MCP configuration.
+- Preserve the existing model and MCP configuration flows under a cleaner information hierarchy.
+- Keep all secret values masked after save and reload.
+
+## Additional test requirements
+
+- Settings page renders the BYO MCP framing without leaking secrets.
+- Existing MCP flows continue to work after layout refresh.
+
+---
+
+# `/admin`
+
+## Route files
+
+- `src/app/(app)/admin/page.tsx`
+- `src/components/admin/AdminPageClient.tsx`
+- `src/components/admin/SystemPromptEditor.tsx`
+- `src/components/admin/ToolPolicyPanel.tsx`
+- `src/components/admin/GlobalMcpSettings.tsx`
+
+## Functional requirements
+
+- Gate the route to admins only.
+- Manage one shared assistant system prompt.
+- Manage built-in tool policy.
+- Manage global MCP server definitions separately from user BYO MCP settings.
+- Show operational summaries without exposing user document contents.
+
+## Test requirements
+
+- Non-admin users are denied access.
+- Admin config loads and saves successfully.
+- Global MCP settings remain secret-safe in the browser.

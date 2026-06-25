@@ -203,3 +203,18 @@ user message
 - Tool calls are logged in Supabase and LangSmith.
 - Disabled MCP servers are never loaded.
 - User A cannot access User B's MCP configs or tool results.
+
+## Next refinement extension
+
+Runtime MCP is now part of the shipped codebase, and the next refinement phase separates two surfaces clearly:
+
+- user BYO MCP in `/settings`,
+- admin-managed global MCP in `/admin`.
+
+Additional implementation requirements:
+
+1. Global MCP configs must be stored as admin-managed records and must not expose raw secrets to the browser.
+2. The runtime registry must support loading enabled global MCP plus enabled user-scoped MCP together.
+3. Global MCP policy must remain compatible with the one-shared-assistant model.
+4. Admins may manage global MCP definitions, but they still must not gain access to user document contents.
+5. History surfaces may show MCP invocation metadata, but not raw decrypted headers, env values, or sensitive tool payloads.

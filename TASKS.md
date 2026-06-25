@@ -1078,3 +1078,259 @@ Tests:
 Acceptance criteria:
 
 - Runtime MCP is configurable and safely integrated without breaking MVP RAG.
+
+---
+
+## Phase 11 — Professional Shell and Chat Refresh
+
+### TASK-039: Refine protected shell, navigation, spacing, and overflow handling
+
+Status: validated
+
+Objective: Upgrade the protected application shell to a professional dashboard standard with consistent layout, spacing, responsive overflow handling, and clearer page hierarchy.
+
+Implementation:
+
+- Rework `AppShell`, `TopNav`, and page containers for consistent max-widths, padding, and scroll regions.
+- Add `History` navigation and conditional `Admin` navigation.
+- Improve card spacing, table wrappers, split-pane behavior, and mobile breakpoints.
+- Establish reusable page header and section layout patterns for `Chat`, `Documents`, `History`, `Settings`, and `Admin`.
+
+Tests:
+
+- Protected shell renders the new navigation structure.
+- Active route highlighting still works.
+- Admin navigation item is hidden for non-admin users.
+- Updated layouts render without overflow regressions in component and page tests.
+
+Acceptance criteria:
+
+- Protected routes share a consistent, professional layout baseline.
+- Navigation and page framing support the expanded information architecture cleanly.
+
+---
+
+### TASK-040: Implement working logout flow and authenticated session controls
+
+Status: not_started
+
+Objective: Replace the placeholder logout control with a working authenticated sign-out flow.
+
+Implementation:
+
+- Add `POST /api/auth/logout`.
+- Wire `UserMenu` to sign out and redirect to `/login`.
+- Ensure E2E auth bypass still behaves correctly in tests.
+
+Tests:
+
+- Logout control triggers a sign-out request.
+- Authenticated users are redirected to `/login` after logout.
+- Logout route rejects invalid methods and preserves secret safety.
+
+Acceptance criteria:
+
+- Users can reliably end their session from the protected shell.
+
+---
+
+### TASK-041: Add chat model selection, thinking controls, and saved preference APIs
+
+Status: not_started
+
+Objective: Expose saved chat model choices and thinking-level selection in the chat experience.
+
+Implementation:
+
+- Add `GET /api/chat/models`.
+- Surface user chat model configs and default thinking level in the chat UI.
+- Persist chosen model config and thinking level on chat sessions and messages.
+
+Tests:
+
+- Model list API is authenticated and user-scoped.
+- Chat UI renders model and thinking controls.
+- Selected thinking level is persisted in chat session/message records.
+
+Acceptance criteria:
+
+- Users can choose a saved chat model and thinking level before sending a message.
+
+---
+
+### TASK-042: Convert chat transport and UI to streaming responses
+
+Status: not_started
+
+Objective: Move the chat experience from one-shot JSON replies to streaming assistant responses.
+
+Implementation:
+
+- Change `POST /api/chat` to stream assistant output while preserving persistence and trace IDs.
+- Add optimistic user messages, in-flight assistant rendering, and stable post-stream persistence.
+- Keep tool activity and LangSmith metadata available throughout the interaction.
+
+Tests:
+
+- Streaming API returns incremental assistant content.
+- Chat UI renders optimistic and streaming states correctly.
+- Persistence still completes after stream finalization.
+
+Acceptance criteria:
+
+- Assistant responses stream progressively in the chat UI without breaking persistence or tool logging.
+
+---
+
+## Phase 12 — History and Document Explorer
+
+### TASK-043: Build LangSmith-aware user history page and history APIs
+
+Status: not_started
+
+Objective: Add a user-facing history surface backed by application audit data and LangSmith-linked run metadata.
+
+Implementation:
+
+- Add `/history`.
+- Add `GET /api/history` and `GET /api/history/:sessionId`.
+- Join `chat_sessions`, `chat_messages`, `agent_tool_calls`, and `mcp_tool_invocations` using session and LangSmith run metadata.
+- Add optional server-side LangSmith enrichment without exposing credentials to the browser.
+
+Tests:
+
+- History APIs are authenticated and user-scoped.
+- User history page renders runs, prompts, replies, tool activity, and trace identifiers.
+- Admin-only operational history filters do not expose user document content.
+
+Acceptance criteria:
+
+- Users can review their own AI-agent interactions and tool activity from a dedicated page.
+
+---
+
+### TASK-044: Rebuild documents list and add document detail explorer with presigned access links
+
+Status: not_started
+
+Objective: Turn the documents area into a clearer two-level explorer for uploaded files, chunks, and embeddings.
+
+Implementation:
+
+- Rebuild `/documents` as a professional uploaded-document index with filtering and status summaries.
+- Add `/documents/:documentId`.
+- Add `GET /api/documents/:documentId`, `GET /api/documents/:documentId/chunks`, `GET /api/documents/:documentId/embeddings`, and `POST /api/documents/:documentId/access-link`.
+- Extend persistence for chunking strategy and richer embedding/index metadata.
+- Use short-lived presigned S3 links for the owning user only.
+
+Tests:
+
+- Document detail routes are authenticated and ownership-scoped.
+- Presigned access links are returned only for the owning user.
+- Document UI renders metadata, chunks, chunking strategy, and embedding details.
+
+Acceptance criteria:
+
+- Users can inspect their uploaded documents, chunking results, embeddings, and private file access links from a structured document explorer.
+
+---
+
+## Phase 13 — Admin Control Plane
+
+### TASK-045: Add admin role model and admin-only route/API guards
+
+Status: not_started
+
+Objective: Introduce a simple admin role and enforce it consistently across admin surfaces.
+
+Implementation:
+
+- Add `profiles.is_admin`.
+- Add shared admin-only guards for pages and route handlers.
+- Keep admins blocked from viewing user document contents and raw uploads.
+
+Tests:
+
+- Non-admin users cannot access admin routes or admin APIs.
+- Admin users can access admin routes.
+- Admin access does not bypass user document privacy rules.
+
+Acceptance criteria:
+
+- Admin functionality is clearly separated from standard user capabilities.
+
+---
+
+### TASK-046: Add shared assistant admin settings for system prompt and tool policy
+
+Status: not_started
+
+Objective: Let admins manage one shared runtime assistant configuration for all chats.
+
+Implementation:
+
+- Add `/admin`.
+- Add a global assistant settings store, such as `agent_runtime_settings`.
+- Add admin APIs for reading and updating global system prompt and built-in tool policy.
+- Merge admin-managed assistant settings into chat invocation.
+
+Tests:
+
+- Admin settings APIs are admin-only.
+- Chat workflow applies the saved global system prompt and tool policy.
+- Disabled built-in tools are not invoked by the agent.
+
+Acceptance criteria:
+
+- One shared assistant can be centrally configured by admins without exposing secrets or user content.
+
+---
+
+### TASK-047: Add global MCP management for admins and merge global plus user MCP loading
+
+Status: not_started
+
+Objective: Separate user BYO MCP from admin-managed global MCP and load both safely at runtime.
+
+Implementation:
+
+- Add admin MCP management APIs and UI.
+- Support `user_id = null` global MCP configs for admin-managed servers.
+- Load enabled global and user-scoped MCP configs together in the runtime registry.
+- Keep user settings as BYO MCP in `/settings`.
+
+Tests:
+
+- Admin can manage global MCP configs.
+- Global and user MCP configs are merged safely at runtime.
+- Disabled global MCP configs are not loaded.
+- Browser responses never expose raw secrets.
+
+Acceptance criteria:
+
+- The shared assistant can use admin-managed global MCP tools alongside user-scoped MCP tools where allowed.
+
+---
+
+## Phase 14 — Hardening, Docs, and QA
+
+### TASK-048: Refresh docs, tests, smoke coverage, and visual QA for the new IA
+
+Status: not_started
+
+Objective: Bring project documentation and validation coverage in line with the refined application information architecture.
+
+Implementation:
+
+- Update product, UI, security, testing, environment, and MCP docs.
+- Expand unit, component, API, and E2E coverage for shell, history, documents, chat streaming, settings, and admin.
+- Record visual verification notes for the major page refreshes.
+
+Tests:
+
+- Lint, typecheck, unit tests, E2E tests, and build all pass.
+- Smoke coverage includes logout, streaming chat, history, document details, presigned access, user MCP, and admin controls.
+
+Acceptance criteria:
+
+- The refined application is documented and validated end-to-end.

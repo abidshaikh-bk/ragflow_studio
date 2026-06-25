@@ -2370,3 +2370,76 @@ npm run build
 
 ### Follow-up
 - Keep vector search as the first document-grounding step and use runtime MCP only as a safe fallback path.
+
+---
+
+## TASK-039: Refine protected shell, navigation, spacing, and overflow handling
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-039-professional-shell-refresh
+Started: 2026-06-25
+Completed: 2026-06-25
+
+### Objective
+Upgrade the protected app shell and page framing to a professional dashboard standard, and lay down the information architecture required for History and Admin surfaces.
+
+### Files Changed
+- TASKS.md
+- PROGRESS_LOG.md
+- design.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- SECURITY.md
+- TESTING.md
+- ENVIRONMENT.md
+- MCP_SERVERS.md
+- AGENTIC_RAG_MCP.md
+- src/app/(app)/admin/page.tsx
+- src/app/(app)/chat/page.tsx
+- src/app/(app)/documents/page.tsx
+- src/app/(app)/history/page.tsx
+- src/app/(app)/layout.tsx
+- src/app/(app)/settings/page.tsx
+- src/components/app-shell/AppShell.tsx
+- src/components/app-shell/navigation.ts
+- src/components/app-shell/PageHeader.tsx
+- src/components/app-shell/ProtectedPagePlaceholder.tsx
+- src/components/app-shell/TopNav.tsx
+- src/components/chat/ChatLayout.tsx
+- src/server/auth/authorization.ts
+- src/server/supabase/middleware.ts
+- src/tests/app-shell.test.tsx
+- src/tests/page-scaffolds.test.tsx
+- src/tests/supabase-auth.test.tsx
+
+### Implementation Notes
+- Appended the multi-phase implementation plan into the project markdown files before starting product code changes.
+- Added the new task series `TASK-039` through `TASK-048` so the remaining work is tracked in-repo.
+- Reworked the protected shell with a taller sticky top bar, consistent max-width framing, a dedicated inner scroll region, and shared page headers for the refreshed app surfaces.
+- Added `History` routing, admin-aware navigation, protected-route middleware coverage for the expanded IA, and placeholder pages for `/history` and `/admin`.
+- Updated the chat, documents, and settings pages to share the new framing while preserving the existing product behavior underneath.
+
+### Tests Added
+- Protected shell navigation and admin-role coverage in `src/tests/app-shell.test.tsx`
+- Protected page placeholder coverage in `src/tests/page-scaffolds.test.tsx`
+- Expanded middleware/layout auth coverage for `/history` and admin navigation in `src/tests/supabase-auth.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Implement the protected shell refresh first, then continue through logout, chat modernization, history, documents, and admin tasks in sequence.

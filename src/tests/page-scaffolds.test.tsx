@@ -2,8 +2,10 @@ import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 import ChatPage from "@/app/(app)/chat/page";
+import HistoryPage from "@/app/(app)/history/page";
 import DocumentsPage from "@/app/(app)/documents/page";
 import SettingsPage from "@/app/(app)/settings/page";
+import AdminPage from "@/app/(app)/admin/page";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 
 vi.mock("next/navigation", () => ({
@@ -109,6 +111,9 @@ describe("phase 1a page scaffolds", () => {
     render(<SettingsPage />);
 
     expect(
+      screen.getByRole("heading", { name: /assistant configuration/i })
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("heading", { name: /model configuration status/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Chat provider")).toBeInTheDocument();
@@ -118,6 +123,20 @@ describe("phase 1a page scaffolds", () => {
         screen.getByText(/stored value on file: \*{8}1234/i)
       ).toBeInTheDocument()
     );
+  });
+
+  it("renders the history and admin placeholders inside the protected shell", () => {
+    render(
+      <div>
+        <HistoryPage />
+        <AdminPage />
+      </div>
+    );
+
+    expect(screen.getByRole("heading", { name: /run history/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /shared assistant control plane/i })
+    ).toBeInTheDocument();
   });
 
   it("blocks empty chat submit and calls the handler when populated", async () => {

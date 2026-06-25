@@ -128,9 +128,10 @@ export function ChatLayout({
       />
 
       <Card
-        eyebrow="Chat"
-        title="Agentic RAG workspace"
-        description="Use the chat composer to ask questions about your private document set. The model and thinking controls stay read-only until a later phase."
+        className="overflow-hidden"
+        eyebrow="Conversation"
+        title="Private document chat"
+        description="Ask questions about your indexed documents while keeping retrieval and tool activity visible alongside the active thread."
       >
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.24em] text-slate-400">

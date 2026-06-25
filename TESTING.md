@@ -216,3 +216,46 @@ Only after Phase 4 begins:
 - Agent workflow tests for runtime MCP fallback, disabled-tool avoidance, and vector-search-first behavior.
 - MCP tool call logging redacts inputs/outputs.
 - MCP tools do not break default vector-search RAG.
+
+## Professional refresh test expansion
+
+Add the following coverage as the application expands beyond the initial MVP shell:
+
+### Shared shell and auth controls
+
+- Shell layout test for `Chat`, `Documents`, `History`, `Settings`, and `Admin` navigation states.
+- Logout API and UI tests.
+- Admin navigation visibility tests for admin vs non-admin users.
+
+### Streaming chat
+
+- API tests for streaming `POST /api/chat`.
+- Component tests for optimistic user messages, in-flight assistant rendering, and stream completion.
+- Persistence tests proving the final assistant message is stored after stream completion.
+
+### History
+
+- Route tests for `GET /api/history` and `GET /api/history/:sessionId`.
+- Component tests for empty, populated, and error states on `/history`.
+- Ownership tests proving users cannot read another user's history.
+
+### Documents explorer
+
+- Route tests for document detail, chunk list, embedding detail, and presigned access endpoints.
+- Component tests for document list filters and document detail panels.
+- Ownership tests proving only the document owner can receive a private access link.
+
+### Admin control plane
+
+- Admin guard tests for pages and APIs.
+- API tests for shared assistant config and global MCP config CRUD.
+- Agent workflow tests proving the global system prompt and tool policy are respected.
+
+### E2E additions
+
+- Logout flow.
+- History page visibility.
+- Document detail drilldown from `/documents`.
+- Private file access action availability for the owning user.
+- Admin-only access to `/admin`.
+- Streaming chat and thinking-level selection.

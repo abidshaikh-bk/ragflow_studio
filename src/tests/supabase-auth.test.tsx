@@ -49,6 +49,26 @@ describe("Supabase auth protection", () => {
     );
   });
 
+  it("protects the new history route with the same authenticated redirect", async () => {
+    createServerClientMock.mockReturnValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: null
+          }
+        })
+      }
+    });
+
+    const request = new NextRequest("http://localhost:3000/history");
+    const response = await updateSession(request);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/login?next=%2Fhistory"
+    );
+  });
+
   it("allows authenticated protected requests to continue", async () => {
     createServerClientMock.mockReturnValue({
       auth: {
@@ -72,6 +92,9 @@ describe("Supabase auth protection", () => {
 
   it("renders protected content for an authenticated layout session", async () => {
     requireAuthenticatedUserMock.mockResolvedValue({
+      app_metadata: {
+        role: "admin"
+      },
       email: "abid@example.com"
     });
 
@@ -83,5 +106,6 @@ describe("Supabase auth protection", () => {
 
     expect(screen.getByText("Secure dashboard")).toBeInTheDocument();
     expect(screen.getByText("abid@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Admin" })).toBeInTheDocument();
   });
 });

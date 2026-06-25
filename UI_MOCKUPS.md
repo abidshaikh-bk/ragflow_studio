@@ -429,3 +429,112 @@ Settings is allowed in MVP, but it should initially show default configuration s
 Implementation note:
 
 - The runtime UI may use a dialog-style add/edit flow as long as the `MCP Tools` tab preserves this list-plus-editor structure and keeps stored secrets masked.
+
+---
+
+# 6. History page — `/history`
+
+## Layout intent
+
+A professional audit-style run history surface that shows the user how the agent answered, which tools ran, and which LangSmith run tracked the interaction.
+
+## Wireframe
+
+```txt
+┌───────────────────────────────────────────────────────────────────────────┐
+│ RAGFlow Studio   Chat   Documents   History   Settings          User ▾    │
+├───────────────────────┬───────────────────────────────────────────────────┤
+│ Filters               │ Run history                                        │
+│                       │                                                    │
+│ Date range            │ Session: Policy Q&A                               │
+│ Tool type             │ User: What does the refund policy say?            │
+│ Status                │ Assistant: Based on your documents...             │
+│                       │ Tools: pinecone.query, runtime.mcp.weather        │
+│                       │ LangSmith run: trace-123                          │
+│                       │ Status: completed                                 │
+│                       │                                                    │
+│                       │ Session: Research                                 │
+│                       │ ...                                               │
+└───────────────────────┴───────────────────────────────────────────────────┘
+```
+
+## Required UI states
+
+- Empty history.
+- Loading history.
+- Error loading history.
+- Run with built-in tools only.
+- Run with runtime MCP tool activity.
+
+---
+
+# 7. Document detail page — `/documents/:documentId`
+
+## Layout intent
+
+A focused inspection page for one uploaded document with clear metadata, chunk insights, embedding/index status, and private access actions.
+
+## Wireframe
+
+```txt
+┌───────────────────────────────────────────────────────────────────────────┐
+│ Back to Documents                                                         │
+│                                                                           │
+│ Document: employee-handbook.md              [ View file ] [ Download ]    │
+│ Status: Completed    Chunks: 24    Strategy: recursive-words              │
+│ Embedding model: text-embedding-3-small                                   │
+│                                                                           │
+│ Chunks                                                                     │
+│ #0   112 tokens   vector:user:doc:0   "Welcome to the company..."         │
+│ #1   108 tokens   vector:user:doc:1   "Managers are responsible..."       │
+│                                                                           │
+│ Embedding / indexing                                                       │
+│ Namespace: user:uuid                                                      │
+│ Vectors indexed: 24                                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+## Required UI states
+
+- Loading detail page.
+- Document not found.
+- Processing document with partial metadata.
+- Completed document with private access actions.
+- Failed document with error state.
+
+---
+
+# 8. Admin page — `/admin`
+
+## Layout intent
+
+A restrained control plane for one shared assistant. Operational and configuration focused, without any user document-content visibility.
+
+## Wireframe
+
+```txt
+┌───────────────────────────────────────────────────────────────────────────┐
+│ RAGFlow Studio   Chat   Documents   History   Settings   Admin   User ▾   │
+├───────────────────────────────────────────────────────────────────────────┤
+│ Shared assistant                                                          │
+│ System prompt                                                             │
+│ [ multiline prompt editor                                      ]          │
+│                                                                           │
+│ Built-in tools                                                            │
+│ [x] Vector search   [x] Date/time   [x] Web search                        │
+│                                                                           │
+│ Global MCP                                                                │
+│ Name              Transport   Status     Tools                            │
+│ Remote Research   HTTP        Enabled    3                                │
+│                                                                           │
+│ Operations summary                                                        │
+│ Runs today: 42    Success rate: 95%    Active users: 11                   │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+## Required UI states
+
+- Non-admin access denied.
+- Empty global MCP state.
+- Save success and error states for system prompt and tool policy.
+- Operational summary with metadata only, never user document content.

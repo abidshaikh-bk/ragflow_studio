@@ -7,7 +7,13 @@ import {
   isE2EAuthBypassEnabled
 } from "@/server/auth/e2e";
 
-const protectedRoutePrefixes = ["/chat", "/documents", "/settings"] as const;
+const protectedRoutePrefixes = [
+  "/chat",
+  "/documents",
+  "/history",
+  "/settings",
+  "/admin"
+] as const;
 const authRoutes = ["/login", "/register"] as const;
 
 export function isProtectedRoute(pathname: string) {

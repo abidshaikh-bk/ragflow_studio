@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell/AppShell";
+import { isAdminUser } from "@/server/auth/authorization";
 import { requireAuthenticatedUser } from "@/server/auth/session";
 
 export default async function ProtectedLayout({
@@ -8,5 +9,9 @@ export default async function ProtectedLayout({
 }>) {
   const user = await requireAuthenticatedUser();
 
-  return <AppShell userEmail={user.email}>{children}</AppShell>;
+  return (
+    <AppShell isAdmin={isAdminUser(user)} userEmail={user.email}>
+      {children}
+    </AppShell>
+  );
 }

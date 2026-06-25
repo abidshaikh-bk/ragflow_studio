@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { Spinner } from "@/components/ui/Spinner";
 import { TopNav } from "@/components/app-shell/TopNav";
+import { isAdminUser } from "@/server/auth/authorization";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/documents"
@@ -21,6 +22,10 @@ describe("TopNav", () => {
       "href",
       "/documents"
     );
+    expect(screen.getByRole("link", { name: "History" })).toHaveAttribute(
+      "href",
+      "/history"
+    );
     expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
       "href",
       "/settings"
@@ -30,8 +35,44 @@ describe("TopNav", () => {
       "page"
     );
     expect(
+      screen.queryByRole("link", { name: "Admin" })
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: /logout/i })
     ).toBeInTheDocument();
+  });
+
+  it("shows the admin navigation item only for admin users", () => {
+    render(<TopNav isAdmin />);
+
+    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
+      "href",
+      "/admin"
+    );
+  });
+});
+
+describe("isAdminUser", () => {
+  it("reads admin roles from app metadata", () => {
+    expect(
+      isAdminUser({
+        app_metadata: {
+          roles: ["member", "admin"]
+        },
+        user_metadata: {}
+      } as never)
+    ).toBe(true);
+  });
+
+  it("returns false when no admin role is present", () => {
+    expect(
+      isAdminUser({
+        app_metadata: {
+          role: "member"
+        },
+        user_metadata: {}
+      } as never)
+    ).toBe(false);
   });
 });
 

@@ -1,13 +1,13 @@
 import { DocumentsWorkspace } from "@/components/documents/DocumentsWorkspace";
-import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/app-shell/PageHeader";
 
 export default function DocumentsPage() {
   return (
     <div className="space-y-6">
-      <Card
+      <PageHeader
+        description="Upload, process, and monitor the files that power user-scoped retrieval while keeping long-running status work contained inside the document workspace."
         eyebrow="Documents"
         title="Document ingestion workspace"
-        description="Upload, process, and track the files that power user-scoped retrieval."
       />
       <DocumentsWorkspace />
     </div>

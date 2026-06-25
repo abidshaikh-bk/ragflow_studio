@@ -117,3 +117,12 @@ MCP_HTTP_TIMEOUT_MS=30000
 ```
 
 Do not enable runtime MCP until Phase 10 tasks are implemented and tested.
+
+## Professional refresh environment notes
+
+The next UI and admin refinement phase does not require browser-visible secrets. Keep all new configuration server-side.
+
+- Private document access continues to rely on the existing S3 credentials and bucket configuration.
+- LangSmith history enrichment continues to rely on the existing server-side LangSmith environment variables only.
+- Global assistant configuration is planned as database-backed application state, not as frontend environment variables.
+- If presigned URL expiration tuning is introduced later, keep it server-only and document it before use.

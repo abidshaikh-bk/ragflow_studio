@@ -199,3 +199,18 @@ Rules:
 11. Global MCP configs, if used later, must only be read through trusted server-side clients and never exposed as raw table rows to authenticated browsers.
 12. Runtime MCP adapters must reject browser execution and enforce the stdio allowlist before spawning any local command.
 13. MCP configuration APIs must always return sanitized config shapes with secret-presence flags instead of raw encrypted payloads or fingerprints.
+
+## Professional refresh security additions
+
+The next refinement phase adds History, document detail exploration, admin controls, and private object access. These rules are mandatory:
+
+1. Users may access only their own document rows, chunk rows, embeddings metadata, chat sessions, chat messages, tool calls, and runtime MCP logs.
+2. Admin status must not grant read access to another user's document contents, chunk previews, or raw uploaded files.
+3. Admin operational views may expose counts, statuses, timestamps, and run metadata only.
+4. User-visible document access must use short-lived server-generated presigned links or an equivalent server-mediated private access mechanism.
+5. Raw S3 object keys may be stored server-side, but the UI must not expose a reusable raw bucket URL or long-lived object URL.
+6. History APIs must never return raw secrets, raw headers, decrypted MCP env values, or hidden LangSmith credentials.
+7. LangSmith enrichment must happen server-side only and must return safe metadata such as run IDs, status, timings, and deep links.
+8. Global assistant configuration must be guarded by explicit admin-only route and API checks.
+9. Global MCP configs with `user_id = null` must be manageable only by admins and loaded server-side only.
+10. Streaming chat responses must preserve the same auth, user scoping, and secret redaction guarantees as the prior one-shot chat flow.
