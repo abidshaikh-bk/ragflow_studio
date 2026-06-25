@@ -407,48 +407,7 @@ export function ChatLayout({
   return (
     <WorkspaceLayout
       center={
-        <div className="flex min-h-full flex-col gap-6">
-          <div className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 sm:grid-cols-2">
-            <label className="space-y-2 text-sm text-slate-300">
-              <span className="block font-mono text-[11px] uppercase tracking-[0.28em] text-aqua">
-                Chat model
-              </span>
-              <select
-                aria-label="Chat model"
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-ice-white outline-none transition focus:border-aqua/60"
-                onChange={(event) =>
-                  setSelectedModelConfigId(event.target.value || null)
-                }
-                value={selectedModelConfigId ?? ""}
-              >
-                {modelOptions.map((model) => (
-                  <option key={model.id ?? "server-default"} value={model.id ?? ""}>
-                    {model.label} · {model.provider} / {model.modelName}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="space-y-2 text-sm text-slate-300">
-              <span className="block font-mono text-[11px] uppercase tracking-[0.28em] text-aqua">
-                Thinking level
-              </span>
-              <select
-                aria-label="Thinking level"
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-ice-white outline-none transition focus:border-aqua/60"
-                disabled={selectedModel?.supportsThinking === false}
-                onChange={(event) =>
-                  setSelectedThinkingLevel(event.target.value as ThinkingLevel)
-                }
-                value={selectedThinkingLevel}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-          </div>
-
+        <div className="flex h-full min-h-[34rem] flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.24em] text-slate-400">
             <span>
               Model: {selectedModel ? `${selectedModel.label}` : "Loading options"}
@@ -479,8 +438,53 @@ export function ChatLayout({
             </div>
           ) : null}
 
-          <MessageList loading={false} messages={activeMessages} />
-          <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <MessageList loading={false} messages={activeMessages} />
+          </div>
+          <div
+            className="sticky bottom-0 mt-auto rounded-[1.5rem] border border-white/10 bg-[#081122]/95 p-4 shadow-[0_-12px_40px_rgba(5,8,22,0.45)] backdrop-blur"
+            data-testid="chat-composer-shell"
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-2 text-sm text-slate-300">
+                <span className="block font-mono text-[11px] uppercase tracking-[0.28em] text-aqua">
+                  Chat model
+                </span>
+                <select
+                  aria-label="Chat model"
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-ice-white outline-none transition focus:border-aqua/60"
+                  onChange={(event) =>
+                    setSelectedModelConfigId(event.target.value || null)
+                  }
+                  value={selectedModelConfigId ?? ""}
+                >
+                  {modelOptions.map((model) => (
+                    <option key={model.id ?? "server-default"} value={model.id ?? ""}>
+                      {model.label} · {model.provider} / {model.modelName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="space-y-2 text-sm text-slate-300">
+                <span className="block font-mono text-[11px] uppercase tracking-[0.28em] text-aqua">
+                  Thinking level
+                </span>
+                <select
+                  aria-label="Thinking level"
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-ice-white outline-none transition focus:border-aqua/60"
+                  disabled={selectedModel?.supportsThinking === false}
+                  onChange={(event) =>
+                    setSelectedThinkingLevel(event.target.value as ThinkingLevel)
+                  }
+                  value={selectedThinkingLevel}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+            </div>
             <ChatComposer
               disabled={!hasCompletedDocuments}
               isLoading={loading}
@@ -489,6 +493,7 @@ export function ChatLayout({
           </div>
         </div>
       }
+      centerScrollable={false}
       centerTitle="Private knowledge chat"
       leftCollapsedSummary={
         <>

@@ -74,6 +74,7 @@ UI:
 
 - Left session rail with recent chats and new-chat action
 - Scroll-safe center conversation panel
+- Fixed bottom composer zone with model and thinking controls
 - Chat input
 - Send button
 - Streaming/loading indicator

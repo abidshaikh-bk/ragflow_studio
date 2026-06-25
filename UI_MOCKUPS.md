@@ -191,6 +191,7 @@ A split-pane agent chat UI. Left side has sessions and context status. Main area
 - Chat error state.
 - No indexed documents warning.
 - Left and right rails can collapse on desktop and open as drawers on mobile.
+- The composer stays pinned to the bottom of the center pane and carries the model and thinking controls.
 
 ## Components
 

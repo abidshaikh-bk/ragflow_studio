@@ -117,6 +117,8 @@ Phase 1A scaffold note:
 - Create a new session when needed.
 - Submit message to `/api/chat`.
 - Render the page inside the shared split-workspace primitive without a standalone hero header card.
+- Keep the composer pinned to the bottom of the center pane instead of leaving it in the normal document flow.
+- Render model and thinking controls inside the composer zone.
 - Render user and assistant messages.
 - Show tool activity returned in metadata.
 - Show structured citation metadata returned in assistant metadata.

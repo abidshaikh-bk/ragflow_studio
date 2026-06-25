@@ -1399,7 +1399,7 @@ Acceptance criteria:
 
 ### TASK-051: Rebuild the chat workspace into a three-pane conversational UI
 
-Status: not_started
+Status: done
 
 Objective: Deliver a left collapsible session rail, center chat thread, fixed bottom composer, and right collapsible sources/reasoning rail.
 

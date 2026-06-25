@@ -3110,7 +3110,7 @@ Owner Agent: Codex
 Git Branch: task/TASK-050-chat-citations-reasoning
 Started: 2026-06-25
 Completed: 2026-06-25
-Commit Hash:
+Commit Hash: fd75d7c
 
 ### Objective
 Upgrade chat metadata, streaming, and document chunk linking so answers expose structured citations and safe reasoning events.
@@ -3184,3 +3184,52 @@ npm run build
 
 ### Follow-up
 - Move on to `TASK-051` to rebuild the chat workspace around the new citations and reasoning timeline without changing the validated backend contracts again.
+
+---
+
+## TASK-051: Rebuild the chat workspace into a three-pane conversational UI
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-051-chat-three-pane-workspace
+Started: 2026-06-26
+Completed: 2026-06-26
+Commit Hash:
+
+### Objective
+Refine the chat workspace into a true three-pane conversational layout with a pinned composer zone and persistent access to sessions, sources, and reasoning.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/components/chat/ChatLayout.tsx
+- src/components/workspace/WorkspaceLayout.tsx
+- src/tests/chat-layout.test.tsx
+
+### Implementation Notes
+- Built on the completed `TASK-050` chat contracts so the UI could take advantage of live reasoning and citation updates without reopening backend work.
+- Moved the model and thinking controls into the composer zone, gave the center pane its own scroll region, and pinned the composer shell to the bottom of the chat workspace.
+- Kept the left session rail and right context rail intact while making the center thread behave more like a modern messaging workspace.
+
+### Tests Added
+- Expanded `src/tests/chat-layout.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npx vitest run src/tests/chat-layout.test.tsx src/tests/page-scaffolds.test.tsx
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- `TASK-052` still remains to give the documents workspace the same level of staged, sectioned refinement as chat.

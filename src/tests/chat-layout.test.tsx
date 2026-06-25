@@ -139,6 +139,7 @@ describe("chat layout", () => {
     render(<ChatLayout initialSessions={initialSessions} />);
 
     await screen.findByLabelText("Chat model");
+    expect(screen.getByTestId("chat-composer-shell")).toBeInTheDocument();
     expect(screen.getByLabelText("sessions")).toBeInTheDocument();
     expect(screen.getByLabelText("context")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /new chat/i })[0]);
