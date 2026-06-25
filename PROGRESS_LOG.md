@@ -2685,13 +2685,13 @@ npm run build
 
 ## TASK-044: Rebuild documents list and add document detail explorer with presigned access links
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-044-document-explorer
 Started: 2026-06-25
-Completed:
-Commit Hash:
+Completed: 2026-06-25
+Commit Hash: ca8fdb6
 
 ### Objective
 Turn the documents area into a clearer two-level explorer for uploaded files, chunks, embeddings, and private access actions.
@@ -2741,6 +2741,7 @@ Turn the documents area into a clearer two-level explorer for uploaded files, ch
 - Added authenticated document explorer APIs for detail, chunk previews, embedding/index summaries, and ownership-scoped short-lived S3 access links.
 - Extended document persistence with chunking and indexing snapshots while reusing the existing embedding snapshot field for richer detail-page metadata.
 - Added `@aws-sdk/s3-request-presigner` and hardened `npm run build` to clear stale `.next` artifacts before building after validation exposed intermittent Next.js artifact conflicts.
+- Task commit created: `ca8fdb6`
 
 ### Tests Added
 - `src/tests/document-access-link-route.test.ts`
@@ -2768,4 +2769,4 @@ npm run build
 - None
 
 ### Follow-up
-- Record the task commit hash after the task-scoped commit is created, then mark the task `done` once the working tree is clean.
+- Continue on a fresh `TASK-045` branch after confirming this branch is pushed and clean.
