@@ -1239,7 +1239,7 @@ Acceptance criteria:
 
 ### TASK-045: Add admin role model and admin-only route/API guards
 
-Status: validated
+Status: done
 
 Objective: Introduce a simple admin role and enforce it consistently across admin surfaces.
 

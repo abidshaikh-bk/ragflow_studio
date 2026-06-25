@@ -2775,13 +2775,13 @@ npm run build
 
 ## TASK-045: Add admin role model and admin-only route/API guards
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-045-admin-guards
 Started: 2026-06-25
-Completed:
-Commit Hash:
+Completed: 2026-06-25
+Commit Hash: c546815
 
 ### Objective
 Introduce a simple admin role and enforce it consistently across admin pages and admin-only APIs.
@@ -2809,6 +2809,7 @@ Introduce a simple admin role and enforce it consistently across admin pages and
 - Added `profiles.is_admin` through a dedicated migration and introduced shared admin access helpers for server-rendered pages and API routes.
 - Protected the `/admin` page before render, added a minimal admin-only API probe at `/api/admin/access`, and updated the protected app layout to read admin state from the shared authorization helper.
 - Extended middleware coverage to include `/admin` and `/history`, while keeping document and upload routes user-scoped so admins still cannot read another user's private document content.
+- Task commit created: `c546815`
 
 ### Tests Added
 - `src/tests/admin-guards.test.tsx`
@@ -2831,4 +2832,4 @@ npm run build
 - None
 
 ### Follow-up
-- Record the task commit hash after the task-scoped commit is created, then mark the task `done` once the branch is clean.
+- Continue on a fresh `TASK-046` branch after confirming this branch is pushed and clean.
