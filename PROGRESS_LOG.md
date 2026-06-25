@@ -2449,10 +2449,11 @@ npm run build
 
 ## TASK-040: Implement working logout flow and authenticated session controls
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-040-logout-session-controls
+Commit Hash: d1371d0
 Started: 2026-06-25
 Completed: 2026-06-25
 

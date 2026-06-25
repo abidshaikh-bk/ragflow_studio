@@ -1112,7 +1112,7 @@ Acceptance criteria:
 
 ### TASK-040: Implement working logout flow and authenticated session controls
 
-Status: validated
+Status: done
 
 Objective: Replace the placeholder logout control with a working authenticated sign-out flow.
 
