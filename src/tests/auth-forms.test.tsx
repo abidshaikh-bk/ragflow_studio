@@ -9,6 +9,8 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 const pushMock = vi.fn();
 const signUpMock = vi.fn();
 const signInWithPasswordMock = vi.fn();
+const fetchMock = vi.fn();
+let useE2ELoginBypass = false;
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -26,7 +28,7 @@ vi.mock("@/lib/supabase/browser", () => ({
 }));
 
 vi.mock("@/lib/e2e", () => ({
-  shouldUseE2ELoginBypass: () => false
+  shouldUseE2ELoginBypass: () => useE2ELoginBypass
 }));
 
 describe("auth page scaffolds", () => {
@@ -34,6 +36,9 @@ describe("auth page scaffolds", () => {
     pushMock.mockReset();
     signInWithPasswordMock.mockReset();
     signUpMock.mockReset();
+    fetchMock.mockReset();
+    useE2ELoginBypass = false;
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   it("renders login route fields and actions", () => {
@@ -130,6 +135,77 @@ describe("auth page scaffolds", () => {
     );
 
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("uses the E2E login bypass when the test route is enabled", async () => {
+    useE2ELoginBypass = true;
+    fetchMock.mockResolvedValue(
+      Response.json({
+        data: {
+          redirectTo: "/chat"
+        }
+      })
+    );
+
+    render(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "abid@example.com" }
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "secret123" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/e2e/login", {
+        method: "POST"
+      })
+    );
+
+    expect(signInWithPasswordMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/chat"));
+  });
+
+  it("falls back to Supabase login when the E2E route returns not found", async () => {
+    useE2ELoginBypass = true;
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          error: "Not found"
+        },
+        {
+          status: 404
+        }
+      )
+    );
+    signInWithPasswordMock.mockResolvedValue({
+      data: {},
+      error: null
+    });
+
+    render(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "abid@example.com" }
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "secret123" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/e2e/login", {
+        method: "POST"
+      })
+    );
+    await waitFor(() =>
+      expect(signInWithPasswordMock).toHaveBeenCalledWith({
+        email: "abid@example.com",
+        password: "secret123"
+      })
+    );
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/chat"));
   });
 
   it("blocks mismatched passwords before submit", async () => {

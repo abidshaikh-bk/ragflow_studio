@@ -110,7 +110,11 @@ async function loginWithSupabase(values: {
   password: string;
 }): Promise<LoginSubmitResult> {
   if (shouldUseE2ELoginBypass()) {
-    return loginWithE2EBypass();
+    const bypassResult = await loginWithE2EBypass();
+
+    if (bypassResult) {
+      return bypassResult;
+    }
   }
 
   const supabase = createBrowserSupabaseClient();
@@ -130,7 +134,7 @@ async function loginWithSupabase(values: {
   };
 }
 
-async function loginWithE2EBypass(): Promise<LoginSubmitResult> {
+async function loginWithE2EBypass(): Promise<LoginSubmitResult | null> {
   const response = await fetch("/api/e2e/login", {
     method: "POST"
   });
@@ -140,6 +144,10 @@ async function loginWithE2EBypass(): Promise<LoginSubmitResult> {
     };
     error?: string;
   };
+
+  if (response.status === 404 && payload.error === "Not found") {
+    return null;
+  }
 
   if (!response.ok || payload.data?.redirectTo !== "/chat") {
     throw new Error(payload.error || "Unable to log in right now.");

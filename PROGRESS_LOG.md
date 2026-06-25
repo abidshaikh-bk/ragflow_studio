@@ -1835,6 +1835,7 @@ Pass
 
 ### Follow-up
 - Reuse the Playwright auth harness for the document, chat, and tool-routing E2E tasks in Phase 9.
+- 2026-06-25: Hardened `src/components/auth/LoginForm.tsx` so a stray `/api/e2e/login` `404 Not found` response falls back to normal Supabase auth during local development, while `src/tests/auth-forms.test.tsx` and `src/tests/e2e/auth.spec.ts` continue to validate the intended Playwright bypass path.
 
 ---
 
