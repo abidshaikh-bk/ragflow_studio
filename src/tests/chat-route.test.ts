@@ -2,8 +2,11 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/route";
 
+const defaultModelId = "11111111-1111-4111-8111-111111111111";
+
 const getUserMock = vi.fn();
 const getChatSessionMock = vi.fn();
+const resolveChatModelSelectionMock = vi.fn();
 const prepareChatTurnMock = vi.fn();
 const persistAssistantReplyMock = vi.fn();
 const invokeChatAgentMock = vi.fn();
@@ -36,6 +39,11 @@ vi.mock("@/server/chat/persistence", () => ({
   prepareChatTurn: (...args: unknown[]) => prepareChatTurnMock(...args)
 }));
 
+vi.mock("@/server/chat/models", () => ({
+  resolveChatModelSelection: (...args: unknown[]) =>
+    resolveChatModelSelectionMock(...args)
+}));
+
 describe("/api/chat route", () => {
   beforeEach(() => {
     getUserMock.mockReset();
@@ -43,8 +51,27 @@ describe("/api/chat route", () => {
     prepareChatTurnMock.mockReset();
     persistAssistantReplyMock.mockReset();
     invokeChatAgentMock.mockReset();
+    resolveChatModelSelectionMock.mockReset();
     logInfoMock.mockReset();
     logErrorMock.mockReset();
+
+    resolveChatModelSelectionMock.mockResolvedValue({
+      model: {
+        defaultThinkingLevel: "medium",
+        id: defaultModelId,
+        isDefault: true,
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai",
+        supportsThinking: true
+      },
+      snapshot: {
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai"
+      },
+      thinkingLevel: "high"
+    });
   });
 
   it("returns 401 when the request is unauthenticated", async () => {
@@ -107,6 +134,8 @@ describe("/api/chat route", () => {
           role: "user"
         }
       ],
+      modelConfigId: defaultModelId,
+      thinkingLevel: "medium",
       title: "What is our document policy?",
       updatedAt: "Jun 21, 10:05 PM"
     });
@@ -148,16 +177,30 @@ describe("/api/chat route", () => {
     const response = await POST(
       createJsonRequest({
         message: "Summarize my documents",
-        sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef"
+        modelConfigId: defaultModelId,
+        sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef",
+        thinkingLevel: "high"
       })
     );
     const payload = await response.json();
 
     expect(response.status).toBe(200);
+    expect(resolveChatModelSelectionMock).toHaveBeenCalledWith(supabaseMock, {
+      modelConfigId: defaultModelId,
+      thinkingLevel: "high",
+      userId: "user-123"
+    });
     expect(prepareChatTurnMock).toHaveBeenCalledWith({
       message: "Summarize my documents",
+      modelConfigId: defaultModelId,
+      modelSnapshot: {
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai"
+      },
       sessionId: "1f62d9cf-5230-4ad7-9573-0b7f8d252aef",
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
     expect(invokeChatAgentMock).toHaveBeenCalledWith({
@@ -168,8 +211,11 @@ describe("/api/chat route", () => {
         }
       ],
       message: "Summarize my documents",
+      requestedModel: "gpt-4.1-mini",
+      requestedProvider: "openai",
       sessionId: "session-1",
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
     expect(persistAssistantReplyMock).toHaveBeenCalledWith({
@@ -181,8 +227,15 @@ describe("/api/chat route", () => {
           toolActivity: ["pinecone.query -> searched the authenticated user's namespace"]
         }
       },
+      modelConfigId: defaultModelId,
+      modelSnapshot: {
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai"
+      },
       sessionId: "session-1",
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
     expect(payload.data.id).toBe("session-1");
@@ -234,6 +287,8 @@ describe("/api/chat route", () => {
     const response = await POST(
       createJsonRequest({
         message: "Summarize my documents",
+        modelConfigId: defaultModelId,
+        thinkingLevel: "high",
         userId: "attacker-controlled-user"
       })
     );
@@ -241,15 +296,25 @@ describe("/api/chat route", () => {
     expect(response.status).toBe(200);
     expect(prepareChatTurnMock).toHaveBeenCalledWith({
       message: "Summarize my documents",
+      modelConfigId: defaultModelId,
+      modelSnapshot: {
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai"
+      },
       sessionId: undefined,
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
     expect(invokeChatAgentMock).toHaveBeenCalledWith({
       history: [],
       message: "Summarize my documents",
+      requestedModel: "gpt-4.1-mini",
+      requestedProvider: "openai",
       sessionId: "session-1",
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
     expect(persistAssistantReplyMock).toHaveBeenCalledWith({
@@ -261,8 +326,15 @@ describe("/api/chat route", () => {
           toolActivity: []
         }
       },
+      modelConfigId: defaultModelId,
+      modelSnapshot: {
+        label: "Default chat model",
+        modelName: "gpt-4.1-mini",
+        provider: "openai"
+      },
       sessionId: "session-1",
       supabase: supabaseMock,
+      thinkingLevel: "high",
       userId: "user-123"
     });
   });

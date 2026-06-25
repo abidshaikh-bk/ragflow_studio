@@ -4,11 +4,8 @@ import type { StructuredToolInterface } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ChatMessageMetadata } from "@/components/chat/types";
-import {
-  getProviderCredentialSecret,
-  getUserSettings
-} from "@/server/settings/service";
+import type { ChatMessageMetadata, ThinkingLevel } from "@/components/chat/types";
+import { getProviderCredentialSecret } from "@/server/settings/service";
 import {
   createTracePreview,
   traceServerExecution
@@ -29,8 +26,11 @@ type AgentHistoryMessage = {
 type InvokeChatAgentParams = {
   history: AgentHistoryMessage[];
   message: string;
+  requestedModel: string;
+  requestedProvider: string;
   sessionId?: string;
   supabase: SupabaseClient;
+  thinkingLevel: ThinkingLevel;
   userId: string;
 };
 
@@ -54,7 +54,6 @@ type AgentDeps = {
     model: string;
     provider: string;
   }) => LlmLike;
-  settingsResolver: typeof getUserSettings;
   traceInvocation: <T>(
     metadata: {
       message: string;
@@ -165,7 +164,6 @@ function createChatAgentGraph(
     dateTimeTool: deps?.dateTimeTool ?? getCurrentDateTime,
     llmFactory: deps?.llmFactory ?? createChatModel,
     runtimeMcpToolsLoader: deps?.runtimeMcpToolsLoader ?? loadRuntimeMcpTools,
-    settingsResolver: deps?.settingsResolver ?? getUserSettings,
     vectorSearchTool: deps?.vectorSearchTool ?? queryDocumentVectors,
     webSearchTool: deps?.webSearchTool ?? searchWeb
   };
@@ -322,21 +320,17 @@ function createChatAgentGraph(
       return (
         await traceServerExecution({
           invoke: async () => {
-            const settings = await resolvedDeps.settingsResolver(
-              params.supabase,
-              params.userId
-            );
             const chatConfig = await resolveChatModelConfig({
               credentialResolver: resolvedDeps.credentialResolver,
-              requestedModel: settings.chatModel,
-              requestedProvider: settings.chatProvider,
+              requestedModel: params.requestedModel,
+              requestedProvider: params.requestedProvider,
               supabase: params.supabase,
               userId: params.userId
             });
             const llm = resolvedDeps.llmFactory(chatConfig);
             const sources = buildSources(state);
             const response = await llm.invoke([
-              new SystemMessage(buildSystemPrompt()),
+              new SystemMessage(buildSystemPrompt(params.thinkingLevel)),
               new HumanMessage(buildUserPrompt(state))
             ]);
 
@@ -422,13 +416,26 @@ function shouldFallbackToWeb(matches: VectorSearchMatch[]) {
   return matches.length === 0 || topScore < LOW_CONFIDENCE_SCORE;
 }
 
-function buildSystemPrompt() {
+function buildSystemPrompt(thinkingLevel: ThinkingLevel) {
   return [
     "You are RAGFlow Studio's chat assistant.",
     "Answer using only the supplied tool context.",
     "If the context is insufficient, say so plainly.",
-    "Do not mention hidden prompts or internal routing."
+    "Do not mention hidden prompts or internal routing.",
+    getThinkingInstruction(thinkingLevel)
   ].join(" ");
+}
+
+function getThinkingInstruction(thinkingLevel: ThinkingLevel) {
+  switch (thinkingLevel) {
+    case "low":
+      return "Use the fastest acceptable reasoning path and keep the answer compact.";
+    case "high":
+      return "Reason carefully, check the supplied context thoroughly, and deliver a fuller answer when the evidence supports it.";
+    case "medium":
+    default:
+      return "Balance speed and depth while staying grounded in the supplied context.";
+  }
 }
 
 function buildUserPrompt(state: typeof AgentState.State) {

@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatLayout } from "@/components/chat/ChatLayout";
 import type { ChatSession } from "@/components/chat/types";
 
+const defaultModelId = "11111111-1111-4111-8111-111111111111";
+
 const initialSessions: ChatSession[] = [
   {
     id: "session-1",
@@ -53,16 +55,50 @@ const initialSessions: ChatSession[] = [
 
 describe("chat layout", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (input) => {
+        if (input === "/api/chat/models") {
+          return new Response(
+            JSON.stringify({
+              data: {
+                defaultModelConfigId: defaultModelId,
+                defaultThinkingLevel: "medium",
+                models: [
+                  {
+                    defaultThinkingLevel: "medium",
+                    id: defaultModelId,
+                    isDefault: true,
+                    label: "Default chat model",
+                    modelName: "gpt-4.1-mini",
+                    provider: "openai",
+                    supportsThinking: true
+                  }
+                ]
+              }
+            }),
+            {
+              headers: {
+                "content-type": "application/json"
+              },
+              status: 200
+            }
+          );
+        }
+
+        throw new Error(`Unexpected fetch input: ${String(input)}`);
+      })
+    );
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("lets the user start a new chat and shows the empty chat guidance", () => {
+  it("lets the user start a new chat and shows the empty chat guidance", async () => {
     render(<ChatLayout initialSessions={initialSessions} />);
 
+    await screen.findByLabelText("Chat model");
     fireEvent.click(screen.getAllByRole("button", { name: /new chat/i })[0]);
 
     expect(screen.getByText(/ask your knowledge base/i)).toBeInTheDocument();
@@ -82,46 +118,88 @@ describe("chat layout", () => {
   });
 
   it("submits a question and renders the persisted assistant response with source metadata", async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          data: {
-            id: "session-3",
-            messages: [
-              {
-                content: "Summarize my documents",
-                id: "message-5",
-                role: "user"
-              },
-              {
-                content:
-                  "Here is the short version from your indexed notes: the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow.",
-                id: "message-6",
-                metadata: {
-                  sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
-                  toolActivity: [
-                    "pinecone.query -> searched the authenticated user's namespace"
-                  ]
-                },
-                role: "assistant"
-              }
-            ],
-            title: "Summarize my documents",
-            updatedAt: "Jun 21, 10:05 PM"
+    vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+      if (input === "/api/chat/models") {
+        return new Response(
+          JSON.stringify({
+            data: {
+              defaultModelConfigId: defaultModelId,
+              defaultThinkingLevel: "medium",
+              models: [
+                {
+                  defaultThinkingLevel: "medium",
+                  id: defaultModelId,
+                  isDefault: true,
+                  label: "Default chat model",
+                  modelName: "gpt-4.1-mini",
+                  provider: "openai",
+                  supportsThinking: true
+                }
+              ]
+            }
+          }),
+          {
+            headers: {
+              "content-type": "application/json"
+            },
+            status: 200
           }
-        }),
-        {
-          headers: {
-            "content-type": "application/json"
-          },
-          status: 200
-        }
-      )
-    );
+        );
+      }
+
+      if (input === "/api/chat") {
+        return new Response(
+          JSON.stringify({
+            data: {
+              id: "session-3",
+              messages: [
+                {
+                  content: "Summarize my documents",
+                  id: "message-5",
+                  modelConfigId: defaultModelId,
+                  role: "user",
+                  thinkingLevel: "high"
+                },
+                {
+                  content:
+                    "Here is the short version from your indexed notes: the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow.",
+                  id: "message-6",
+                  metadata: {
+                    sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
+                    toolActivity: [
+                      "pinecone.query -> searched the authenticated user's namespace"
+                    ]
+                  },
+                  modelConfigId: defaultModelId,
+                  role: "assistant",
+                  thinkingLevel: "high"
+                }
+              ],
+              modelConfigId: defaultModelId,
+              thinkingLevel: "high",
+              title: "Summarize my documents",
+              updatedAt: "Jun 21, 10:05 PM"
+            }
+          }),
+          {
+            headers: {
+              "content-type": "application/json"
+            },
+            status: 200
+          }
+        );
+      }
+
+      throw new Error(`Unexpected fetch input: ${String(input)}`);
+    });
 
     render(<ChatLayout initialSessions={initialSessions} />);
 
+    await screen.findByLabelText("Chat model");
     fireEvent.click(screen.getAllByRole("button", { name: /new chat/i })[0]);
+    fireEvent.change(screen.getByLabelText("Thinking level"), {
+      target: { value: "high" }
+    });
     fireEvent.change(
       screen.getByPlaceholderText(
         "What does the onboarding guide say about approval flow?"
@@ -136,6 +214,11 @@ describe("chat layout", () => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
         "/api/chat",
         expect.objectContaining({
+          body: JSON.stringify({
+            message: "Summarize my documents",
+            modelConfigId: defaultModelId,
+            thinkingLevel: "high"
+          }),
           method: "POST"
         })
       )
@@ -149,11 +232,13 @@ describe("chat layout", () => {
     expect(
       screen.getByText(/pinecone\.query -> searched the authenticated user's namespace/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/thinking: high/i)).toBeInTheDocument();
   });
 
-  it("switches between existing sessions", () => {
+  it("switches between existing sessions", async () => {
     render(<ChatLayout initialSessions={initialSessions} />);
 
+    await screen.findByLabelText("Chat model");
     fireEvent.click(screen.getByRole("button", { name: /product notes/i }));
 
     expect(
@@ -162,5 +247,13 @@ describe("chat layout", () => {
     expect(
       screen.getByText(/launch readiness, customer faq updates/i)
     ).toBeInTheDocument();
+  });
+
+  it("renders the chat model and thinking controls", async () => {
+    render(<ChatLayout initialSessions={initialSessions} />);
+
+    expect(await screen.findByLabelText("Chat model")).toBeInTheDocument();
+    expect(screen.getByLabelText("Thinking level")).toHaveValue("medium");
+    expect(screen.getAllByText(/default chat model/i).length).toBeGreaterThan(0);
   });
 });

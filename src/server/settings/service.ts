@@ -19,6 +19,10 @@ const SETTINGS_LABELS = {
 
 type SettingsKind = keyof typeof SETTINGS_LABELS;
 
+function providerSupportsThinking(provider: string) {
+  return ["openai", "gemini", "server_default"].includes(provider);
+}
+
 type ModelConfigRow = {
   extra_config?: {
     dimensions?: number;
@@ -172,6 +176,7 @@ async function saveModelConfig(
     const updateResult = await supabase
       .from("user_model_configs")
       .update({
+        default_thinking_level: "medium",
         display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
         extra_config:
           kind === "embedding"
@@ -182,7 +187,9 @@ async function saveModelConfig(
         is_active: true,
         is_default: true,
         model_name: values.model,
-        provider: values.provider
+        provider: values.provider,
+        supports_thinking:
+          kind === "chat" ? providerSupportsThinking(values.provider) : false
       })
       .eq("id", existingResult.data.id)
       .eq("user_id", userId)
@@ -204,6 +211,7 @@ async function saveModelConfig(
   const insertResult = await supabase
     .from("user_model_configs")
     .insert({
+      default_thinking_level: "medium",
       display_name: kind === "chat" ? "Default chat model" : "Default embedding model",
       extra_config:
         kind === "embedding"
@@ -216,6 +224,8 @@ async function saveModelConfig(
       kind,
       model_name: values.model,
       provider: values.provider,
+      supports_thinking:
+        kind === "chat" ? providerSupportsThinking(values.provider) : false,
       user_id: userId
     })
     .select("id")

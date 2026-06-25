@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { chatMessagePayloadSchema } from "@/lib/validations/chat";
+import { resolveChatModelSelection } from "@/server/chat/models";
 import {
   getChatSession,
   persistAssistantReply,
@@ -40,8 +41,10 @@ export async function POST(request: NextRequest) {
       if (await getE2EAuthenticatedUser()) {
         const session = createE2EChatReply({
           message: payload.data.message,
+          modelConfigId: payload.data.modelConfigId ?? null,
           sessionId: payload.data.sessionId,
-          stateId: (await getE2EStateId()) ?? "default"
+          stateId: (await getE2EStateId()) ?? "default",
+          thinkingLevel: payload.data.thinkingLevel ?? "medium"
         });
 
         return NextResponse.json({
@@ -64,10 +67,22 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const resolvedSelection = await resolveChatModelSelection(auth.supabase, {
+        modelConfigId:
+          payload.data.modelConfigId === undefined
+            ? existingSession?.modelConfigId ?? undefined
+            : payload.data.modelConfigId,
+        thinkingLevel: payload.data.thinkingLevel ?? existingSession?.thinkingLevel,
+        userId: auth.userId
+      });
+
       const preparedTurn = await prepareChatTurn({
         message: payload.data.message,
+        modelConfigId: resolvedSelection.model.id,
+        modelSnapshot: resolvedSelection.snapshot,
         sessionId: payload.data.sessionId,
         supabase: auth.supabase,
+        thinkingLevel: resolvedSelection.thinkingLevel,
         userId: auth.userId
       });
       const agentResult = await invokeChatAgent({
@@ -77,8 +92,11 @@ export async function POST(request: NextRequest) {
             role: message.role
           })) ?? [],
         message: payload.data.message,
+        requestedModel: resolvedSelection.model.modelName,
+        requestedProvider: resolvedSelection.model.provider,
         sessionId: preparedTurn.sessionId,
         supabase: auth.supabase,
+        thinkingLevel: resolvedSelection.thinkingLevel,
         userId: auth.userId
       });
       const session = await persistAssistantReply({
@@ -87,8 +105,11 @@ export async function POST(request: NextRequest) {
           langsmithRunId: agentResult.langsmithRunId,
           metadata: agentResult.metadata
         },
+        modelConfigId: resolvedSelection.model.id,
+        modelSnapshot: resolvedSelection.snapshot,
         sessionId: preparedTurn.sessionId,
         supabase: auth.supabase,
+        thinkingLevel: resolvedSelection.thinkingLevel,
         userId: auth.userId
       });
 

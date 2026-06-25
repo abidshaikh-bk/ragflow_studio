@@ -1136,7 +1136,7 @@ Acceptance criteria:
 
 ### TASK-041: Add chat model selection, thinking controls, and saved preference APIs
 
-Status: not_started
+Status: validated
 
 Objective: Expose saved chat model choices and thinking-level selection in the chat experience.
 

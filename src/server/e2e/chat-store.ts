@@ -24,8 +24,10 @@ export function listE2EChatSessions(stateId = "default") {
 
 export function createE2EChatReply(input: {
   message: string;
+  modelConfigId?: string | null;
   sessionId?: string;
   stateId?: string;
+  thinkingLevel?: "high" | "low" | "medium";
 }) {
   const stateId = input.stateId ?? "default";
   const route = classifyE2ERoute(input.message);
@@ -40,6 +42,8 @@ export function createE2EChatReply(input: {
     {
       id: randomUUID(),
       messages: [],
+      modelConfigId: null,
+      thinkingLevel: "medium",
       title: input.message.slice(0, 36) || "New chat",
       updatedAt: "Just now"
     };
@@ -47,16 +51,22 @@ export function createE2EChatReply(input: {
   session.messages.push({
     content: input.message,
     id: randomUUID(),
-    role: "user"
+    modelConfigId: input.modelConfigId ?? null,
+    role: "user",
+    thinkingLevel: input.thinkingLevel ?? "medium"
   });
 
   session.messages.push({
     content: answerQuestion(input.message, route),
     id: randomUUID(),
     metadata: buildMetadata(route),
-    role: "assistant"
+    modelConfigId: input.modelConfigId ?? null,
+    role: "assistant",
+    thinkingLevel: input.thinkingLevel ?? "medium"
   });
 
+  session.modelConfigId = input.modelConfigId ?? null;
+  session.thinkingLevel = input.thinkingLevel ?? "medium";
   session.title = input.message.slice(0, 36) || session.title;
   session.updatedAt = "Just now";
 

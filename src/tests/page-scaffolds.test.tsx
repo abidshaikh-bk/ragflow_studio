@@ -8,6 +8,8 @@ import SettingsPage from "@/app/(app)/settings/page";
 import AdminPage from "@/app/(app)/admin/page";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 
+const defaultModelId = "11111111-1111-4111-8111-111111111111";
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/chat"
 }));
@@ -53,25 +55,54 @@ describe("phase 1a page scaffolds", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation(async (input) => ({
-        json: async () =>
-          input === "/api/documents"
-            ? {
-                data: []
+      vi.fn().mockImplementation(async (input) => {
+        if (input === "/api/documents") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
+        if (input === "/api/chat/models") {
+          return {
+            json: async () => ({
+              data: {
+                defaultModelConfigId: defaultModelId,
+                defaultThinkingLevel: "medium",
+                models: [
+                  {
+                    defaultThinkingLevel: "medium",
+                    id: defaultModelId,
+                    isDefault: true,
+                    label: "Default chat model",
+                    modelName: "gpt-4.1-mini",
+                    provider: "openai",
+                    supportsThinking: true
+                  }
+                ]
               }
-            : {
-                data: {
-                  chatApiKeyMasked: "********1234",
-                  chatModel: "gpt-4.1-mini",
-                  chatProvider: "openai",
-                  embeddingApiKeyMasked: "********5678",
-                  embeddingDimensions: 1024,
-                  embeddingModel: "text-embedding-3-small",
-                  embeddingProvider: "openai"
-                }
-              },
-        ok: true
-      }))
+            }),
+            ok: true
+          };
+        }
+
+        return {
+          json: async () => ({
+            data: {
+              chatApiKeyMasked: "********1234",
+              chatModel: "gpt-4.1-mini",
+              chatProvider: "openai",
+              embeddingApiKeyMasked: "********5678",
+              embeddingDimensions: 1024,
+              embeddingModel: "text-embedding-3-small",
+              embeddingProvider: "openai"
+            }
+          }),
+          ok: true
+        };
+      })
     );
   });
 
@@ -91,6 +122,7 @@ describe("phase 1a page scaffolds", () => {
         "What does the onboarding guide say about approval flow?"
       )
     ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Chat model")).toBeInTheDocument();
   });
 
   it("renders the documents workspace shell", async () => {

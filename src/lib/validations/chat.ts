@@ -1,10 +1,15 @@
 import { z } from "zod";
 
 const optionalSessionIdSchema = z.string().uuid().optional();
+const optionalModelConfigIdSchema = z.string().uuid().nullable().optional();
+
+export const thinkingLevelSchema = z.enum(["low", "medium", "high"]);
 
 export const chatMessagePayloadSchema = z.object({
   message: z.string().trim().min(1, "Ask a question about your indexed documents."),
-  sessionId: optionalSessionIdSchema
+  modelConfigId: optionalModelConfigIdSchema,
+  sessionId: optionalSessionIdSchema,
+  thinkingLevel: thinkingLevelSchema.optional()
 });
 
 const chatSessionParamsSchema = z.object({

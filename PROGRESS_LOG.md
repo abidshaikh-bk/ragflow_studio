@@ -2499,3 +2499,66 @@ npm run build
 
 ### Follow-up
 - Add the server logout route first, then wire the shell control and E2E-safe redirect flow.
+
+---
+
+## TASK-041: Add chat model selection, thinking controls, and saved preference APIs
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-041-chat-model-thinking-controls
+Started: 2026-06-25
+Completed: 2026-06-25
+
+### Objective
+Expose the authenticated user's chat model options and thinking-level controls in the chat UI, then persist the chosen model metadata with chat sessions and messages.
+
+### Files Changed
+- TASKS.md
+- PROGRESS_LOG.md
+- src/app/api/chat/models/route.ts
+- src/app/api/chat/route.ts
+- src/components/chat/ChatLayout.tsx
+- src/components/chat/types.ts
+- src/lib/validations/chat.ts
+- src/server/agent/workflow.ts
+- src/server/chat/models.ts
+- src/server/chat/persistence.ts
+- src/server/e2e/chat-store.ts
+- src/server/settings/service.ts
+- src/tests/agent-workflow.test.ts
+- src/tests/chat-layout.test.tsx
+- src/tests/chat-models-route.test.ts
+- src/tests/chat-route.test.ts
+- src/tests/page-scaffolds.test.tsx
+
+### Implementation Notes
+- Started the model-selection task after completing and pushing TASK-040.
+- Added `GET /api/chat/models` plus a server-side selection resolver that returns authenticated chat model options, default thinking preferences, and a safe server-default fallback when no saved chat config exists.
+- Threaded the chosen chat model and thinking level through the chat API, persistence layer, and E2E fixture store so sessions and messages retain the selected model metadata.
+- Updated the chat UI to load model options, let users choose model and thinking level before sending, and restore those controls from the active session.
+- Applied thinking-level guidance inside the agent system prompt while continuing to respect the selected chat provider and model at invocation time.
+
+### Tests Added
+- Chat model route coverage in `src/tests/chat-models-route.test.ts`
+- Chat model and thinking control coverage in `src/tests/chat-layout.test.tsx`
+- Expanded chat API and agent workflow coverage in `src/tests/chat-route.test.ts` and `src/tests/agent-workflow.test.ts`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Add the model-list API and selection resolver first, then thread the chosen model and thinking level through the chat route and UI.

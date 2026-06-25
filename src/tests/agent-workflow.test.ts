@@ -46,23 +46,17 @@ describe("chat agent workflow", () => {
       {
         history: [],
         message: "What does the onboarding runbook say about approval?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
         sessionId: "session-1",
         supabase: supabaseMock,
+        thinkingLevel: "medium",
         userId: "user-123"
       },
       {
         credentialResolver: credentialResolverMock as never,
         dateTimeTool: dateTimeTool as never,
         llmFactory: () => llm,
-        settingsResolver: async () => ({
-          chatApiKeyMasked: null,
-          chatModel: "gpt-4.1-mini",
-          chatProvider: "openai",
-          embeddingApiKeyMasked: null,
-          embeddingDimensions: 1024,
-          embeddingModel: "text-embedding-3-small",
-          embeddingProvider: "openai"
-        }),
         traceInvocation: async (_, invoke) => ({
           result: await invoke(),
           runId: "trace-123"
@@ -103,23 +97,17 @@ describe("chat agent workflow", () => {
       {
         history: [],
         message: "What date is it today?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
         sessionId: "session-2",
         supabase: supabaseMock,
+        thinkingLevel: "medium",
         userId: "user-123"
       },
       {
         credentialResolver: credentialResolverMock as never,
         dateTimeTool: dateTimeTool as never,
         llmFactory: () => llm,
-        settingsResolver: async () => ({
-          chatApiKeyMasked: null,
-          chatModel: "gpt-4.1-mini",
-          chatProvider: "openai",
-          embeddingApiKeyMasked: null,
-          embeddingDimensions: 1024,
-          embeddingModel: "text-embedding-3-small",
-          embeddingProvider: "openai"
-        }),
         traceInvocation: async (_, invoke) => ({
           result: await invoke(),
           runId: "trace-456"
@@ -164,23 +152,17 @@ describe("chat agent workflow", () => {
       {
         history: [],
         message: "What is the latest AI news today?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
         sessionId: "session-3",
         supabase: supabaseMock,
+        thinkingLevel: "medium",
         userId: "user-123"
       },
       {
         credentialResolver: credentialResolverMock as never,
         dateTimeTool: vi.fn() as never,
         llmFactory: () => llm,
-        settingsResolver: async () => ({
-          chatApiKeyMasked: null,
-          chatModel: "gpt-4.1-mini",
-          chatProvider: "openai",
-          embeddingApiKeyMasked: null,
-          embeddingDimensions: 1024,
-          embeddingModel: "text-embedding-3-small",
-          embeddingProvider: "openai"
-        }),
         traceInvocation: async (_, invoke) => ({
           result: await invoke(),
           runId: "trace-789"
@@ -224,8 +206,11 @@ describe("chat agent workflow", () => {
       {
         history: [],
         message: "What is the weather in Pune?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
         sessionId: "session-mcp-1",
         supabase: supabaseMock,
+        thinkingLevel: "medium",
         userId: "user-123"
       },
       {
@@ -233,15 +218,6 @@ describe("chat agent workflow", () => {
         dateTimeTool: vi.fn() as never,
         llmFactory: () => llm,
         runtimeMcpToolsLoader: vi.fn().mockResolvedValue([runtimeMcpTool]) as never,
-        settingsResolver: async () => ({
-          chatApiKeyMasked: null,
-          chatModel: "gpt-4.1-mini",
-          chatProvider: "openai",
-          embeddingApiKeyMasked: null,
-          embeddingDimensions: 1024,
-          embeddingModel: "text-embedding-3-small",
-          embeddingProvider: "openai"
-        }),
         traceInvocation: async (_, invoke) => ({
           result: await invoke(),
           runId: "trace-mcp-123"
@@ -274,8 +250,11 @@ describe("chat agent workflow", () => {
       {
         history: [],
         message: "What does the onboarding runbook say about approval?",
+        requestedModel: "gpt-4.1-mini",
+        requestedProvider: "openai",
         sessionId: "session-mcp-2",
         supabase: supabaseMock,
+        thinkingLevel: "medium",
         userId: "user-123"
       },
       {
@@ -287,15 +266,6 @@ describe("chat agent workflow", () => {
           })
         }),
         runtimeMcpToolsLoader: vi.fn().mockResolvedValue([runtimeMcpTool]) as never,
-        settingsResolver: async () => ({
-          chatApiKeyMasked: null,
-          chatModel: "gpt-4.1-mini",
-          chatProvider: "openai",
-          embeddingApiKeyMasked: null,
-          embeddingDimensions: 1024,
-          embeddingModel: "text-embedding-3-small",
-          embeddingProvider: "openai"
-        }),
         traceInvocation: async (_, invoke) => ({
           result: await invoke(),
           runId: "trace-mcp-456"
