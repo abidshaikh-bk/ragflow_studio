@@ -13,6 +13,112 @@ import { withAuthenticatedApiRoute } from "@/server/auth/api";
 import { parseJsonBody } from "@/server/http/validation";
 import { appEventLogger } from "@/server/logging/events";
 
+type ChatStreamMetadata = {
+  langsmithRunId: string | null;
+  metadata: {
+    sources?: string[];
+    toolActivity?: string[];
+  };
+  sessionId: string;
+};
+
+type ChatStreamComplete = {
+  langsmithRunId: string | null;
+  session: Awaited<ReturnType<typeof persistAssistantReply>>;
+};
+
+function wantsStreamingResponse(request: NextRequest) {
+  return request.headers?.get?.("accept")?.includes("text/event-stream") ?? false;
+}
+
+function createSseEvent(event: string, data: unknown) {
+  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+function chunkAssistantContent(content: string) {
+  const normalized = content.trim();
+
+  if (!normalized) {
+    return [""];
+  }
+
+  const words = normalized.split(/\s+/);
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const word of words) {
+    const candidate = currentChunk ? `${currentChunk} ${word}` : word;
+
+    if (candidate.length > 48 && currentChunk) {
+      chunks.push(`${currentChunk} `);
+      currentChunk = word;
+      continue;
+    }
+
+    currentChunk = candidate;
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
+}
+
+function createStreamingChatResponse(input: {
+  agentResult: Awaited<ReturnType<typeof invokeChatAgent>>;
+  onComplete: () => Promise<Awaited<ReturnType<typeof persistAssistantReply>>>;
+  sessionId: string;
+}) {
+  const encoder = new TextEncoder();
+
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            createSseEvent("metadata", {
+              langsmithRunId: input.agentResult.langsmithRunId,
+              metadata: input.agentResult.metadata,
+              sessionId: input.sessionId
+            } satisfies ChatStreamMetadata)
+          )
+        );
+
+        for (const chunk of chunkAssistantContent(input.agentResult.content)) {
+          controller.enqueue(
+            encoder.encode(
+              createSseEvent("delta", {
+                content: chunk
+              })
+            )
+          );
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
+        const session = await input.onComplete();
+
+        controller.enqueue(
+          encoder.encode(
+            createSseEvent("complete", {
+              langsmithRunId: input.agentResult.langsmithRunId,
+              session
+            } satisfies ChatStreamComplete)
+          )
+        );
+        controller.close();
+      }
+    }),
+    {
+      headers: {
+        "cache-control": "no-cache, no-transform",
+        connection: "keep-alive",
+        "content-type": "text/event-stream; charset=utf-8"
+      }
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   return withAuthenticatedApiRoute(async (auth) => {
     const payload = await parseJsonBody(
@@ -26,6 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     const startedAt = Date.now();
+    const shouldStream = wantsStreamingResponse(request);
 
     appEventLogger.info({
       event: "chat.request.started",
@@ -46,6 +153,26 @@ export async function POST(request: NextRequest) {
           stateId: (await getE2EStateId()) ?? "default",
           thinkingLevel: payload.data.thinkingLevel ?? "medium"
         });
+
+        if (shouldStream) {
+          const latestAssistantMessage = [...session.messages]
+            .reverse()
+            .find((message) => message.role === "assistant");
+
+          if (!latestAssistantMessage) {
+            throw new Error("The streamed E2E chat response did not include an assistant reply.");
+          }
+
+          return createStreamingChatResponse({
+            agentResult: {
+              content: latestAssistantMessage.content,
+              langsmithRunId: null,
+              metadata: latestAssistantMessage.metadata ?? {}
+            },
+            onComplete: async () => session,
+            sessionId: session.id
+          });
+        }
 
         return NextResponse.json({
           data: session,
@@ -99,31 +226,46 @@ export async function POST(request: NextRequest) {
         thinkingLevel: resolvedSelection.thinkingLevel,
         userId: auth.userId
       });
-      const session = await persistAssistantReply({
-        assistant: {
-          content: agentResult.content,
-          langsmithRunId: agentResult.langsmithRunId,
-          metadata: agentResult.metadata
-        },
-        modelConfigId: resolvedSelection.model.id,
-        modelSnapshot: resolvedSelection.snapshot,
-        sessionId: preparedTurn.sessionId,
-        supabase: auth.supabase,
-        thinkingLevel: resolvedSelection.thinkingLevel,
-        userId: auth.userId
-      });
 
-      appEventLogger.info({
-        durationMs: Date.now() - startedAt,
-        event: "chat.request.completed",
-        langsmithRunId: agentResult.langsmithRunId,
-        metadata: {
-          sourceCount: agentResult.metadata.sources?.length ?? 0,
-          toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
-        },
-        sessionId: preparedTurn.sessionId,
-        userId: auth.userId
-      });
+      const finalizeSession = async () => {
+        const session = await persistAssistantReply({
+          assistant: {
+            content: agentResult.content,
+            langsmithRunId: agentResult.langsmithRunId,
+            metadata: agentResult.metadata
+          },
+          modelConfigId: resolvedSelection.model.id,
+          modelSnapshot: resolvedSelection.snapshot,
+          sessionId: preparedTurn.sessionId,
+          supabase: auth.supabase,
+          thinkingLevel: resolvedSelection.thinkingLevel,
+          userId: auth.userId
+        });
+
+        appEventLogger.info({
+          durationMs: Date.now() - startedAt,
+          event: "chat.request.completed",
+          langsmithRunId: agentResult.langsmithRunId,
+          metadata: {
+            sourceCount: agentResult.metadata.sources?.length ?? 0,
+            toolActivityCount: agentResult.metadata.toolActivity?.length ?? 0
+          },
+          sessionId: preparedTurn.sessionId,
+          userId: auth.userId
+        });
+
+        return session;
+      };
+
+      if (shouldStream) {
+        return createStreamingChatResponse({
+          agentResult,
+          onComplete: finalizeSession,
+          sessionId: preparedTurn.sessionId
+        });
+      }
+
+      const session = await finalizeSession();
 
       return NextResponse.json({
         data: session,

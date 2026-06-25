@@ -6,6 +6,23 @@ import type { ChatSession } from "@/components/chat/types";
 
 const defaultModelId = "11111111-1111-4111-8111-111111111111";
 
+function createStreamResponse(body: string) {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(body));
+        controller.close();
+      }
+    }),
+    {
+      headers: {
+        "content-type": "text/event-stream"
+      },
+      status: 200
+    }
+  );
+}
+
 const initialSessions: ChatSession[] = [
   {
     id: "session-1",
@@ -148,45 +165,60 @@ describe("chat layout", () => {
       }
 
       if (input === "/api/chat") {
-        return new Response(
-          JSON.stringify({
-            data: {
-              id: "session-3",
-              messages: [
-                {
-                  content: "Summarize my documents",
-                  id: "message-5",
-                  modelConfigId: defaultModelId,
-                  role: "user",
-                  thinkingLevel: "high"
-                },
-                {
-                  content:
-                    "Here is the short version from your indexed notes: the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow.",
-                  id: "message-6",
-                  metadata: {
-                    sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
-                    toolActivity: [
-                      "pinecone.query -> searched the authenticated user's namespace"
-                    ]
+        return createStreamResponse(
+          [
+            `event: metadata\ndata: ${JSON.stringify({
+              langsmithRunId: "trace-123",
+              metadata: {
+                sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
+                toolActivity: [
+                  "pinecone.query -> searched the authenticated user's namespace"
+                ]
+              },
+              sessionId: "session-3"
+            })}\n`,
+            `event: delta\ndata: ${JSON.stringify({
+              content: "Here is the short version from your indexed notes: "
+            })}\n`,
+            `event: delta\ndata: ${JSON.stringify({
+              content:
+                "the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow."
+            })}\n`,
+            `event: complete\ndata: ${JSON.stringify({
+              langsmithRunId: "trace-123",
+              session: {
+                id: "session-3",
+                messages: [
+                  {
+                    content: "Summarize my documents",
+                    id: "message-5",
+                    modelConfigId: defaultModelId,
+                    role: "user",
+                    thinkingLevel: "high"
                   },
-                  modelConfigId: defaultModelId,
-                  role: "assistant",
-                  thinkingLevel: "high"
-                }
-              ],
-              modelConfigId: defaultModelId,
-              thinkingLevel: "high",
-              title: "Summarize my documents",
-              updatedAt: "Jun 21, 10:05 PM"
-            }
-          }),
-          {
-            headers: {
-              "content-type": "application/json"
-            },
-            status: 200
-          }
+                  {
+                    content:
+                      "Here is the short version from your indexed notes: the documents focus on approval flow, security guardrails, and the key handoff steps new teammates should follow.",
+                    id: "message-6",
+                    metadata: {
+                      langsmithRunId: "trace-123",
+                      sources: ["handbook.md chunk 1", "policy.txt chunk 1"],
+                      toolActivity: [
+                        "pinecone.query -> searched the authenticated user's namespace"
+                      ]
+                    },
+                    modelConfigId: defaultModelId,
+                    role: "assistant",
+                    thinkingLevel: "high"
+                  }
+                ],
+                modelConfigId: defaultModelId,
+                thinkingLevel: "high",
+                title: "Summarize my documents",
+                updatedAt: "Jun 21, 10:05 PM"
+              }
+            })}\n`
+          ].join("\n")
         );
       }
 
@@ -210,10 +242,16 @@ describe("chat layout", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: /send/i }));
 
+    expect(screen.getAllByText("Summarize my documents").length).toBeGreaterThan(0);
+
     await waitFor(() =>
       expect(globalThis.fetch).toHaveBeenCalledWith(
         "/api/chat",
         expect.objectContaining({
+          headers: {
+            accept: "text/event-stream",
+            "content-type": "application/json"
+          },
           body: JSON.stringify({
             message: "Summarize my documents",
             modelConfigId: defaultModelId,
@@ -232,6 +270,7 @@ describe("chat layout", () => {
     expect(
       screen.getByText(/pinecone\.query -> searched the authenticated user's namespace/i)
     ).toBeInTheDocument();
+    expect(screen.getByText(/trace-123/i)).toBeInTheDocument();
     expect(screen.getByText(/thinking: high/i)).toBeInTheDocument();
   });
 

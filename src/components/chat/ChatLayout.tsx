@@ -38,6 +38,7 @@ function getAssistantMessageMetadata(messages: ChatSession["messages"]) {
     .find((message) => message.role === "assistant");
 
   return {
+    langsmithRunId: latestAssistantMessage?.metadata?.langsmithRunId ?? null,
     sources:
       latestAssistantMessage?.metadata?.sources?.map((source, index) => ({
         detail:
@@ -47,6 +48,35 @@ function getAssistantMessageMetadata(messages: ChatSession["messages"]) {
         title: source
       })) ?? [],
     toolActivity: latestAssistantMessage?.metadata?.toolActivity ?? []
+  };
+}
+
+function parseSseEvents(buffer: string) {
+  const frames = buffer.split("\n\n");
+  const completeFrames = frames.slice(0, -1);
+  const remainder = frames.at(-1) ?? "";
+
+  return {
+    events: completeFrames
+      .map((frame) => {
+        const lines = frame.split("\n");
+        const event = lines.find((line) => line.startsWith("event:"))?.slice(6).trim();
+        const dataLine = lines.find((line) => line.startsWith("data:"))?.slice(5).trim();
+
+        if (!event || !dataLine) {
+          return null;
+        }
+
+        return {
+          data: JSON.parse(dataLine) as unknown,
+          event
+        };
+      })
+      .filter(Boolean) as Array<{
+      data: unknown;
+      event: string;
+    }>,
+    remainder
   };
 }
 
@@ -74,13 +104,30 @@ export function ChatLayout({
   const activeMetadata = getAssistantMessageMetadata(activeMessages);
 
   function upsertSession(session: ChatSession) {
+    upsertSessionWithReplacement(session);
+  }
+
+  function upsertSessionWithReplacement(
+    session: ChatSession,
+    replaceSessionId?: string | null
+  ) {
     setSessions((currentSessions) => {
       const filteredSessions = currentSessions.filter(
-        (currentSession) => currentSession.id !== session.id
+        (currentSession) =>
+          currentSession.id !== session.id &&
+          (!replaceSessionId || currentSession.id !== replaceSessionId)
       );
 
       return [session, ...filteredSessions];
     });
+  }
+
+  function updateSession(sessionId: string, updater: (session: ChatSession) => ChatSession) {
+    setSessions((currentSessions) =>
+      currentSessions.map((session) =>
+        session.id === sessionId ? updater(session) : session
+      )
+    );
   }
 
   function handleNewChat() {
@@ -99,6 +146,70 @@ export function ChatLayout({
     setLoading(true);
     setChatError("");
 
+    const optimisticSessionId =
+      activeSessionId ?? `pending-session-${Date.now().toString(36)}`;
+    const optimisticAssistantId = `pending-assistant-${Date.now().toString(36)}`;
+    const optimisticSession: ChatSession =
+      activeSession && activeSession.id === activeSessionId
+        ? {
+            ...activeSession,
+            messages: [
+              ...activeSession.messages,
+              {
+                content: message,
+                id: `pending-user-${Date.now().toString(36)}`,
+                modelConfigId: selectedModelConfigId,
+                role: "user",
+                thinkingLevel: selectedThinkingLevel
+              },
+              {
+                content: "",
+                id: optimisticAssistantId,
+                metadata: {
+                  sources: [],
+                  toolActivity: []
+                },
+                modelConfigId: selectedModelConfigId,
+                role: "assistant",
+                thinkingLevel: selectedThinkingLevel
+              }
+            ],
+            modelConfigId: selectedModelConfigId,
+            thinkingLevel: selectedThinkingLevel,
+            title: message.slice(0, 36) || activeSession.title,
+            updatedAt: "Just now"
+          }
+        : {
+            id: optimisticSessionId,
+            messages: [
+              {
+                content: message,
+                id: `pending-user-${Date.now().toString(36)}`,
+                modelConfigId: selectedModelConfigId,
+                role: "user",
+                thinkingLevel: selectedThinkingLevel
+              },
+              {
+                content: "",
+                id: optimisticAssistantId,
+                metadata: {
+                  sources: [],
+                  toolActivity: []
+                },
+                modelConfigId: selectedModelConfigId,
+                role: "assistant",
+                thinkingLevel: selectedThinkingLevel
+              }
+            ],
+            modelConfigId: selectedModelConfigId,
+            thinkingLevel: selectedThinkingLevel,
+            title: message.slice(0, 36) || "New chat",
+            updatedAt: "Just now"
+          };
+
+    upsertSessionWithReplacement(optimisticSession, activeSessionId);
+    setActiveSessionId(optimisticSessionId);
+
     try {
       const response = await fetch("/api/chat", {
         body: JSON.stringify({
@@ -108,29 +219,108 @@ export function ChatLayout({
           thinkingLevel: selectedThinkingLevel
         }),
         headers: {
+          accept: "text/event-stream",
           "content-type": "application/json"
         },
         method: "POST"
       });
-      const payload = (await response.json()) as ChatApiResponse;
 
-      if (!response.ok || !payload.data) {
+      if (!response.ok) {
+        const payload = (await response.json()) as ChatApiResponse;
         const fieldMessage = payload.fieldErrors?.message?.[0];
 
-        throw new Error(
-          fieldMessage || payload.error || "Unable to save your chat message."
-        );
+        throw new Error(fieldMessage || payload.error || "Unable to save your chat message.");
       }
 
-      startTransition(() => {
-        upsertSession(payload.data!);
-        setActiveSessionId(payload.data!.id);
-        setSelectedModelConfigId(payload.data!.modelConfigId ?? null);
-        setSelectedThinkingLevel(
-          payload.data!.thinkingLevel ?? selectedThinkingLevel
-        );
-      });
+      const reader = response.body?.getReader();
+
+      if (!reader) {
+        throw new Error("The chat response stream was unavailable.");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const parsed = parseSseEvents(buffer);
+        buffer = parsed.remainder;
+
+        for (const entry of parsed.events) {
+          if (entry.event === "metadata") {
+            const payload = entry.data as {
+              langsmithRunId: string | null;
+              metadata: {
+                sources?: string[];
+                toolActivity?: string[];
+              };
+            };
+
+            updateSession(optimisticSessionId, (session) => ({
+              ...session,
+              messages: session.messages.map((currentMessage) =>
+                currentMessage.id === optimisticAssistantId
+                  ? {
+                      ...currentMessage,
+                      metadata: {
+                        ...(currentMessage.metadata ?? {}),
+                        ...(payload.metadata ?? {}),
+                        ...(payload.langsmithRunId
+                          ? {
+                              langsmithRunId: payload.langsmithRunId
+                            }
+                          : {})
+                      }
+                    }
+                  : currentMessage
+              )
+            }));
+          }
+
+          if (entry.event === "delta") {
+            const payload = entry.data as {
+              content: string;
+            };
+
+            updateSession(optimisticSessionId, (session) => ({
+              ...session,
+              messages: session.messages.map((currentMessage) =>
+                currentMessage.id === optimisticAssistantId
+                  ? {
+                      ...currentMessage,
+                      content: `${currentMessage.content}${payload.content}`
+                    }
+                  : currentMessage
+              )
+            }));
+          }
+
+          if (entry.event === "complete") {
+            const payload = entry.data as {
+              session: ChatSession;
+            };
+
+            startTransition(() => {
+              upsertSessionWithReplacement(payload.session, optimisticSessionId);
+              setActiveSessionId(payload.session.id);
+              setSelectedModelConfigId(payload.session.modelConfigId ?? null);
+              setSelectedThinkingLevel(
+                payload.session.thinkingLevel ?? selectedThinkingLevel
+              );
+            });
+          }
+        }
+      }
     } catch (error) {
+      setSessions((currentSessions) =>
+        currentSessions.filter((session) => session.id !== optimisticSessionId)
+      );
       setChatError(
         error instanceof Error
           ? error.message
@@ -254,6 +444,9 @@ export function ChatLayout({
               Model: {selectedModel ? `${selectedModel.label}` : "Loading options"}
             </span>
             <span>Thinking: {selectedThinkingLevel}</span>
+            {activeMetadata.langsmithRunId ? (
+              <span>Trace: {activeMetadata.langsmithRunId}</span>
+            ) : null}
           </div>
 
           {!hasCompletedDocuments ? (
@@ -275,7 +468,7 @@ export function ChatLayout({
             </div>
           ) : null}
 
-          <MessageList loading={loading} messages={activeMessages} />
+          <MessageList loading={false} messages={activeMessages} />
           <ChatComposer
             disabled={!hasCompletedDocuments}
             isLoading={loading}

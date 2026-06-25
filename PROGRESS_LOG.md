@@ -2563,3 +2563,52 @@ npm run build
 
 ### Follow-up
 - Add the model-list API and selection resolver first, then thread the chosen model and thinking level through the chat route and UI.
+
+---
+
+## TASK-042: Convert chat transport and UI to streaming responses
+
+Status: validated
+
+Owner Agent: Codex
+Git Branch: task/TASK-042-streaming-chat-responses
+Started: 2026-06-25
+Completed: 2026-06-25
+
+### Objective
+Move the chat experience from one-shot JSON replies to streamed assistant output while preserving optimistic UI behavior, persistence, and trace metadata.
+
+### Files Changed
+- TASKS.md
+- PROGRESS_LOG.md
+- src/app/api/chat/route.ts
+- src/components/chat/ChatLayout.tsx
+- src/tests/chat-layout.test.tsx
+- src/tests/chat-stream-route.test.ts
+
+### Implementation Notes
+- Added an SSE transport on `POST /api/chat` that emits metadata, assistant deltas, and a final persisted-session event while keeping the JSON fallback for non-stream callers.
+- Switched the chat UI to optimistic local session updates plus streamed assistant rendering, then replaced the temporary turn with the persisted session when the stream completed.
+- Surfaced LangSmith trace ids during the active turn and kept persistence/logging on the server-side completion path.
+
+### Tests Added
+- Streaming route coverage in `src/tests/chat-stream-route.test.ts`
+- Updated streaming and optimistic chat UI coverage in `src/tests/chat-layout.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- Use the new SSE transport as the baseline for the upcoming history surface so in-flight metadata and final persisted turns stay aligned.

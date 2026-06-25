@@ -1160,7 +1160,7 @@ Acceptance criteria:
 
 ### TASK-042: Convert chat transport and UI to streaming responses
 
-Status: not_started
+Status: validated
 
 Objective: Move the chat experience from one-shot JSON replies to streaming assistant responses.
 
