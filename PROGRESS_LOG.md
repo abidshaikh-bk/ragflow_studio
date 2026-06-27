@@ -3287,3 +3287,58 @@ npx playwright test src/tests/e2e/auth.spec.ts
 
 ### Follow-up
 - `TASK-054` can now reuse the tighter auth-page tone and visual hierarchy when refreshing the public landing experience.
+
+---
+
+## TASK-054: Rebuild the landing page as a user-centric marketing surface with real product snapshots
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-054-landing-marketing
+Started: 2026-06-27
+Completed: 2026-06-27
+Commit Hash:
+
+### Objective
+Explain what the product does, what problem it solves, why it is worth using, and show believable application previews.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- TESTING.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- public/landing/chat-workspace-snapshot.png
+- public/landing/documents-workspace-snapshot.png
+- src/app/page.tsx
+- src/tests/e2e/homepage.spec.ts
+- src/tests/homepage.test.tsx
+
+### Implementation Notes
+- Replaced the scaffold-oriented homepage with a user-facing marketing surface that explains the problem, product workflow, trust posture, and clear next actions.
+- Added real application snapshots captured from the live chat and documents experiences so the landing page shows believable product views instead of abstract placeholders.
+- Introduced a more polished public information architecture with section anchors, benefit cards, privacy messaging, and a professional footer that routes visitors toward login or registration.
+
+### Tests Added
+- Added `src/tests/e2e/homepage.spec.ts`
+- Expanded `src/tests/homepage.test.tsx`
+
+### Validation Commands
+```bash
+npm run build
+npm run lint
+npm run typecheck
+npx vitest run src/tests/homepage.test.tsx
+npx playwright test src/tests/e2e/homepage.spec.ts
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- The public entry experience is now ready to evolve alongside future app screenshots as the protected product surfaces continue to mature.

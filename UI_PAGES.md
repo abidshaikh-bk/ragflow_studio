@@ -14,6 +14,29 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 
 ---
 
+# `/`
+
+## Route files
+
+- `src/app/page.tsx`
+
+## Functional requirements
+
+- Replace scaffold/task language with user-facing marketing copy.
+- Explain the product outcome, problem, solution, benefits, and workflow.
+- Include real application snapshots from the product experience with meaningful alt text.
+- Surface login and registration CTAs in both the header and hero.
+- Include privacy/trust messaging that matches the document-intelligence use case.
+- Include a footer with product, navigation, and authentication links.
+
+## Test requirements
+
+- Renders the new marketing sections and CTAs.
+- Footer links render correctly.
+- Snapshot images include useful alt text.
+
+---
+
 # `/login`
 
 ## Route files

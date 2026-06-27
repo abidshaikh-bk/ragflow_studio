@@ -18,6 +18,51 @@ This file defines low-fidelity page mockups for Codex/coding agents. Implement t
 
 ---
 
+# 0. Landing page — `/`
+
+## Layout intent
+
+Public marketing page that explains the product in user language, shows real application snapshots, and routes visitors toward registration or login.
+
+## Wireframe
+
+```txt
+┌──────────────────────────────────────────────────────────────────────────┐
+│ RAGFlow Studio     Product   How it works   Trust       Login   Sign up │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Hero: private document answers, value proposition, CTA                  │
+│ [ Start free workspace ] [ Sign in ]           [ real chat snapshot ]   │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Problem cards                                                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Product snapshots + feature/benefit cards                               │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Workflow steps                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Privacy and trust section                                               │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Footer: product copy, navigation, auth links                            │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+## Required UI states
+
+- Responsive hero and snapshot layout.
+- Auth CTAs visible above the fold.
+- Snapshot images include meaningful alt text.
+- Footer includes product and auth navigation.
+
+## Components
+
+- `AppLogo`
+- marketing hero section
+- feature cards
+- product snapshot cards
+- trust section
+- footer
+
+---
+
 # 1. Login page — `/login`
 
 ## Layout intent

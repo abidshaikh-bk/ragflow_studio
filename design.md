@@ -37,6 +37,18 @@
 
 ## 4. Pages
 
+### `/`
+
+Purpose: explain the product to prospective users and convert them into login or registration.
+
+UI:
+
+- Marketing hero focused on the user outcome
+- Problem, solution, benefits, and workflow sections
+- Real product snapshots from the chat and documents experience
+- Privacy and trust messaging
+- Footer with product and authentication links
+
 Phase 15 refinement note:
 
 - `/chat` and `/documents` now share a split-workspace foundation with collapsible left and right rails, mobile drawer access, and a scroll-safe center panel while keeping the global top navigation intact.

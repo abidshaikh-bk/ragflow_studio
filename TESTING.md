@@ -152,6 +152,7 @@ Current recorded status:
 ## Current tool coverage
 
 - `src/tests/e2e/auth.spec.ts` validates protected-route redirect to `/login`, successful login redirect to `/chat`, and authenticated access to `/settings` using the Playwright-only auth harness.
+- `src/tests/e2e/homepage.spec.ts` validates the public landing-page marketing sections, screenshot alt text, footer navigation, and mobile CTA visibility.
 - `src/tests/e2e/document-upload.spec.ts` validates Markdown upload, live status polling to `completed`, and document-list rendering using mocked document APIs in a real browser run.
 - `src/tests/e2e/chat-rag.spec.ts` validates a document-grounded answer, source/tool metadata rendering, and chat-session persistence after refresh using the server-side E2E chat store.
 - `src/tests/e2e/tool-routing.spec.ts` validates browser-visible routing for date, document, and web questions through the deterministic E2E chat harness.

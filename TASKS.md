@@ -1495,7 +1495,7 @@ Acceptance criteria:
 
 ### TASK-054: Rebuild the landing page as a user-centric marketing surface with real product snapshots
 
-Status: not_started
+Status: done
 
 Objective: Explain what the product does, what problem it solves, why it is worth using, and show believable application previews.
 
