@@ -275,6 +275,13 @@ Refinement note:
 
 Configuration page with secure model settings. API keys must be masked after save and never rendered as raw stored secrets.
 
+Refinement note:
+
+- The page now behaves like a compact control-center workspace instead of a plain settings form.
+- A left settings rail keeps `Model & MCP` active while surfacing future sections such as workspace, security, billing, and integrations.
+- The main pane separates chat model, embedding model, and MCP server connections into distinct panels with stronger hierarchy.
+- A secure-storage callout remains visible near the bottom of the page.
+
 ## Wireframe
 
 ```txt
@@ -310,6 +317,7 @@ Configuration page with secure model settings. API keys must be masked after sav
 - Save success toast.
 - Validation errors.
 - API failure error.
+- MCP server empty state within the refreshed workspace.
 
 ## Components
 
@@ -441,6 +449,7 @@ Settings is allowed in MVP, but it should initially show default configuration s
 Implementation note:
 
 - The runtime UI may use a dialog-style add/edit flow as long as the `MCP Tools` tab preserves this list-plus-editor structure and keeps stored secrets masked.
+- The refined page may merge models and MCP into one scrollable workspace as long as masked-secret handling and MCP CRUD/test flows remain intact.
 
 ---
 

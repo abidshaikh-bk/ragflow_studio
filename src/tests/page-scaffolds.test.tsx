@@ -115,6 +115,15 @@ describe("phase 1a page scaffolds", () => {
           };
         }
 
+        if (input === "/api/mcp/servers") {
+          return {
+            json: async () => ({
+              data: []
+            }),
+            ok: true
+          };
+        }
+
         if (input === "/api/admin/assistant") {
           return {
             json: async () => ({
@@ -201,10 +210,16 @@ describe("phase 1a page scaffolds", () => {
     render(<SettingsPage />);
 
     expect(
-      screen.getByRole("heading", { name: /assistant configuration/i })
+      screen.getByRole("heading", { name: /model & mcp configuration/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /model configuration status/i })
+      screen.getByText(/configure ai models and mcp/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /chat model/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /mcp server connections/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Chat provider")).toBeInTheDocument();
     expect(screen.getByLabelText("Embedding provider")).toBeInTheDocument();

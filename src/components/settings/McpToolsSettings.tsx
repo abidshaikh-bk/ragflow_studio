@@ -79,6 +79,7 @@ const defaultEditorState: EditorState = {
 };
 
 type McpToolsSettingsProps = {
+  description?: string;
   endpointBase?: string;
   emptyDescription?: string;
   emptyTitle?: string;
@@ -89,6 +90,7 @@ type McpToolsSettingsProps = {
 };
 
 export function McpToolsSettings({
+  description = "Configure runtime MCP servers for later-phase tool use. Secret headers and env values stay masked after save.",
   endpointBase = "/api/mcp/servers",
   emptyDescription = "No MCP servers configured. Add an HTTP or stdio runtime MCP server to preview tools without exposing stored secrets.",
   emptyTitle = "No MCP servers configured.",
@@ -133,7 +135,7 @@ export function McpToolsSettings({
           error?: string;
         };
 
-        if (!response.ok || !payload.data) {
+        if (!response.ok || !Array.isArray(payload.data)) {
           throw new Error(payload.error || "Unable to load MCP tools.");
         }
 
@@ -455,7 +457,7 @@ export function McpToolsSettings({
             Add MCP Server
           </Button>
         }
-        description="Configure runtime MCP servers for later-phase tool use. Secret headers and env values stay masked after save."
+        description={description}
         eyebrow={eyebrow}
         title={title}
       >

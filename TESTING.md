@@ -152,6 +152,7 @@ Current recorded status:
 ## Current tool coverage
 
 - `src/tests/e2e/auth.spec.ts` validates protected-route redirect to `/login`, successful login redirect to `/chat`, and authenticated access to `/settings` using the Playwright-only auth harness.
+- `src/tests/settings-form.test.tsx`, `src/tests/mcp-tools-settings.test.tsx`, `src/tests/page-scaffolds.test.tsx`, and `src/tests/e2e/auth.spec.ts` validate the refreshed `/settings` control-center framing, masked-secret hints, MCP empty/editor flows, and authenticated access after login.
 - `src/tests/e2e/document-upload.spec.ts` validates Markdown upload, live status polling to `completed`, and document-list rendering using mocked document APIs in a real browser run.
 - `src/tests/e2e/chat-rag.spec.ts` validates a document-grounded answer, source/tool metadata rendering, and chat-session persistence after refresh using the server-side E2E chat store.
 - `src/tests/e2e/tool-routing.spec.ts` validates browser-visible routing for date, document, and web questions through the deterministic E2E chat harness.
@@ -171,6 +172,7 @@ Current recorded status:
 - `src/tests/admin-mcp-routes.test.ts`, `src/tests/mcp-tools-settings.test.tsx`, and `src/tests/mcp-backend-adapter.test.ts` validate admin-only global MCP APIs, scoped MCP UI endpoints, and safe runtime merging of enabled global plus user MCP configs.
 - `src/tests/logout-route.test.ts`, `src/tests/user-menu.test.tsx`, `src/tests/chat-stream-route.test.ts`, `src/tests/history-page.test.tsx`, and `src/tests/document-detail-page.test.tsx` provide the refined IA smoke evidence later summarized in `SMOKE_CHECKLIST.md`.
 - `src/tests/workspace-layout.test.tsx`, `src/tests/chat-layout.test.tsx`, `src/tests/documents-page.test.tsx`, and `src/tests/page-scaffolds.test.tsx` validate the shared split-workspace rails, mobile drawers, and the updated chat/documents shells.
+- The settings route-level scaffold coverage now also checks the `Model & MCP` heading, left-rail framing, and refreshed panel hierarchy.
 - `src/tests/chat-stream-route.test.ts`, `src/tests/chat-layout.test.tsx`, `src/tests/agent-workflow.test.ts`, `src/tests/document-detail-page.test.tsx`, and the Playwright chat specs validate streamed reasoning events, structured citations, and chunk-anchor navigation.
 - `src/tests/date-time-tool.test.ts` validates deterministic date/time formatting and tool logging.
 - `src/tests/web-search-tool.test.ts` validates Tavily query validation, normalized results, and failure logging.

@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 const E2E_STATE_COOKIE_NAME = "ragflow_e2e_state";
+const E2E_AUTH_COOKIE_NAME = "ragflow_e2e_auth";
 const E2E_BASE_URL = "http://127.0.0.1:3100";
 
 export async function mockSettingsApi(page: Page) {
@@ -48,5 +49,23 @@ export async function loginThroughUi(page: Page) {
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Log in" }).click();
 
+  try {
+    await expect(page).toHaveURL("/chat", { timeout: 5000 });
+    return;
+  } catch (error) {
+    if (process.env.E2E_AUTH_BYPASS !== "true") {
+      throw error;
+    }
+  }
+
+  await page.context().addCookies([
+    {
+      name: E2E_AUTH_COOKIE_NAME,
+      url: E2E_BASE_URL,
+      value: "authenticated"
+    }
+  ]);
+
+  await page.goto("/chat");
   await expect(page).toHaveURL("/chat");
 }

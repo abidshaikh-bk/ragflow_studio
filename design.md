@@ -111,6 +111,8 @@ Purpose: configure model providers.
 
 UI:
 
+- Left settings rail with `Model & MCP` active plus visible future sections for workspace, security, billing, and integrations
+- Main control-center pane for model and MCP configuration
 - Chat provider select: OpenAI, Anthropic, Gemini, Hugging Face
 - Chat model input
 - Chat API key input, masked after save and stored encrypted server-side
@@ -118,6 +120,8 @@ UI:
 - Embedding dimensions input
 - Embedding model input
 - Embedding API key input, masked after save and stored encrypted server-side
+- MCP server connections panel for user-scoped BYO MCP configs
+- Persistent secure-storage callout explaining masked and encrypted secret handling
 - Save button
 
 ### `/history`

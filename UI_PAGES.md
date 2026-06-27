@@ -201,7 +201,8 @@ TASK-009 implementation note:
 
 - Fetch masked settings from `/api/settings`.
 - Save settings to `/api/settings`.
-- Show a tabbed settings surface with `Models` and `MCP Tools`.
+- Render the page as a control-center workspace with a left settings rail and a main `Model & MCP` content pane.
+- Keep future settings areas visible in the left rail as non-interactive placeholders until those sections ship.
 - Fetch runtime MCP server configs from `/api/mcp/servers`.
 - Save MCP server configs through `/api/mcp/servers` and `/api/mcp/servers/:id`.
 - Test and preview MCP tools through `/api/mcp/servers/:id/test` and `/api/mcp/servers/:id/tools`.
@@ -211,6 +212,8 @@ TASK-009 implementation note:
 - Never display raw stored API keys.
 - Never display raw stored MCP headers or env secrets.
 - Show save success/error state.
+- Render separate chat-model and embedding-model panels before the MCP server connections panel.
+- Keep a secure-storage callout visible so masked and encrypted secret handling is obvious.
 
 MVP note:
 
@@ -409,11 +412,13 @@ Do not expose raw MCP headers, env values, or decrypted secrets in the browser.
 - Reframe runtime MCP as user BYO MCP configuration.
 - Preserve the existing model and MCP configuration flows under a cleaner information hierarchy.
 - Keep all secret values masked after save and reload.
+- Use a sidebar-plus-panels layout that visually matches the polished reference direction rather than a generic page header and stacked cards.
 
 ## Additional test requirements
 
 - Settings page renders the BYO MCP framing without leaking secrets.
 - Existing MCP flows continue to work after layout refresh.
+- Route-level settings scaffolds confirm the new `Model & MCP` framing renders.
 
 ---
 

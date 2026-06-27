@@ -14,6 +14,12 @@ describe("settings form", () => {
       />
     );
 
+    expect(
+      screen.getByRole("heading", { name: "Chat model" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Embedding model" })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Chat provider")).toBeInTheDocument();
     expect(screen.getByLabelText("Chat model")).toBeInTheDocument();
     expect(
@@ -27,6 +33,7 @@ describe("settings form", () => {
     expect(
       screen.getByPlaceholderText("Enter a new embedding provider key")
     ).toBeInTheDocument();
+    expect(screen.getByText(/about dimensions/i)).toBeInTheDocument();
     expect(screen.getByText(/stored value on file: \*{8}1234/i)).toBeInTheDocument();
     expect(screen.getByText(/stored value on file: \*{8}5678/i)).toBeInTheDocument();
   });

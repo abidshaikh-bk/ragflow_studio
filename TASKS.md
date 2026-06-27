@@ -1519,3 +1519,32 @@ Tests:
 Acceptance criteria:
 
 - The landing page clearly communicates the product to end users and supports conversion into login or registration.
+
+---
+
+### TASK-055: Refresh the settings page into a control-center workspace
+
+Status: validated
+
+Objective: Reframe `/settings` around a polished control-center layout inspired by the product reference while preserving the existing secure model and MCP flows.
+
+Implementation:
+
+- Replace the generic settings header/card stack with a workspace-style settings layout.
+- Add a left settings navigation rail with `Model & MCP` as the active section and clearly marked future sections.
+- Rebuild the model settings surface into distinct chat and embedding configuration panels with clearer hierarchy.
+- Keep masked secret handling unchanged and never render raw stored credentials.
+- Preserve the existing MCP list, add/edit, test, and preview flows while refreshing their framing.
+- Add a secure-storage callout that reinforces encrypted server-side secret handling.
+
+Tests:
+
+- Settings page renders the new `Model & MCP` workspace framing.
+- Chat and embedding configuration panels render their fields and masked-secret hints.
+- Existing MCP empty-state and transport-specific flows continue to work.
+- Protected-route E2E still confirms `/settings` loads after login.
+
+Acceptance criteria:
+
+- `/settings` feels visually aligned with the provided reference.
+- Existing settings and MCP behavior remain functional and secret-safe.

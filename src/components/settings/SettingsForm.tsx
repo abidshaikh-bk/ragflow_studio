@@ -1,8 +1,8 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { ProviderSelect } from "./ProviderSelect";
@@ -180,12 +180,13 @@ export function SettingsForm({
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <Card
-        eyebrow="Settings"
-        title="Model configuration status"
-        description="Choose the providers and model IDs your workspace should use. Saved secrets stay masked and server-side."
+      <SettingsCard
+        description="Choose the provider and model ID used for conversations and reasoning across the workspace."
+        iconTone="violet"
+        statusLabel="Active"
+        title="Chat model"
       >
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <ProviderSelect
             error={fieldErrors.chatProvider}
             label="Chat provider"
@@ -200,12 +201,23 @@ export function SettingsForm({
             value={values.chatModel}
           />
           <SecretInput
+            className="xl:col-span-2"
             label="Chat API key"
             maskedValue={maskedSecrets.chatApiKey}
             onChange={(event) => handleValueChange("chatApiKey", event.target.value)}
             placeholder="Enter a new chat provider key"
             value={values.chatApiKey}
           />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        description="Select the embedding provider and dimension that should match the Pinecone index configured on the server."
+        iconTone="aqua"
+        statusLabel="Active"
+        title="Embedding model"
+      >
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px]">
           <ProviderSelect
             error={fieldErrors.embeddingProvider}
             label="Embedding provider"
@@ -213,6 +225,15 @@ export function SettingsForm({
               handleValueChange("embeddingProvider", event.target.value)
             }
             value={values.embeddingProvider}
+          />
+          <Input
+            error={fieldErrors.embeddingModel}
+            label="Embedding model"
+            onChange={(event) =>
+              handleValueChange("embeddingModel", event.target.value)
+            }
+            placeholder="text-embedding-3-small"
+            value={values.embeddingModel}
           />
           <Input
             error={fieldErrors.embeddingDimensions}
@@ -228,16 +249,8 @@ export function SettingsForm({
             type="number"
             value={String(values.embeddingDimensions)}
           />
-          <Input
-            error={fieldErrors.embeddingModel}
-            label="Embedding model"
-            onChange={(event) =>
-              handleValueChange("embeddingModel", event.target.value)
-            }
-            placeholder="text-embedding-3-small"
-            value={values.embeddingModel}
-          />
           <SecretInput
+            className="xl:col-span-2"
             label="Embedding API key"
             maskedValue={maskedSecrets.embeddingApiKey}
             onChange={(event) =>
@@ -246,8 +259,15 @@ export function SettingsForm({
             placeholder="Enter a new embedding provider key"
             value={values.embeddingApiKey}
           />
+          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4 xl:row-span-2">
+            <p className="text-sm font-medium text-ice-white">About dimensions</p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              The embedding dimension must match the Pinecone index dimension
+              configured on the server before vectors are upserted.
+            </p>
+          </div>
         </div>
-      </Card>
+      </SettingsCard>
       {formError ? (
         <ErrorAlert
           message={formError}
@@ -256,5 +276,43 @@ export function SettingsForm({
       ) : null}
       <SaveBar isSaving={isSaving} message={saveMessage} />
     </form>
+  );
+}
+
+function SettingsCard({
+  children,
+  description,
+  iconTone,
+  statusLabel,
+  title
+}: {
+  children: ReactNode;
+  description: string;
+  iconTone: "aqua" | "violet";
+  statusLabel: string;
+  title: string;
+}) {
+  return (
+    <section className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(11,17,31,0.96),rgba(6,10,22,0.92))] p-5 shadow-glow sm:p-6">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div
+            className={
+              iconTone === "violet"
+                ? "flex h-12 w-12 items-center justify-center rounded-2xl bg-violet/20 text-violet"
+                : "flex h-12 w-12 items-center justify-center rounded-2xl bg-aqua/15 text-aqua"
+            }
+          >
+            <div className="h-3 w-3 rounded-full bg-current" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="font-heading text-2xl font-semibold text-ice-white">{title}</h2>
+            <p className="max-w-2xl text-sm leading-7 text-slate-300">{description}</p>
+          </div>
+        </div>
+        <Badge tone="success">{statusLabel}</Badge>
+      </div>
+      {children}
+    </section>
   );
 }

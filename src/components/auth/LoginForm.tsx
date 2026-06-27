@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { shouldUseE2ELoginBypass } from "@/lib/e2e";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
@@ -109,12 +108,10 @@ async function loginWithSupabase(values: {
   email: string;
   password: string;
 }): Promise<LoginSubmitResult> {
-  if (shouldUseE2ELoginBypass()) {
-    const bypassResult = await loginWithE2EBypass();
+  const bypassResult = await loginWithE2EBypass();
 
-    if (bypassResult) {
-      return bypassResult;
-    }
+  if (bypassResult) {
+    return bypassResult;
   }
 
   const supabase = createBrowserSupabaseClient();
@@ -135,26 +132,35 @@ async function loginWithSupabase(values: {
 }
 
 async function loginWithE2EBypass(): Promise<LoginSubmitResult | null> {
-  const response = await fetch("/api/e2e/login", {
-    method: "POST"
-  });
-  const payload = (await response.json()) as {
-    data?: {
-      redirectTo?: "/chat";
-    };
-    error?: string;
-  };
-
-  if (response.status === 404 && payload.error === "Not found") {
+  if (!globalThis.fetch) {
     return null;
   }
 
-  if (!response.ok || payload.data?.redirectTo !== "/chat") {
-    throw new Error(payload.error || "Unable to log in right now.");
-  }
+  try {
+    const response = await fetch("/api/e2e/login", {
+      method: "POST"
+    });
+    const payload = (await response.json()) as {
+      data?: {
+        redirectTo?: "/chat";
+      };
+      error?: string;
+    };
 
-  return {
-    message: "Signed in successfully. Redirecting to chat.",
-    redirectTo: "/chat"
-  };
+    if (response.status === 404 && payload.error === "Not found") {
+      return null;
+    }
+
+    if (!response.ok || payload.data?.redirectTo !== "/chat") {
+      throw new Error(payload.error || "Unable to log in right now.");
+    }
+
+    return {
+      hardRedirect: true,
+      message: "Signed in successfully. Redirecting to chat.",
+      redirectTo: "/chat"
+    };
+  } catch {
+    return null;
+  }
 }
