@@ -3238,13 +3238,13 @@ npx vitest run src/tests/chat-layout.test.tsx src/tests/page-scaffolds.test.tsx
 
 ## TASK-055: Refresh the settings page into a control-center workspace
 
-Status: validated
+Status: done
 
 Owner Agent: Codex
 Git Branch: task/TASK-055-settings-reference-refresh
 Started: 2026-06-27
-Completed:
-Commit Hash:
+Completed: 2026-06-27
+Commit Hash: be09f00
 
 ### Objective
 Reframe `/settings` into a reference-style control-center workspace while preserving the existing secure model settings and BYO MCP flows.
@@ -3274,6 +3274,7 @@ Reframe `/settings` into a reference-style control-center workspace while preser
 - Added a secure-storage callout so the page consistently reinforces encrypted server-side credential handling.
 - Hardened the MCP settings loader against malformed payloads and updated the protected-route auth test copy to match the new settings framing.
 - Stabilized the Playwright auth harness by adding a test-only cookie fallback in the E2E helper and by making the login form probe the local bypass route before falling back to Supabase during tests.
+- Task implementation commit created: `be09f00`
 
 ### Tests Added
 - Expanded `src/tests/settings-form.test.tsx`
@@ -3297,4 +3298,4 @@ npm run build
 - None
 
 ### Follow-up
-- Record the task commit hash, mark the task `done`, and push the branch once the completion commit exists.
+- None.

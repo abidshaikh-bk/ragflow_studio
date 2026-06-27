@@ -1524,7 +1524,7 @@ Acceptance criteria:
 
 ### TASK-055: Refresh the settings page into a control-center workspace
 
-Status: validated
+Status: done
 
 Objective: Reframe `/settings` around a polished control-center layout inspired by the product reference while preserving the existing secure model and MCP flows.
 
