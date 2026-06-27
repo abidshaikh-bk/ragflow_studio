@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
@@ -84,7 +83,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
         autoComplete="email"
         label="Email"
         onChange={(event) => setEmail(event.target.value)}
-        placeholder="you@company.com"
+        placeholder="Enter your email"
         type="email"
         value={email}
       />
@@ -108,12 +107,6 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
       <Button className="w-full" loading={loading} type="submit">
         Create account
       </Button>
-      <p className="text-sm text-slate-300">
-        Already have an account?{" "}
-        <Link className="text-aqua transition hover:text-ice-white" href="/login">
-          Sign in
-        </Link>
-      </p>
     </form>
   );
 }

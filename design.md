@@ -47,10 +47,11 @@ Purpose: authenticate existing users.
 
 UI:
 
+- Centered logo and product name above the page heading
 - Email input
 - Password input
 - Login button
-- Link to register
+- Centered footer link to register
 - Error/success state
 
 ### `/register`
@@ -59,11 +60,12 @@ Purpose: create new users.
 
 UI:
 
+- Same centered brand block treatment as login
 - Email input
 - Password input
 - Confirm password input
 - Register button
-- Link to login
+- Centered footer link to login
 - Error/success state
 
 ### `/chat`

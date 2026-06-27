@@ -30,6 +30,10 @@ This file translates `UI_MOCKUPS.md` into implementation-ready page specs for Co
 - Show Supabase auth errors.
 - Show loading state while submitting.
 - Link to `/register`.
+- Center the logo and product name above the heading inside the auth card.
+- Keep the page copy to one heading and one description block.
+- Render the secondary auth link inside the centered card footer instead of the form body.
+- Use `Enter your email` as the email placeholder copy.
 
 Phase 1A scaffold note:
 
@@ -58,6 +62,7 @@ Phase 1A scaffold note:
 - Validate email, password, and confirm password.
 - Show password mismatch error before calling Supabase.
 - Link to `/login`.
+- Match the centered brand, copy, and footer-link treatment from `/login`.
 
 Phase 1A scaffold note:
 

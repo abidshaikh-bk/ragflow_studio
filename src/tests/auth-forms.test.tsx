@@ -47,7 +47,11 @@ describe("auth page scaffolds", () => {
     expect(
       screen.getByRole("heading", { name: /welcome back/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/sign in to ask grounded questions across your private documents/i)
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter your email")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /create account/i })).toHaveAttribute(
@@ -62,7 +66,13 @@ describe("auth page scaffolds", () => {
     expect(
       screen.getByRole("heading", { name: /create your workspace/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /create an account to turn your files into a trusted, searchable workspace/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter your email")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Create a password")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Repeat your password")).toBeInTheDocument();
     expect(

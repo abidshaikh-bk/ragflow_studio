@@ -1467,7 +1467,7 @@ Acceptance criteria:
 
 ### TASK-053: Refine login and registration into a centered branded auth experience
 
-Status: not_started
+Status: done
 
 Objective: Make auth pages feel polished, centered, and consistent with the product brand.
 

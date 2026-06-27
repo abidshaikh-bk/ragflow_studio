@@ -3233,3 +3233,57 @@ npx vitest run src/tests/chat-layout.test.tsx src/tests/page-scaffolds.test.tsx
 
 ### Follow-up
 - `TASK-052` still remains to give the documents workspace the same level of staged, sectioned refinement as chat.
+
+---
+
+## TASK-053: Refine login and registration into a centered branded auth experience
+
+Status: done
+
+Owner Agent: Codex
+Git Branch: task/TASK-053-auth-branding
+Started: 2026-06-27
+Completed: 2026-06-27
+Commit Hash:
+
+### Objective
+Make auth pages feel polished, centered, and consistent with the product brand.
+
+### Files Changed
+- PROGRESS_LOG.md
+- TASKS.md
+- UI_MOCKUPS.md
+- UI_PAGES.md
+- design.md
+- src/app/(auth)/login/page.tsx
+- src/app/(auth)/register/page.tsx
+- src/components/auth/AuthCard.tsx
+- src/components/auth/LoginForm.tsx
+- src/components/auth/RegisterForm.tsx
+- src/tests/auth-forms.test.tsx
+
+### Implementation Notes
+- Reworked the shared auth card into a centered branded stack with the logo, product name, and concise page copy aligned into a single polished header treatment.
+- Moved the secondary auth actions out of the form body and into the shared card footer so login and registration both end with the same centered call to action.
+- Updated both auth forms to use the refined `Enter your email` placeholder and removed the leftover MVP/dev-oriented helper copy from the registration path.
+
+### Tests Added
+- Expanded `src/tests/auth-forms.test.tsx`
+
+### Validation Commands
+```bash
+npm run lint
+npm run typecheck
+npx vitest run src/tests/auth-forms.test.tsx
+npx vitest run src/tests/page-scaffolds.test.tsx
+npx playwright test src/tests/e2e/auth.spec.ts
+```
+
+### Result
+- Pass
+
+### Blockers
+- None
+
+### Follow-up
+- `TASK-054` can now reuse the tighter auth-page tone and visual hierarchy when refreshing the public landing experience.

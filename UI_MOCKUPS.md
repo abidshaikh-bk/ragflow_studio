@@ -22,7 +22,7 @@ This file defines low-fidelity page mockups for Codex/coding agents. Implement t
 
 ## Layout intent
 
-Public auth page with a centered glass card and a subtle animated/blurred network background.
+Public auth page with a centered glass card, a subtle animated/blurred network background, and a centered brand block that leads with the logo before the page heading.
 
 ## Wireframe
 
@@ -58,6 +58,7 @@ Public auth page with a centered glass card and a subtle animated/blurred networ
 - Wrong credentials.
 - Loading during submit.
 - Success redirect state.
+- Centered secondary auth link below the form divider.
 
 ## Components
 
@@ -74,7 +75,7 @@ Public auth page with a centered glass card and a subtle animated/blurred networ
 
 ## Layout intent
 
-Same layout as login with registration-specific copy and confirm password.
+Same layout as login with registration-specific copy, confirm password, and the same centered branded footer link treatment.
 
 ## Wireframe
 
